@@ -20,6 +20,8 @@ file(GLOB MAT_SOURCES CONFIGURE_DEPENDS
     src/mat/cpp/*/*.cc
 )
 list(FILTER MAT_SOURCES EXCLUDE REGEX "_test\\.cc$")
+list(FILTER MAT_SOURCES EXCLUDE REGEX "wsmeans\\.cc$")
+list(FILTER MAT_SOURCES EXCLUDE REGEX "celebi\\.cc$")
 
 qt_add_qml_module(loali
     URI Loali
