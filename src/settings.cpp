@@ -18,6 +18,7 @@ LoaliSettings::LoaliSettings(QObject *parent)
     m_workspaces = s.value(QStringLiteral("shell/workspaces"), 4).toInt();
     m_workspaces = std::clamp(m_workspaces, 2, 6);
     m_dnd = s.value(QStringLiteral("notifications/dnd"), false).toBool();
+    m_dark = s.value(QStringLiteral("appearance/dark"), true).toBool();
 }
 
 LoaliSettings *LoaliSettings::create(QQmlEngine *engine, QJSEngine *jsEngine)
@@ -68,6 +69,16 @@ void LoaliSettings::setAutoAccent(bool value)
     QSettings s;
     s.setValue(QStringLiteral("appearance/autoAccent"), value);
     emit autoAccentChanged();
+}
+
+void LoaliSettings::setDark(bool value)
+{
+    if (m_dark == value)
+        return;
+    m_dark = value;
+    QSettings s;
+    s.setValue(QStringLiteral("appearance/dark"), value);
+    emit darkChanged();
 }
 
 void LoaliSettings::setWorkspaces(int value)

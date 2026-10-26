@@ -16,6 +16,7 @@ class LoaliSettings : public QObject
     Q_PROPERTY(bool autoAccent READ autoAccent WRITE setAutoAccent NOTIFY autoAccentChanged)
     Q_PROPERTY(int workspaces READ workspaces WRITE setWorkspaces NOTIFY workspacesChanged)
     Q_PROPERTY(bool dnd READ dnd WRITE setDnd NOTIFY dndChanged)
+    Q_PROPERTY(bool dark READ dark WRITE setDark NOTIFY darkChanged)
 
 public:
     static LoaliSettings *create(QQmlEngine *engine, QJSEngine *jsEngine);
@@ -38,6 +39,9 @@ public:
     bool dnd() const { return m_dnd; }
     void setDnd(bool value);
 
+    bool dark() const { return m_dark; }
+    void setDark(bool value);
+
 signals:
     void wallpaperChanged();
     void dimChanged();
@@ -45,6 +49,7 @@ signals:
     void autoAccentChanged();
     void workspacesChanged();
     void dndChanged();
+    void darkChanged();
 
 private:
     explicit LoaliSettings(QObject *parent = nullptr);
@@ -56,4 +61,5 @@ private:
     bool m_autoAccent = true;
     int m_workspaces;
     bool m_dnd = false;
+    bool m_dark = true;
 };

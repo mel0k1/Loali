@@ -423,6 +423,16 @@ Item {
 
             SettingRow {
                 Layout.fillWidth: true
+                title: qsTr("Dark theme")
+                subtitle: qsTr("Switch between dark and light Material color schemes")
+                control: MSwitch {
+                    checked: Settings.dark
+                    onToggled: Settings.dark = !Settings.dark
+                }
+            }
+
+            SettingRow {
+                Layout.fillWidth: true
                 title: qsTr("Dynamic color")
                 subtitle: qsTr("Material You palette extracted from the wallpaper")
                 control: MSwitch {

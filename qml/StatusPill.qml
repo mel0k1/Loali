@@ -138,6 +138,46 @@ Rectangle {
         }
 
         Item {
+            id: themeBtn
+            width: 44
+            height: 44
+            scale: themeHover.containsMouse ? 1.1 : 1
+            Behavior on scale {
+                SpringAnimation { spring: 5; mass: 0.55; damping: 0.35 }
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 40
+                height: 40
+                radius: 20
+                color: themeHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+
+            MIcon {
+                anchors.centerIn: parent
+                width: 22
+                height: 22
+                path: Settings.dark ? Theme.iconSun : Theme.iconMoon
+                color: Theme.onSurfaceVariant
+                rotation: Settings.dark ? 0 : 180
+                Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+            }
+
+            MouseArea {
+                id: themeHover
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: Settings.dark = !Settings.dark
+            }
+
+            ToolTip.visible: themeHover.containsMouse
+            ToolTip.text: Settings.dark ? qsTr("Light theme") : qsTr("Dark theme")
+            ToolTip.delay: 400
+        }
+
+        Item {
             id: gearBtn
             width: 44
             height: 44
