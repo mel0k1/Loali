@@ -188,8 +188,22 @@ WaylandCompositor {
         snapPreview.opacity = 0
     }
 
-    Component.onCompleted:
+    Component.onCompleted: {
+        MatColor.generateFromImage(Settings.wallpaper)
         console.info("Loali socket:", socketName === "" ? "wayland-?" : socketName)
+    }
+
+    Connections {
+        target: Settings
+        function onWallpaperChanged() {
+            if (Settings.autoAccent)
+                MatColor.generateFromImage(Settings.wallpaper)
+        }
+        function onAutoAccentChanged() {
+            if (Settings.autoAccent)
+                MatColor.generateFromImage(Settings.wallpaper)
+        }
+    }
 
     WaylandOutput {
         sizeFollowsWindow: true
@@ -266,6 +280,8 @@ WaylandCompositor {
                 id: launcher
                 z: 200
             }
+
+            NotificationPopups { }
 
             SettingsApp {
                 id: settingsApp

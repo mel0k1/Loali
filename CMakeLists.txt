@@ -15,6 +15,12 @@ qt_add_executable(loali
     src/main.cpp
 )
 
+file(GLOB MAT_SOURCES CONFIGURE_DEPENDS
+    src/mat/cpp/*.cc
+    src/mat/cpp/*/*.cc
+)
+list(FILTER MAT_SOURCES EXCLUDE REGEX "_test\\.cc$")
+
 qt_add_qml_module(loali
     URI Loali
     VERSION 1.0
@@ -33,6 +39,7 @@ qt_add_qml_module(loali
         qml/LockScreen.qml
         qml/StatusPill.qml
         qml/SettingsApp.qml
+        qml/NotificationPopups.qml
     SOURCES
         src/apps.h
         src/apps.cpp
@@ -42,10 +49,16 @@ qt_add_qml_module(loali
         src/settings.cpp
         src/tray.h
         src/tray.cpp
+        src/notifications.h
+        src/notifications.cpp
+        src/matcolor.h
+        src/matcolor.cpp
     RESOURCES
         assets/logo.svg
         assets/wallpapers/dusk.jpg
 )
+
+target_sources(loali PRIVATE ${MAT_SOURCES})
 
 target_link_libraries(loali PRIVATE
     Qt6::Quick
@@ -54,7 +67,7 @@ target_link_libraries(loali PRIVATE
     Qt6::DBus
 )
 
-target_include_directories(loali PRIVATE src)
+target_include_directories(loali PRIVATE src src/mat)
 
 include(GNUInstallDirs)
 

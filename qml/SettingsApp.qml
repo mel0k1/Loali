@@ -54,6 +54,7 @@ Item {
             { id: "wallpaper", title: qsTr("Wallpaper"), glyph: Theme.iconWallpaper },
             { id: "appearance", title: qsTr("Appearance"), glyph: Theme.iconPalette },
             { id: "workspaces", title: qsTr("Workspaces"), glyph: Theme.iconApps },
+            { id: "notifications", title: qsTr("Notifications"), glyph: Theme.iconBell },
             { id: "about", title: qsTr("About"), glyph: Theme.iconInfo }
         ]
 
@@ -183,6 +184,7 @@ Item {
                     WallpaperPage { }
                     AppearancePage { }
                     WorkspacesPage { }
+                    NotificationsPage { }
                     AboutPage { }
                 }
             }
@@ -224,6 +226,71 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: mb.clicked()
+            }
+        }
+
+        component MSwitch: Rectangle {
+            id: sw
+            property bool checked: false
+            signal toggled()
+            width: 52
+            height: 32
+            radius: 16
+            color: checked ? Theme.primary : Theme.surfaceContainerHighest
+            border.width: checked ? 0 : 2
+            border.color: Theme.outline
+            Behavior on color { ColorAnimation { duration: 150 } }
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                x: sw.checked ? sw.width - width - 4 : 4
+                width: sw.checked ? 24 : 16
+                height: width
+                radius: width / 2
+                color: sw.checked ? Theme.onPrimary : Theme.outline
+                Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: sw.toggled()
+            }
+        }
+
+        component SettingRow: Row {
+            id: srow
+            property string title
+            property string subtitle
+            property alias control: slot.data
+            spacing: 14
+
+            Column {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 320
+                spacing: 2
+
+                Text {
+                    text: srow.title
+                    font.pixelSize: 14
+                    font.weight: Font.Medium
+                    color: Theme.onSurface
+                }
+
+                Text {
+                    visible: srow.subtitle !== ""
+                    text: srow.subtitle
+                    font.pixelSize: 12
+                    color: Theme.onSurfaceVariant
+                    wrapMode: Text.WordWrap
+                    width: parent.width
+                }
+            }
+
+            Item {
+                id: slot
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
 
@@ -354,6 +421,55 @@ Item {
 
             PageTitle { text: qsTr("Appearance") }
 
+            SettingRow {
+                Layout.fillWidth: true
+                title: qsTr("Dynamic color")
+                subtitle: qsTr("Material You palette extracted from the wallpaper")
+                control: MSwitch {
+                    checked: Settings.autoAccent
+                    onToggled: Settings.autoAccent = !Settings.autoAccent
+                }
+            }
+
+            SectionLabel {
+                visible: Settings.autoAccent && MatColor.suggested.length > 0
+                text: qsTr("Suggested from wallpaper")
+            }
+
+            Row {
+                visible: Settings.autoAccent && MatColor.suggested.length > 0
+                spacing: 12
+
+                Repeater {
+                    model: MatColor.suggested
+
+                    delegate: Item {
+                        id: sug
+                        required property var modelData
+                        width: 46
+                        height: 54
+
+                        Rectangle {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: 40
+                            height: 40
+                            radius: 20
+                            color: sug.modelData
+                            border.width: 2
+                            border.color: Qt.alpha(Theme.outlineVariant, 0.6)
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    Settings.accent = sug.modelData
+                                    Settings.autoAccent = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             SectionLabel { text: qsTr("Accent color") }
 
             Flow {
@@ -427,6 +543,30 @@ Item {
             Text {
                 width: parent.width
                 text: qsTr("The accent color tints the dock, taskbar, highlights and window focus ring.")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 13
+                color: Theme.onSurfaceVariant
+            }
+        }
+
+        component NotificationsPage: ColumnLayout {
+            spacing: 16
+
+            PageTitle { text: qsTr("Notifications") }
+
+            SettingRow {
+                Layout.fillWidth: true
+                title: qsTr("Do Not Disturb")
+                subtitle: qsTr("Hide notification popups; alerts are delivered silently")
+                control: MSwitch {
+                    checked: Settings.dnd
+                    onToggled: Settings.dnd = !Settings.dnd
+                }
+            }
+
+            Text {
+                width: parent.width
+                text: qsTr("Loali implements the freedesktop Notifications daemon. Apps can send alerts, actions and icons; critical notifications stay on screen until dismissed.")
                 wrapMode: Text.WordWrap
                 font.pixelSize: 13
                 color: Theme.onSurfaceVariant

@@ -3,30 +3,37 @@ import QtQuick
 import Loali
 
 QtObject {
-    readonly property color primary: Settings.accent
+    readonly property var scheme: {
+        if (!Settings.autoAccent)
+            return null
+        const d = MatColor.dark
+        return d && d.primary !== undefined ? d : null
+    }
+
+    readonly property color primary: scheme ? scheme.primary : Settings.accent
     readonly property color onPrimary: {
         const l = 0.2126 * primary.r + 0.7152 * primary.g + 0.0722 * primary.b
         return l > 0.6 ? "#1D1B20" : "#FFFFFF"
     }
-    readonly property color primaryContainer: "#4F378B"
-    readonly property color onPrimaryContainer: "#EADDFF"
-    readonly property color secondary: "#CCC2DC"
-    readonly property color onSecondary: "#332D41"
-    readonly property color secondaryContainer: "#4A4458"
-    readonly property color onSecondaryContainer: "#EADDFF"
-    readonly property color tertiary: "#EFB8C8"
-    readonly property color tertiaryContainer: "#633B48"
-    readonly property color surface: "#141218"
-    readonly property color surfaceContainerLow: "#1D1B20"
-    readonly property color surfaceContainer: "#211F26"
-    readonly property color surfaceContainerHigh: "#2B2930"
-    readonly property color surfaceContainerHighest: "#36343B"
-    readonly property color onSurface: "#E6E0E9"
-    readonly property color onSurfaceVariant: "#CAC4D0"
-    readonly property color outline: "#938F99"
-    readonly property color outlineVariant: "#49454F"
-    readonly property color error: "#F2B8B5"
-    readonly property color scrim: "#000000"
+    readonly property color primaryContainer: scheme ? scheme.primaryContainer : "#4F378B"
+    readonly property color onPrimaryContainer: scheme ? scheme.onPrimaryContainer : "#EADDFF"
+    readonly property color secondary: scheme ? scheme.secondary : "#CCC2DC"
+    readonly property color onSecondary: scheme ? scheme.onSecondary : "#332D41"
+    readonly property color secondaryContainer: scheme ? scheme.secondaryContainer : "#4A4458"
+    readonly property color onSecondaryContainer: scheme ? scheme.onSecondaryContainer : "#EADDFF"
+    readonly property color tertiary: scheme ? scheme.tertiary : "#EFB8C8"
+    readonly property color tertiaryContainer: scheme ? scheme.tertiaryContainer : "#633B48"
+    readonly property color surface: scheme ? scheme.surface : "#141218"
+    readonly property color surfaceContainerLow: scheme ? scheme.surfaceContainerLow : "#1D1B20"
+    readonly property color surfaceContainer: scheme ? scheme.surfaceContainer : "#211F26"
+    readonly property color surfaceContainerHigh: scheme ? scheme.surfaceContainerHigh : "#2B2930"
+    readonly property color surfaceContainerHighest: scheme ? scheme.surfaceContainerHighest : "#36343B"
+    readonly property color onSurface: scheme ? scheme.onSurface : "#E6E0E9"
+    readonly property color onSurfaceVariant: scheme ? scheme.onSurfaceVariant : "#CAC4D0"
+    readonly property color outline: scheme ? scheme.outline : "#938F99"
+    readonly property color outlineVariant: scheme ? scheme.outlineVariant : "#49454F"
+    readonly property color error: scheme ? scheme.error : "#F2B8B5"
+    readonly property color scrim: scheme ? scheme.scrim : "#000000"
 
     readonly property int cornerM: 16
     readonly property int cornerL: 28
@@ -51,4 +58,7 @@ QtObject {
     readonly property string iconInfo: "M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
     readonly property string iconCheck: "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
     readonly property string iconFolder: "M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"
+    readonly property string iconBell: "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+    readonly property string iconBellOff: "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68c-.24.06-.47.15-.69.23l1.64 1.64c.18-.05.36-.05.55-.05 2.21 0 4 1.79 4 4v3.68l2 2v.14H8.83l2 2H18l2 2v-1l-2-2zM4.41 2.86 3 4.27l2 2V11c0 3.07-1.64 5.64-2.5 6.32V19h12.23l3.06 3.06 1.41-1.41L4.41 2.86z"
+    readonly property string iconAuto: "M12 2 4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"
 }

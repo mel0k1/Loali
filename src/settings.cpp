@@ -14,8 +14,10 @@ LoaliSettings::LoaliSettings(QObject *parent)
     m_dim = s.value(QStringLiteral("wallpaper/dim"), 0.25).toReal();
     m_dim = std::clamp(m_dim, 0.0, 0.6);
     m_accent = s.value(QStringLiteral("appearance/accent"), QStringLiteral("#D0BCFF")).toString();
+    m_autoAccent = s.value(QStringLiteral("appearance/autoAccent"), true).toBool();
     m_workspaces = s.value(QStringLiteral("shell/workspaces"), 4).toInt();
     m_workspaces = std::clamp(m_workspaces, 2, 6);
+    m_dnd = s.value(QStringLiteral("notifications/dnd"), false).toBool();
 }
 
 LoaliSettings *LoaliSettings::create(QQmlEngine *engine, QJSEngine *jsEngine)
@@ -58,6 +60,16 @@ void LoaliSettings::setAccent(const QColor &value)
     emit accentChanged();
 }
 
+void LoaliSettings::setAutoAccent(bool value)
+{
+    if (m_autoAccent == value)
+        return;
+    m_autoAccent = value;
+    QSettings s;
+    s.setValue(QStringLiteral("appearance/autoAccent"), value);
+    emit autoAccentChanged();
+}
+
 void LoaliSettings::setWorkspaces(int value)
 {
     value = std::clamp(value, 2, 6);
@@ -67,4 +79,14 @@ void LoaliSettings::setWorkspaces(int value)
     QSettings s;
     s.setValue(QStringLiteral("shell/workspaces"), value);
     emit workspacesChanged();
+}
+
+void LoaliSettings::setDnd(bool value)
+{
+    if (m_dnd == value)
+        return;
+    m_dnd = value;
+    QSettings s;
+    s.setValue(QStringLiteral("notifications/dnd"), value);
+    emit dndChanged();
 }
