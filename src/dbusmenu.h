@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QDBusArgument>
 #include <QHash>
 #include <QImage>
 #include <QObject>
@@ -18,6 +19,9 @@ struct DbusMenuNode
 };
 
 Q_DECLARE_METATYPE(DbusMenuNode)
+
+const QDBusArgument &operator>>(const QDBusArgument &arg, DbusMenuNode &node);
+QDBusArgument &operator<<(QDBusArgument &arg, const DbusMenuNode &node);
 
 class TrayMenu : public QObject
 {

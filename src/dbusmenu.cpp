@@ -69,6 +69,25 @@ const QDBusArgument &operator>>(const QDBusArgument &arg, DbusMenuNode &node)
     return arg;
 }
 
+QDBusArgument &operator<<(QDBusArgument &arg, const DbusMenuNode &node)
+{
+    arg.beginStructure();
+    arg << node.id;
+    arg.beginMap(QMetaType::QString, QMetaType::QVariant);
+    for (auto it = node.props.constBegin(); it != node.props.constEnd(); ++it) {
+        arg.beginMapEntry();
+        arg << it.key() << it.value();
+        arg.endMapEntry();
+    }
+    arg.endMap();
+    arg.beginArray(QMetaType::QVariant);
+    for (const DbusMenuNode &child : node.children)
+        arg << QVariant::fromValue(child);
+    arg.endArray();
+    arg.endStructure();
+    return arg;
+}
+
 TrayMenu::TrayMenu(QObject *parent)
     : QObject(parent)
 {
