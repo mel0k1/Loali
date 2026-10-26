@@ -8,6 +8,8 @@
 #include <QDBusObjectPath>
 #include <QDBusServiceWatcher>
 #include <QQmlEngine>
+#include <QSettings>
+#include <algorithm>
 
 Tray *Tray::s_instance = nullptr;
 
@@ -87,6 +89,47 @@ QVariantMap Tray::itemInfo(int row) const
     info.insert(QStringLiteral("menuPath"), it.menuPath);
     info.insert(QStringLiteral("menuService"), it.menuService.isEmpty() ? it.bus : it.menuService);
     return info;
+}
+
+void Tray::move(int from, int to)
+{
+    if (from < 0 || from >= m_order.size() || to < 0 || to >= m_order.size() || from == to)
+        return;
+    beginMoveRows(QModelIndex(), from, from, QModelIndex(), to > from ? to + 1 : to);
+    m_order.move(from, to);
+    endMoveRows();
+    persistOrder();
+}
+
+void Tray::persistOrder()
+{
+    QStringList ids;
+    for (const QString &key : m_order) {
+        const Item *it = itemAt(key);
+        ids.append(it && !it->id.isEmpty() ? it->id : key);
+    }
+    QSettings s;
+    s.setValue(QStringLiteral("tray/order"), ids);
+}
+
+void Tray::applySavedPlace(const QString &key)
+{
+    Item *it = itemAt(key);
+    if (!it || it->placed)
+        return;
+    it->placed = true;
+    const QString ident = !it->id.isEmpty() ? it->id : key;
+    QSettings s;
+    const QStringList saved = s.value(QStringLiteral("tray/order")).toStringList();
+    int want = saved.indexOf(ident);
+    if (want < 0)
+        want = saved.indexOf(key);
+    const int cur = m_order.indexOf(key);
+    if (want < 0 || cur < 0 || want >= m_order.size() || want == cur)
+        return;
+    beginMoveRows(QModelIndex(), cur, cur, QModelIndex(), want > cur ? want + 1 : want);
+    m_order.move(cur, want);
+    endMoveRows();
 }
 
 QString Tray::keyAt(int row) const
@@ -213,6 +256,7 @@ void Tray::applyProps(const QString &key, const QVariantMap &props)
         return;
     it->title = props.value(QStringLiteral("Title")).toString();
     it->status = props.value(QStringLiteral("Status")).toString();
+    it->id = props.value(QStringLiteral("Id")).toString();
     it->iconName = props.value(QStringLiteral("IconName")).toString();
     const QVariantMap tip = props.value(QStringLiteral("ToolTip")).toMap();
     it->toolTip = tip.value(QStringLiteral("title")).toString();
@@ -240,6 +284,7 @@ void Tray::applyProps(const QString &key, const QVariantMap &props)
     else
         it->icon = QImage();
     ++it->serial;
+    applySavedPlace(key);
     const int row = m_order.indexOf(key);
     if (row >= 0)
         emit dataChanged(index(row, 0), index(row, 0));

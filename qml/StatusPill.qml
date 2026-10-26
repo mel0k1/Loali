@@ -116,65 +116,140 @@ Rectangle {
             color: Qt.alpha(Theme.outlineVariant, 0.5)
         }
 
-        Repeater {
-            model: Tray
+        Item {
+            id: trayRow
+            width: Tray.count > 0 ? Tray.count * 44 - 10 : 0
+            height: 44
 
-            Item {
-                id: trayItem
-                required property int index
-                required property string uid
-                required property string title
-                required property string iconName
-                required property int iconSerial
-                required property string status
-                required property string menuPath
-                width: 34
-                height: 44
-                opacity: status === "Passive" ? 0.55 : 1
+            QtObject {
+                id: trayDrag
+                property int active: -1
+                property real startX: 0
+                property real pos: 0
+                readonly property int target: active >= 0
+                    ? Math.max(0, Math.min(Tray.count - 1, Math.round(pos / 44)))
+                    : -1
+            }
 
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 30
-                    height: 30
-                    radius: 15
-                    color: trayHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
-                }
+            Repeater {
+                model: Tray
 
-                Image {
-                    anchors.centerIn: parent
-                    width: 20
-                    height: 20
-                    source: trayItem.iconName !== "" ? "image://loali/" + trayItem.iconName
-                                                     : "image://sni/" + trayItem.uid + "?" + trayItem.iconSerial
-                    sourceSize: Qt.size(40, 40)
-                    fillMode: Image.PreserveAspectFit
-                    asynchronous: true
-                }
-
-                MouseArea {
-                    id: trayHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                    onClicked: (mouse) => {
-                        const p = trayItem.mapToItem(null, 0, 0)
-                        const w = pill.Window.window
-                        const gx = (w ? w.x : 0) + p.x + 17
-                        const gy = (w ? w.y : 0) + p.y + 22
-                        if (mouse.button === Qt.RightButton) {
-                            if (!(pill.shell && pill.shell.openTrayMenu(trayItem.index, p.x + 17, p.y + 56)))
-                                Tray.contextMenu(trayItem.index, gx, gy)
-                        } else if (mouse.button === Qt.MiddleButton)
-                            Tray.secondaryActivate(trayItem.index, gx, gy)
-                        else
-                            Tray.activate(trayItem.index, gx, gy)
+                Item {
+                    id: trayItem
+                    required property int index
+                    required property string uid
+                    required property string title
+                    required property string iconName
+                    required property int iconSerial
+                    required property string status
+                    required property string menuPath
+                    width: 34
+                    height: 44
+                    opacity: status === "Passive" ? 0.55 : 1
+                    z: trayDrag.active === trayItem.index ? 10 : 0
+                    x: {
+                        const i = trayItem.index
+                        if (trayDrag.active === i)
+                            return Math.max(0, Math.min((Tray.count - 1) * 44, trayDrag.pos))
+                        if (trayDrag.active >= 0) {
+                            const t = trayDrag.target
+                            if (trayDrag.active < i && i <= t)
+                                return (i - 1) * 44
+                            if (trayDrag.active > i && i >= t)
+                                return (i + 1) * 44
+                        }
+                        return i * 44
                     }
-                }
+                    Behavior on x {
+                        enabled: trayDrag.active !== trayItem.index
+                        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                    }
+                    Component.onDestruction: {
+                        if (trayDrag.active === trayItem.index)
+                            trayDrag.active = -1
+                    }
 
-                ToolTip.visible: trayHover.containsMouse && trayItem.title !== ""
-                ToolTip.text: trayItem.title
-                ToolTip.delay: 400
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: trayHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                    }
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 20
+                        height: 20
+                        source: trayItem.iconName !== "" ? "image://loali/" + trayItem.iconName
+                                                         : "image://sni/" + trayItem.uid + "?" + trayItem.iconSerial
+                        sourceSize: Qt.size(40, 40)
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                    }
+
+                    MouseArea {
+                        id: trayHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                        property real pressX: 0
+                        property real pressY: 0
+                        property bool dragged: false
+                        onPressed: (mouse) => {
+                            pressX = mouse.x
+                            pressY = mouse.y
+                            dragged = false
+                        }
+                        onPositionChanged: (mouse) => {
+                            if (!(mouse.buttons & Qt.LeftButton))
+                                return
+                            if (trayDrag.active >= 0 && trayDrag.active !== trayItem.index)
+                                return
+                            if (!dragged) {
+                                const dx = mouse.x - pressX
+                                const dy = mouse.y - pressY
+                                if (dx * dx + dy * dy < 49)
+                                    return
+                                dragged = true
+                                const p = trayItem.mapToItem(trayRow, 0, 0)
+                                trayDrag.startX = p.x
+                                trayDrag.pos = p.x
+                                trayDrag.active = trayItem.index
+                            }
+                            trayDrag.pos = trayDrag.startX + (mouse.x - pressX)
+                        }
+                        onReleased: (mouse) => {
+                            if (!dragged)
+                                return
+                            if (trayDrag.target >= 0 && trayDrag.target !== trayItem.index)
+                                Tray.move(trayItem.index, trayDrag.target)
+                            trayDrag.active = -1
+                        }
+                        onClicked: (mouse) => {
+                            if (dragged) {
+                                dragged = false
+                                return
+                            }
+                            const p = trayItem.mapToItem(null, 0, 0)
+                            const w = pill.Window.window
+                            const gx = (w ? w.x : 0) + p.x + 17
+                            const gy = (w ? w.y : 0) + p.y + 22
+                            if (mouse.button === Qt.RightButton) {
+                                if (!(pill.shell && pill.shell.openTrayMenu(trayItem.index, p.x + 17, p.y + 56)))
+                                    Tray.contextMenu(trayItem.index, gx, gy)
+                            } else if (mouse.button === Qt.MiddleButton)
+                                Tray.secondaryActivate(trayItem.index, gx, gy)
+                            else
+                                Tray.activate(trayItem.index, gx, gy)
+                        }
+                    }
+
+                    ToolTip.visible: trayHover.containsMouse && trayItem.title !== "" && trayDrag.active < 0
+                    ToolTip.text: trayItem.title
+                    ToolTip.delay: 400
+                }
             }
         }
 

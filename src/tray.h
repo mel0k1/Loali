@@ -60,6 +60,7 @@ public:
     Q_INVOKABLE void secondaryActivate(int row, int x, int y) const;
     Q_INVOKABLE void contextMenu(int row, int x, int y) const;
     Q_INVOKABLE QVariantMap itemInfo(int row) const;
+    Q_INVOKABLE void move(int from, int to);
 
     QImage iconImage(const QString &key) const;
 
@@ -78,6 +79,7 @@ private:
     struct Item {
         QString bus;
         QString path;
+        QString id;
         QString title;
         QString status;
         QString iconName;
@@ -86,6 +88,7 @@ private:
         QString menuService;
         QImage icon;
         int serial = 0;
+        bool placed = false;
         QDBusServiceWatcher *watcher = nullptr;
         SniRelay *relay = nullptr;
     };
@@ -96,6 +99,8 @@ private:
     void applyProps(const QString &key, const QVariantMap &props);
     void itemCall(const Item &item, const QString &method, int x, int y) const;
     void watchItem(Item &item, const QString &key);
+    void persistOrder();
+    void applySavedPlace(const QString &key);
 
     QString keyAt(int row) const;
     Item *itemAt(const QString &key);
