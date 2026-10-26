@@ -1,0 +1,10 @@
+build*/
+*.qmlc
+*.jsc
+*.user
+*.pro.user*
+compile_commands.json
+.cache/
+.idea/
+.vscode/
+.DS_Store
