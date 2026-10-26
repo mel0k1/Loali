@@ -1,4 +1,8 @@
 <div align="center">
+  <img src="assets/logo.svg" alt="Loali icon" width="88"/>
+</div>
+
+<div align="center">
   <img src="assets/banner.svg" alt="Hi! Loali" width="820"/>
 </div>
 
@@ -26,13 +30,38 @@
 
 - **Native Wayland compositor** — Loali *is* the display server, built with the official Qt Wayland Compositor API (XdgShell, server-side decorations, popups).
 - **Top dock** — a floating pill with pinned apps, springy hover magnification, running indicators and an app grid launcher button.
+- **Status pill** — workspace dots, a StatusNotifier system tray and a settings button, floating at the top right.
 - **Bottom taskbar** — window buttons for every open toplevel, a lock shortcut and a live clock.
 - **Desktop icons** — a grid of installed applications directly on the wallpaper, with selection and double-click launch.
 - **App launcher** — a searchable full-screen grid of installed applications.
+- **Virtual workspaces** — 2–6 independent desktops with an animated switcher in the status pill, `Super+1…6` to switch and `Super+Shift+1…6` to send windows across.
+- **Window tiling** — snap windows to halves and quarters with `Super`-arrows or by dragging them to screen edges, with a live M3 snap preview and animated transitions; drag a tiled window to restore it.
+- **System tray** — a full StatusNotifierWatcher implementation over D-Bus: tray items register, expose icons (theme names or ARGB pixmaps) and react to activate / secondary-activate / context-menu clicks.
+- **Settings application** — a built-in M3 settings app with wallpaper (bundled art, custom image path, dim overlay), accent color, workspace count, a shortcut cheat-sheet and an about page; everything persists via QSettings.
+- **Wallpapers** — a bundled default artwork plus procedural M3E gradient styles, applied to the desktop and the lock screen.
 - **Window management** — server-side title bars, drag, 8-way resize, maximize, fullscreen, minimize, click-to-focus.
 - **Lock screen** — large M3 display-style clock over a dimmed wallpaper.
 - **Material 3 Expressive design** — dark tonal palette, 18–32 px corner radii, emphasized easing curves and spring animations.
 - **Automatic app discovery** — parses `.desktop` files from standard XDG locations, with a themed-icon provider and graceful fallback icons.
+
+## Keyboard shortcuts
+
+| Keys | Action |
+| --- | --- |
+| `Super + 1…6` | Switch workspace |
+| `Super + Shift + 1…6` | Move window to workspace |
+| `Super + ← / →` | Snap window to left / right half |
+| `Super + Alt + ←↑→↓` | Snap window to a corner |
+| `Super + ↑` | Maximize |
+| `Super + ↓` | Restore / minimize |
+| `Super + F` | Toggle fullscreen |
+| `Super + D` | Show desktop |
+| `Super + A` | App launcher |
+| `Super + S` | Settings |
+| `Alt + F4` | Close window |
+| `Ctrl + Alt + L` | Lock screen |
+
+Dragging a window to the left / right screen edge snaps it to that half, dragging to the top edge maximizes it.
 
 ## Getting started
 
@@ -86,23 +115,29 @@ Loali/
 ├── src/
 │   ├── main.cpp              QGuiApplication + QML engine bootstrap
 │   ├── apps.{h,cpp}          XDG .desktop scanner, model, pins, launcher
+│   ├── settings.{h,cpp}      persisted shell settings singleton (QML: Settings)
+│   ├── tray.{h,cpp}          StatusNotifierWatcher, tray model and image provider
 │   └── iconprovider.{h,cpp}  themed QIcon image provider with M3 fallback
 ├── qml/
-│   ├── Main.qml              WaylandCompositor, XdgShell, window routing
-│   ├── Chrome.qml            server-side window decorations, drag/resize
+│   ├── Main.qml              WaylandCompositor, XdgShell, workspaces, shortcuts
+│   ├── Chrome.qml            server-side decorations, drag/resize, snap/tiling
 │   ├── Dock.qml              top dock (pinned apps, indicators)
+│   ├── StatusPill.qml        workspaces switcher, tray icons, settings button
 │   ├── Taskbar.qml           bottom taskbar (windows, lock, clock)
 │   ├── Desktop.qml           wallpaper + desktop icon grid
 │   ├── Launcher.qml          app grid overlay with search
+│   ├── SettingsApp.qml       settings: wallpaper, accent, workspaces, about
 │   ├── LockScreen.qml        lock overlay with big clock
-│   ├── Wallpaper.qml         procedural M3E gradient blobs
+│   ├── Wallpaper.qml         image / procedural wallpapers with dim overlay
 │   ├── Theme.qml             Material 3 design tokens (singleton)
 │   ├── MIcon.qml             Material Symbols path renderer
 │   └── Shadow.qml            layered soft shadow
 └── assets/
+    ├── logo.svg              Loali flower icon
+    └── wallpapers/           bundled default wallpaper
 ```
 
-The shell follows the reference Qt compositor pattern: `XdgShell.onToplevelCreated` creates a `Chrome` (a `ShellSurfaceItem` wrapped in a rounded container with a title bar). Windows are tracked in a `ListModel` that drives both the taskbar and the dock, and `XdgDecorationManagerV1` requests server-side decorations so client windows integrate seamlessly with the M3 look.
+The shell follows the reference Qt compositor pattern: `XdgShell.onToplevelCreated` creates a `Chrome` (a `ShellSurfaceItem` wrapped in a rounded container with a title bar). Windows are tracked in a `ListModel` that drives both the taskbar and the dock, and `XdgDecorationManagerV1` requests server-side decorations so client windows integrate seamlessly with the M3 look. The tray is a real `org.kde.StatusNotifierWatcher` on the session bus — tray apps register themselves, and their icons are exposed to QML through a dedicated `image://sni/` provider.
 
 ## Roadmap
 
@@ -110,12 +145,12 @@ The shell follows the reference Qt compositor pattern: `XdgShell.onToplevelCreat
 - [x] Top dock, bottom taskbar, desktop icons
 - [x] App launcher with search
 - [x] Lock screen
-- [ ] Virtual workspaces
-- [ ] Window tiling and snapping
-- [ ] StatusNotifier tray support
+- [x] Virtual workspaces
+- [x] Window tiling and snapping
+- [x] StatusNotifier tray support
+- [x] Settings application with wallpapers and accent color
 - [ ] Dynamic Material You color extraction from wallpaper
 - [ ] Notifications daemon
-- [ ] Settings application
 
 ## Contributing
 
@@ -129,7 +164,7 @@ Loali is licensed under the [GNU GPL-3.0](LICENSE). Material Symbols path data u
 
 **Loali** — лёгкая и выразительная графическая среда для Linux. Это настоящий Wayland-композитор на C++ и QML поверх Qt Wayland Compositor. Знакомая раскладка в смелом стиле Material 3 Expressive: **док сверху**, **панель задач снизу**, **иконки прямо на рабочем столе**.
 
-Возможности: нативный Wayland-композитор (XdgShell, серверные декорации), верхний док с закреплёнными приложениями и пружинными анимациями, нижний таскбар с кнопками окон и часами, сетка иконок на рабочем столе, лаунчер с поиском, перетаскивание, изменение размера с 8 сторон, разворачивание, сворачивание, экран блокировки с большими часами, автоматический поиск приложений по `.desktop`-файлам.
+Возможности: нативный Wayland-композитор (XdgShell, серверные декорации), верхний док с закреплёнными приложениями и пружинными анимациями, статус-пилюля с переключателем рабочих столов и системным треем (StatusNotifier), нижний таскбар с кнопками окон и часами, сетка иконок на рабочем столе, лаунчер с поиском, **виртуальные рабочие столы** (2–6, переключение `Super+1…6`, перенос окон `Super+Shift+1…6`), **тайлинг окон** — половины и углы по `Super`-стрелкам и перетаскиванием к краям экрана с живым превью, **приложение «Настройки»** — обои (встроенные, свой файл, затемнение), акцентный цвет, число рабочих столов, шпаргалка по клавишам, перетаскивание, изменение размера с 8 сторон, разворачивание, сворачивание, экран блокировки с большими часами, автоматический поиск приложений по `.desktop`-файлам.
 
 Сборка и запуск:
 
