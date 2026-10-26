@@ -8,6 +8,7 @@
 #include <QString>
 #include <QStringList>
 #include <QVariantMap>
+#include <QtDBus/QDBusContext>
 #include <qqml.h>
 
 class QDBusServiceWatcher;
@@ -101,6 +102,13 @@ private:
     QStringList m_order;
     QHash<QString, Item> m_items;
     bool m_available = false;
+};
+
+class SniImageProvider : public QQuickImageProvider
+{
+public:
+    SniImageProvider();
+    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
 };
 
 class StatusNotifierWatcher : public QObject, public QDBusContext
