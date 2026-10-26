@@ -53,6 +53,7 @@ Item {
         readonly property var pages: [
             { id: "wallpaper", title: qsTr("Wallpaper"), glyph: Theme.iconWallpaper },
             { id: "appearance", title: qsTr("Appearance"), glyph: Theme.iconPalette },
+            { id: "panels", title: qsTr("Panels"), glyph: Theme.iconTune },
             { id: "workspaces", title: qsTr("Workspaces"), glyph: Theme.iconApps },
             { id: "notifications", title: qsTr("Notifications"), glyph: Theme.iconBell },
             { id: "about", title: qsTr("About"), glyph: Theme.iconInfo }
@@ -183,6 +184,7 @@ Item {
 
                     WallpaperPage { }
                     AppearancePage { }
+                    PanelsPage { }
                     WorkspacesPage { }
                     NotificationsPage { }
                     AboutPage { }
@@ -256,6 +258,54 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 onClicked: sw.toggled()
+            }
+        }
+
+        component MSegments: Rectangle {
+            id: seg
+            property var labels: []
+            property int current: 0
+            signal picked(int idx)
+            width: segRow.width + 8
+            height: 40
+            radius: 20
+            color: Theme.surfaceContainerHighest
+            Behavior on color { ColorAnimation { duration: 150 } }
+
+            Row {
+                id: segRow
+                anchors.centerIn: parent
+                spacing: 4
+
+                Repeater {
+                    model: seg.labels
+
+                    delegate: Rectangle {
+                        id: segOpt
+                        required property var modelData
+                        required property int index
+                        width: segOptLbl.width + 24
+                        height: 32
+                        anchors.verticalCenter: parent.verticalCenter
+                        radius: 16
+                        color: seg.current === segOpt.index ? Theme.primary : "transparent"
+                        Behavior on color { ColorAnimation { duration: 180 } }
+
+                        Text {
+                            id: segOptLbl
+                            anchors.centerIn: parent
+                            text: segOpt.modelData
+                            font.pixelSize: 13
+                            font.weight: seg.current === segOpt.index ? Font.Medium : Font.Normal
+                            color: seg.current === segOpt.index ? Theme.onPrimary : Theme.onSurfaceVariant
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: seg.picked(segOpt.index)
+                        }
+                    }
+                }
             }
         }
 
@@ -553,6 +603,61 @@ Item {
             Text {
                 width: parent.width
                 text: qsTr("The accent color tints the dock, taskbar, highlights and window focus ring.")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 13
+                color: Theme.onSurfaceVariant
+            }
+        }
+
+        component PanelsPage: ColumnLayout {
+            spacing: 16
+
+            PageTitle { text: qsTr("Panels") }
+
+            SettingRow {
+                Layout.fillWidth: true
+                title: qsTr("Taskbar style")
+                subtitle: qsTr("Floating pill that widens only when tasks overflow, or a classic full-width bar")
+                control: MSegments {
+                    labels: [qsTr("Floating"), qsTr("Full")]
+                    current: Settings.taskbarStyle
+                    onPicked: (i) => Settings.taskbarStyle = i
+                }
+            }
+
+            SettingRow {
+                Layout.fillWidth: true
+                title: qsTr("Dock look")
+                subtitle: qsTr("Dynamic Island that morphs on hover and app launches, or a flat plane across the top")
+                control: MSegments {
+                    labels: [qsTr("Island"), qsTr("Plane")]
+                    current: Settings.dockMode
+                    onPicked: (i) => Settings.dockMode = i
+                }
+            }
+
+            SettingRow {
+                Layout.fillWidth: true
+                title: qsTr("Panel size")
+                subtitle: qsTr("Scales the dock, taskbar and status pill together")
+                control: Slider {
+                    id: scaleSlider
+                    width: 260
+                    from: 0.7
+                    to: 1.3
+                    stepSize: 0.05
+                    value: Settings.panelScale
+                    onMoved: Settings.panelScale = value
+                }
+            }
+
+            SectionLabel {
+                text: qsTr("Size: %1%").arg(Math.round(Settings.panelScale * 100))
+            }
+
+            Text {
+                width: parent.width
+                text: qsTr("Windows keep their maximized area in sync automatically when panels change size or style.")
                 wrapMode: Text.WordWrap
                 font.pixelSize: 13
                 color: Theme.onSurfaceVariant
