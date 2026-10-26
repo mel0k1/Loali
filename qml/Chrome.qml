@@ -16,12 +16,18 @@ Rectangle {
     property bool maximized: false
     property bool fullscreen: false
     property bool resizing: false
+    property bool instant: false
+    property int ws: 0
+    property string tiled: ""
     property rect prevRect
     readonly property bool decorated: toplevel.decorationMode === XdgToplevel.ServerSideDecoration
     readonly property int barHeight: decorated ? 40 : 0
 
     function toggleMaximize() {
+        if (fullscreen)
+            exitFullscreen()
         if (!maximized) {
+            tiled = ""
             prevRect = Qt.rect(x, y, width, height)
             maximized = true
             const a = compositor.maxArea()
@@ -37,7 +43,80 @@ Rectangle {
             width = prevRect.width
             height = prevRect.height
             toplevel.sendUnmaximized()
+            toplevel.sendConfigure(Qt.size(width, height - barHeight), [])
         }
+    }
+
+    function snapTo(mode) {
+        if (fullscreen)
+            exitFullscreen()
+        if (mode === "max") {
+            if (!maximized)
+                toggleMaximize()
+            return
+        }
+        if (tiled === "" && !maximized)
+            prevRect = Qt.rect(x, y, width, height)
+        maximized = false
+        tiled = mode
+        const a = compositor.maxArea()
+        let nx = a.x
+        let ny = a.y
+        let nw = a.width / 2
+        let nh = a.height
+        if (mode === "right") {
+            nx = a.x + a.width / 2
+        } else if (mode === "tl") {
+            nh = a.height / 2
+        } else if (mode === "tr") {
+            nx = a.x + a.width / 2
+            nh = a.height / 2
+        } else if (mode === "bl") {
+            ny = a.y + a.height / 2
+            nh = a.height / 2
+        } else if (mode === "br") {
+            nx = a.x + a.width / 2
+            ny = a.y + a.height / 2
+            nh = a.height / 2
+        }
+        x = nx
+        y = ny
+        width = nw
+        height = nh
+        toplevel.sendConfigure(Qt.size(nw, nh - barHeight), [])
+    }
+
+    function unsnap() {
+        if (tiled === "")
+            return
+        tiled = ""
+        x = prevRect.x
+        y = prevRect.y
+        width = prevRect.width
+        height = prevRect.height
+        toplevel.sendConfigure(Qt.size(width, height - barHeight), [])
+    }
+
+    function dragSnapCheck() {
+        if (!dragHandler.active || maximized || fullscreen)
+            return
+        const p = dragHandler.centroid.scenePosition
+        const w = compositor.fullArea().width
+        if (p.x <= 8)
+            compositor.showSnapPreview("left")
+        else if (p.x >= w - 8)
+            compositor.showSnapPreview("right")
+        else if (p.y <= 8)
+            compositor.showSnapPreview("max")
+        else
+            compositor.hideSnapPreview()
+    }
+
+    function finishDragSnap() {
+        const mode = compositor.snapMode
+        compositor.hideSnapPreview()
+        if (mode !== "")
+            snapTo(mode)
     }
 
     function enterFullscreen() {
@@ -62,7 +141,7 @@ Rectangle {
         height = prevRect.height
     }
 
-    visible: !minimized
+    visible: !minimized && ws === compositor.currentWorkspace
     radius: maximized || fullscreen ? 0 : 18
     color: Theme.surfaceContainerLow
     border.width: 1
@@ -79,11 +158,11 @@ Rectangle {
         NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
     }
     Behavior on width {
-        enabled: !resizing
+        enabled: !resizing && !instant
         NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
     }
     Behavior on height {
-        enabled: !resizing
+        enabled: !resizing && !instant
         NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
     }
     Behavior on radius {
@@ -240,6 +319,21 @@ Rectangle {
             id: dragHandler
             enabled: !chrome.maximized && !chrome.fullscreen
             target: chrome
+            onActiveChanged: {
+                if (active) {
+                    chrome.instant = true
+                    if (chrome.tiled !== "") {
+                        const c = centroid
+                        const relX = c.position.x / chrome.width
+                        chrome.unsnap()
+                        chrome.x = c.scenePosition.x - relX * chrome.width
+                        chrome.y = c.scenePosition.y - c.position.y
+                    }
+                } else {
+                    chrome.instant = false
+                    chrome.finishDragSnap()
+                }
+            }
         }
 
         TapHandler {
@@ -258,6 +352,9 @@ Rectangle {
         focusOnClicked: true
         onSurfaceDestroyed: chrome.windowClosed()
     }
+
+    onXChanged: dragSnapCheck()
+    onYChanged: dragSnapCheck()
 
     TapHandler {
         onTapped: chrome.compositor.activate(chrome)
