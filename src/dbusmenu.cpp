@@ -76,13 +76,13 @@ QDBusArgument &operator<<(QDBusArgument &arg, const DbusMenuNode &node)
     arg.beginMap(QMetaType::QString, QMetaType::QVariant);
     for (auto it = node.props.constBegin(); it != node.props.constEnd(); ++it) {
         arg.beginMapEntry();
-        arg << it.key() << QVariant::fromValue(QDBusVariant(it.value()));
+        arg << it.key() << QDBusVariant(it.value());
         arg.endMapEntry();
     }
     arg.endMap();
     arg.beginArray(QMetaType::QVariant);
     for (const DbusMenuNode &child : node.children)
-        arg << QVariant::fromValue(QDBusVariant(QVariant::fromValue(child)));
+        arg << QDBusVariant(QVariant::fromValue(child));
     arg.endArray();
     arg.endStructure();
     return arg;
