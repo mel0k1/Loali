@@ -7,10 +7,12 @@ import Loali
 WaylandCompositor {
     id: comp
 
-    readonly property int dockHeight: 64
-    readonly property int taskbarHeight: 64
-    readonly property real topInset: 12 + dockHeight + 10
-    readonly property real bottomInset: taskbarHeight + 10
+    readonly property int dockHeight: Theme.sz(Settings.dockMode === Settings.Plane ? 56 : 52)
+    readonly property int taskbarHeight: Theme.sz(50)
+    readonly property bool dockPlane: Settings.dockMode === Settings.Plane
+    readonly property bool barFull: Settings.taskbarStyle === Settings.Full
+    readonly property real topInset: dockPlane ? dockHeight + 6 : 12 + dockHeight + 8
+    readonly property real bottomInset: barFull ? taskbarHeight + 4 : 12 + taskbarHeight + 8
     property int zTop: 10
     property bool locked: false
     property bool expoActive: false
@@ -230,6 +232,20 @@ WaylandCompositor {
             if (Settings.autoAccent)
                 MatColor.generateFromImage(Settings.wallpaper)
         }
+        function onPanelScaleChanged() {
+            comp.reapplyLayouts()
+        }
+        function onDockModeChanged() {
+            comp.reapplyLayouts()
+        }
+        function onTaskbarStyleChanged() {
+            comp.reapplyLayouts()
+        }
+    }
+
+    function reapplyLayouts() {
+        for (let i = 0; i < windows.count; ++i)
+            windows.get(i).win.reapplyLayout()
     }
 
     WaylandOutput {
@@ -275,18 +291,29 @@ WaylandCompositor {
             Dock {
                 shell: comp
                 launcherOpen: launcher.open
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: 12
+                x: comp.dockPlane ? 0 : Math.round((win.width - width) / 2)
+                y: comp.dockPlane ? 0 : 12
+                width: comp.dockPlane ? win.width : implicitWidth
+                height: comp.dockHeight
                 z: 100
+                Behavior on x {
+                    enabled: !comp.dockPlane
+                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                }
                 onLauncherToggled: launcher.open = !launcher.open
             }
 
             StatusPill {
                 shell: comp
-                anchors.right: parent.right
-                anchors.rightMargin: 12
-                y: 12
+                x: win.width - width - (comp.dockPlane ? 10 : 12)
+                y: comp.dockPlane ? Math.round((comp.dockHeight - height) / 2) : 12
                 z: 100
+                Behavior on x {
+                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                }
+                Behavior on y {
+                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                }
                 onSettingsRequested: {
                     launcher.open = false
                     settingsApp.open = true
@@ -296,9 +323,6 @@ WaylandCompositor {
             Taskbar {
                 shell: comp
                 windows: comp.windows
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
                 z: 100
                 onLockRequested: comp.locked = true
             }

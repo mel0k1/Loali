@@ -47,6 +47,21 @@ Rectangle {
         }
     }
 
+    function reapplyLayout() {
+        if (!toplevel || fullscreen || minimized)
+            return
+        if (maximized) {
+            const a = compositor.maxArea()
+            x = a.x
+            y = a.y
+            width = a.width
+            height = a.height
+            toplevel.sendMaximized(Qt.size(content.width, content.height))
+        } else if (tiled !== "") {
+            snapTo(tiled)
+        }
+    }
+
     function snapTo(mode) {
         if (fullscreen)
             exitFullscreen()
