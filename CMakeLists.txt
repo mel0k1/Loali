@@ -44,6 +44,8 @@ target_link_libraries(loali PRIVATE
     Qt6::WaylandCompositor
 )
 
+target_include_directories(loali PRIVATE src)
+
 include(GNUInstallDirs)
 
 install(TARGETS loali RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

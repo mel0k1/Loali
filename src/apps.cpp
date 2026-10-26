@@ -3,6 +3,7 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
+#include <QQmlEngine>
 #include <QRegularExpression>
 #include <QSettings>
 #include <QStandardPaths>
@@ -243,7 +244,7 @@ QString Apps::iconForAppId(const QString &appId) const
     return QString();
 }
 
-const Entry *Apps::find(const QString &id) const
+const Apps::Entry *Apps::find(const QString &id) const
 {
     for (const Entry &e : m_entries) {
         if (e.id == id)
