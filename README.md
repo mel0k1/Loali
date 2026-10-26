@@ -37,6 +37,8 @@
 - **Virtual workspaces** — 2–6 independent desktops with an animated switcher in the status pill, `Super+1…6` to switch and `Super+Shift+1…6` to send windows across.
 - **Window tiling** — snap windows to halves and quarters with `Super`-arrows or by dragging them to screen edges, with a live M3 snap preview and animated transitions; drag a tiled window to restore it.
 - **System tray** — a full StatusNotifierWatcher implementation over D-Bus: tray items register, expose icons (theme names or ARGB pixmaps) and react to activate / secondary-activate / context-menu clicks.
+- **Notifications daemon** — a real `org.freedesktop.Notifications` server on the session bus: summary, body, app icons and image hints render as M3 cards stacked in the corner, actions are forwarded back to the sender, critical alerts stay on screen, and Do Not Disturb lives in Settings.
+- **Dynamic Material You color** — the seed color is extracted from the wallpaper (Wu quantizer + scoring) and a full Material 3 tonal scheme is generated with Google’s `material-color-utilities` (HCT / CAM16); dock, taskbar, windows, launcher and settings all recolor live, with manual accent and wallpaper-suggested swatches as fallback.
 - **Settings application** — a built-in M3 settings app with wallpaper (bundled art, custom image path, dim overlay), accent color, workspace count, a shortcut cheat-sheet and an about page; everything persists via QSettings.
 - **Wallpapers** — a bundled default artwork plus procedural M3E gradient styles, applied to the desktop and the lock screen.
 - **Window management** — server-side title bars, drag, 8-way resize, maximize, fullscreen, minimize, click-to-focus.
@@ -117,6 +119,9 @@ Loali/
 │   ├── apps.{h,cpp}          XDG .desktop scanner, model, pins, launcher
 │   ├── settings.{h,cpp}      persisted shell settings singleton (QML: Settings)
 │   ├── tray.{h,cpp}          StatusNotifierWatcher, tray model and image provider
+│   ├── notifications.{h,cpp} freedesktop Notifications daemon, model and popups
+│   ├── matcolor.{h,cpp}      Material You extraction + tonal schemes (QML: MatColor)
+│   ├── mat/                  vendored material-color-utilities C++ (Apache-2.0)
 │   └── iconprovider.{h,cpp}  themed QIcon image provider with M3 fallback
 ├── qml/
 │   ├── Main.qml              WaylandCompositor, XdgShell, workspaces, shortcuts
@@ -126,7 +131,8 @@ Loali/
 │   ├── Taskbar.qml           bottom taskbar (windows, lock, clock)
 │   ├── Desktop.qml           wallpaper + desktop icon grid
 │   ├── Launcher.qml          app grid overlay with search
-│   ├── SettingsApp.qml       settings: wallpaper, accent, workspaces, about
+│   ├── SettingsApp.qml       settings: wallpaper, dynamic color, workspaces, notifications, about
+│   ├── NotificationPopups.qml  M3 notification cards stacked top-right
 │   ├── LockScreen.qml        lock overlay with big clock
 │   ├── Wallpaper.qml         image / procedural wallpapers with dim overlay
 │   ├── Theme.qml             Material 3 design tokens (singleton)
@@ -137,7 +143,7 @@ Loali/
     └── wallpapers/           bundled default wallpaper
 ```
 
-The shell follows the reference Qt compositor pattern: `XdgShell.onToplevelCreated` creates a `Chrome` (a `ShellSurfaceItem` wrapped in a rounded container with a title bar). Windows are tracked in a `ListModel` that drives both the taskbar and the dock, and `XdgDecorationManagerV1` requests server-side decorations so client windows integrate seamlessly with the M3 look. The tray is a real `org.kde.StatusNotifierWatcher` on the session bus — tray apps register themselves, and their icons are exposed to QML through a dedicated `image://sni/` provider.
+The shell follows the reference Qt compositor pattern: `XdgShell.onToplevelCreated` creates a `Chrome` (a `ShellSurfaceItem` wrapped in a rounded container with a title bar). Windows are tracked in a `ListModel` that drives both the taskbar and the dock, and `XdgDecorationManagerV1` requests server-side decorations so client windows integrate seamlessly with the M3 look. The tray is a real `org.kde.StatusNotifierWatcher` on the session bus — tray apps register themselves, and their icons are exposed to QML through a dedicated `image://sni/` provider. Notification clients hit `org.freedesktop.Notifications`, which feeds the popup model. When the wallpaper changes, `MatColor` re-quantizes it and regenerates both light and dark tonal schemes; `Theme.qml` binds every color role to the active scheme.
 
 ## Roadmap
 
@@ -149,8 +155,8 @@ The shell follows the reference Qt compositor pattern: `XdgShell.onToplevelCreat
 - [x] Window tiling and snapping
 - [x] StatusNotifier tray support
 - [x] Settings application with wallpapers and accent color
-- [ ] Dynamic Material You color extraction from wallpaper
-- [ ] Notifications daemon
+- [x] Dynamic Material You color extraction from wallpaper
+- [x] Notifications daemon
 
 ## Contributing
 
@@ -158,13 +164,13 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) — ke
 
 ## License
 
-Loali is licensed under the [GNU GPL-3.0](LICENSE). Material Symbols path data used by `MIcon.qml` is derived from [Material Design Icons](https://github.com/google/material-design-icons) (Apache-2.0).
+Loali is licensed under the [GNU GPL-3.0](LICENSE). Material Symbols path data used by `MIcon.qml` is derived from [Material Design Icons](https://github.com/google/material-design-icons) (Apache-2.0). The `src/mat` directory contains a vendored subset of [material-color-utilities](https://github.com/material-foundation/material-color-utilities) (Apache-2.0, © Google LLC).
 
 ## Русский
 
 **Loali** — лёгкая и выразительная графическая среда для Linux. Это настоящий Wayland-композитор на C++ и QML поверх Qt Wayland Compositor. Знакомая раскладка в смелом стиле Material 3 Expressive: **док сверху**, **панель задач снизу**, **иконки прямо на рабочем столе**.
 
-Возможности: нативный Wayland-композитор (XdgShell, серверные декорации), верхний док с закреплёнными приложениями и пружинными анимациями, статус-пилюля с переключателем рабочих столов и системным треем (StatusNotifier), нижний таскбар с кнопками окон и часами, сетка иконок на рабочем столе, лаунчер с поиском, **виртуальные рабочие столы** (2–6, переключение `Super+1…6`, перенос окон `Super+Shift+1…6`), **тайлинг окон** — половины и углы по `Super`-стрелкам и перетаскиванием к краям экрана с живым превью, **приложение «Настройки»** — обои (встроенные, свой файл, затемнение), акцентный цвет, число рабочих столов, шпаргалка по клавишам, перетаскивание, изменение размера с 8 сторон, разворачивание, сворачивание, экран блокировки с большими часами, автоматический поиск приложений по `.desktop`-файлам.
+Возможности: нативный Wayland-композитор (XdgShell, серверные декорации), верхний док с закреплёнными приложениями и пружинными анимациями, статус-пилюля с переключателем рабочих столов и системным треем (StatusNotifier), нижний таскбар с кнопками окон и часами, сетка иконок на рабочем столе, лаунчер с поиском, **виртуальные рабочие столы** (2–6, переключение `Super+1…6`, перенос окон `Super+Shift+1…6`), **тайлинг окон** — половины и углы по `Super`-стрелкам и перетаскиванием к краям экрана с живым превью, **демон уведомлений** `org.freedesktop.Notifications` — карточки M3 с действиями, критические алерты и режим «Не беспокоить», **динамический цвет Material You** — палитра генерируется из обоев (квантизатор Wu + HCT/CAM16 из material-color-utilities), интерфейс перекрашивается на лету, есть ручной акцент и подсказки обоев, **приложение «Настройки»** — обои (встроенные, свой файл, затемнение), динамический и ручной акцент, число рабочих столов, уведомления, шпаргалка по клавишам, перетаскивание, изменение размера с 8 сторон, разворачивание, сворачивание, экран блокировки с большими часами, автоматический поиск приложений по `.desktop`-файлам.
 
 Сборка и запуск:
 
