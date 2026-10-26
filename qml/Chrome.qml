@@ -141,7 +141,8 @@ Rectangle {
         height = prevRect.height
     }
 
-    visible: !minimized && ws === compositor.currentWorkspace
+    visible: !minimized && (compositor.expoActive || ws === compositor.currentWorkspace)
+    enabled: !compositor.expoActive
     radius: maximized || fullscreen ? 0 : 18
     color: Theme.surfaceContainerLow
     border.width: 1
@@ -150,11 +151,11 @@ Rectangle {
     clip: true
 
     Behavior on x {
-        enabled: !resizing && !dragHandler.active
+        enabled: !resizing && !dragHandler.active && !compositor.expoActive
         NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
     }
     Behavior on y {
-        enabled: !resizing && !dragHandler.active
+        enabled: !resizing && !dragHandler.active && !compositor.expoActive
         NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
     }
     Behavior on width {

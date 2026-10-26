@@ -13,6 +13,7 @@ WaylandCompositor {
     readonly property real bottomInset: taskbarHeight + 10
     property int zTop: 10
     property bool locked: false
+    property bool expoActive: false
     property int workspaceCount: Settings.workspaces
     property int currentWorkspace: 0
     property var activeWin: null
@@ -23,10 +24,26 @@ WaylandCompositor {
     onWorkspaceCountChanged: {
         if (currentWorkspace >= workspaceCount)
             currentWorkspace = workspaceCount - 1
+        for (let i = 0; i < windows.count; ++i) {
+            const w = windows.get(i).win
+            if (w.ws >= workspaceCount)
+                w.ws = workspaceCount - 1
+        }
     }
 
     function maxArea() {
         return Qt.rect(10, topInset, win.width - 20, win.height - topInset - bottomInset)
+    }
+
+    function canOp() {
+        return !locked && !expoActive
+    }
+
+    function toggleExpo() {
+        launcher.open = false
+        settingsApp.open = false
+        trayMenuPanel.close()
+        expo.toggle()
     }
 
     function fullArea() {
@@ -103,6 +120,11 @@ WaylandCompositor {
         if (c.ws === n)
             return
         c.ws = n
+        if (expoActive) {
+            const h = expo.holderOf(n)
+            if (h)
+                c.parent = h
+        }
         if (n === currentWorkspace) {
             activate(c)
             return
@@ -292,6 +314,13 @@ WaylandCompositor {
                 z: 210
             }
 
+            Expo {
+                id: expo
+                shell: comp
+                winLayer: workspace
+                z: 150
+            }
+
             NotificationPopups { }
 
             SettingsApp {
@@ -311,10 +340,12 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Escape"
-                enabled: (launcher.open || settingsApp.open || trayMenuPanel.openState) && !comp.locked
+                enabled: (launcher.open || settingsApp.open || trayMenuPanel.openState || expo.active) && !comp.locked
                 onActivated: {
                     if (trayMenuPanel.openState)
                         trayMenuPanel.close()
+                    else if (expo.active)
+                        expo.close()
                     else if (settingsApp.open)
                         settingsApp.open = false
                     else
@@ -323,8 +354,14 @@ WaylandCompositor {
             }
 
             Shortcut {
-                sequence: "Meta+A"
+                sequence: "Meta+W"
                 enabled: !comp.locked
+                onActivated: comp.toggleExpo()
+            }
+
+            Shortcut {
+                sequence: "Meta+A"
+                enabled: comp.canOp()
                 onActivated: {
                     settingsApp.open = false
                     launcher.open = !launcher.open
@@ -333,7 +370,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+S"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     launcher.open = false
                     settingsApp.open = !settingsApp.open
@@ -342,13 +379,13 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+D"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: comp.toggleShowDesktop()
             }
 
             Shortcut {
                 sequence: "Alt+F4"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -358,7 +395,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+F"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (!w)
@@ -372,7 +409,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+Up"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -382,7 +419,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+Down"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (!w)
@@ -398,7 +435,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+Left"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -408,7 +445,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+Right"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -418,7 +455,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+Alt+Left"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -428,7 +465,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+Alt+Right"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -438,7 +475,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+Alt+Up"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -448,7 +485,7 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+Alt+Down"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -458,38 +495,38 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Meta+1"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: comp.switchWorkspace(0)
             }
             Shortcut {
                 sequence: "Meta+2"
-                enabled: !comp.locked && comp.workspaceCount > 1
+                enabled: comp.canOp() && comp.workspaceCount > 1
                 onActivated: comp.switchWorkspace(1)
             }
             Shortcut {
                 sequence: "Meta+3"
-                enabled: !comp.locked && comp.workspaceCount > 2
+                enabled: comp.canOp() && comp.workspaceCount > 2
                 onActivated: comp.switchWorkspace(2)
             }
             Shortcut {
                 sequence: "Meta+4"
-                enabled: !comp.locked && comp.workspaceCount > 3
+                enabled: comp.canOp() && comp.workspaceCount > 3
                 onActivated: comp.switchWorkspace(3)
             }
             Shortcut {
                 sequence: "Meta+5"
-                enabled: !comp.locked && comp.workspaceCount > 4
+                enabled: comp.canOp() && comp.workspaceCount > 4
                 onActivated: comp.switchWorkspace(4)
             }
             Shortcut {
                 sequence: "Meta+6"
-                enabled: !comp.locked && comp.workspaceCount > 5
+                enabled: comp.canOp() && comp.workspaceCount > 5
                 onActivated: comp.switchWorkspace(5)
             }
 
             Shortcut {
                 sequence: "Meta+Shift+1"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -498,7 +535,7 @@ WaylandCompositor {
             }
             Shortcut {
                 sequence: "Meta+Shift+2"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -507,7 +544,7 @@ WaylandCompositor {
             }
             Shortcut {
                 sequence: "Meta+Shift+3"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -516,7 +553,7 @@ WaylandCompositor {
             }
             Shortcut {
                 sequence: "Meta+Shift+4"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -525,7 +562,7 @@ WaylandCompositor {
             }
             Shortcut {
                 sequence: "Meta+Shift+5"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)
@@ -534,7 +571,7 @@ WaylandCompositor {
             }
             Shortcut {
                 sequence: "Meta+Shift+6"
-                enabled: !comp.locked
+                enabled: comp.canOp()
                 onActivated: {
                     const w = comp.activeWindow()
                     if (w)

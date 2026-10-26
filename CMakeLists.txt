@@ -43,6 +43,7 @@ qt_add_qml_module(loali
         qml/SettingsApp.qml
         qml/NotificationPopups.qml
         qml/TrayMenuPanel.qml
+        qml/Expo.qml
     SOURCES
         src/apps.h
         src/apps.cpp

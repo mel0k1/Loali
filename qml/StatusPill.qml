@@ -70,6 +70,52 @@ Rectangle {
             color: Qt.alpha(Theme.outlineVariant, 0.5)
         }
 
+        Item {
+            id: expoBtn
+            width: 44
+            height: 44
+            scale: expoHover.containsMouse ? 1.1 : 1
+            Behavior on scale {
+                SpringAnimation { spring: 5; mass: 0.55; damping: 0.35 }
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 40
+                height: 40
+                radius: 20
+                color: expoHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+
+            MIcon {
+                anchors.centerIn: parent
+                width: 22
+                height: 22
+                path: Theme.iconExpo
+                color: Theme.onSurfaceVariant
+            }
+
+            MouseArea {
+                id: expoHover
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: pill.shell.toggleExpo()
+            }
+
+            ToolTip.visible: expoHover.containsMouse
+            ToolTip.text: qsTr("Overview") + " (Meta+W)"
+            ToolTip.delay: 400
+        }
+
+        Rectangle {
+            width: 1
+            height: 32
+            anchors.verticalCenter: parent.verticalCenter
+            visible: Tray.count > 0
+            color: Qt.alpha(Theme.outlineVariant, 0.5)
+        }
+
         Repeater {
             model: Tray
 
