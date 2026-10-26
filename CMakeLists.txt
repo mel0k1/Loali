@@ -42,6 +42,7 @@ qt_add_qml_module(loali
         qml/StatusPill.qml
         qml/SettingsApp.qml
         qml/NotificationPopups.qml
+        qml/TrayMenuPanel.qml
     SOURCES
         src/apps.h
         src/apps.cpp
@@ -51,6 +52,8 @@ qt_add_qml_module(loali
         src/settings.cpp
         src/tray.h
         src/tray.cpp
+        src/dbusmenu.h
+        src/dbusmenu.cpp
         src/notifications.h
         src/notifications.cpp
         src/matcolor.h

@@ -5,6 +5,7 @@
 #include <QDBusMessage>
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
+#include <QDBusObjectPath>
 #include <QDBusServiceWatcher>
 #include <QQmlEngine>
 
@@ -50,6 +51,8 @@ QVariant Tray::data(const QModelIndex &index, int role) const
         return it.status;
     case ToolTipRole:
         return it.toolTip.isEmpty() ? it.title : it.toolTip;
+    case MenuPathRole:
+        return it.menuPath;
     default:
         return QVariant();
     }
@@ -64,12 +67,26 @@ QHash<int, QByteArray> Tray::roleNames() const
     roles[IconSerialRole] = "iconSerial";
     roles[StatusRole] = "status";
     roles[ToolTipRole] = "tooltip";
+    roles[MenuPathRole] = "menuPath";
     return roles;
 }
 
 int Tray::count() const
 {
     return m_order.size();
+}
+
+QVariantMap Tray::itemInfo(int row) const
+{
+    QVariantMap info;
+    if (row < 0 || row >= m_order.size())
+        return info;
+    const Item &it = m_items.value(m_order.at(row));
+    info.insert(QStringLiteral("uid"), m_order.at(row));
+    info.insert(QStringLiteral("bus"), it.bus);
+    info.insert(QStringLiteral("menuPath"), it.menuPath);
+    info.insert(QStringLiteral("menuService"), it.menuService.isEmpty() ? it.bus : it.menuService);
+    return info;
 }
 
 QString Tray::keyAt(int row) const
@@ -199,6 +216,25 @@ void Tray::applyProps(const QString &key, const QVariantMap &props)
     it->iconName = props.value(QStringLiteral("IconName")).toString();
     const QVariantMap tip = props.value(QStringLiteral("ToolTip")).toMap();
     it->toolTip = tip.value(QStringLiteral("title")).toString();
+    const QVariant menu = props.value(QStringLiteral("Menu"));
+    if (menu.isValid()) {
+        QString mpath;
+        QString mservice;
+        if (menu.userType() == qMetaTypeId<QDBusArgument>()) {
+            QDBusArgument arg = menu.value<QDBusArgument>();
+            arg.beginStructure();
+            QDBusObjectPath objPath;
+            arg >> objPath >> mservice;
+            arg.endStructure();
+            mpath = objPath.path();
+        } else if (menu.userType() == qMetaTypeId<QDBusObjectPath>()) {
+            mpath = menu.value<QDBusObjectPath>().path();
+        } else {
+            mpath = menu.toString();
+        }
+        it->menuPath = mpath;
+        it->menuService = mservice;
+    }
     if (it->iconName.isEmpty())
         it->icon = decodePixmap(props.value(QStringLiteral("IconPixmap")));
     else

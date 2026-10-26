@@ -81,6 +81,7 @@ Rectangle {
                 required property string iconName
                 required property int iconSerial
                 required property string status
+                required property string menuPath
                 width: 34
                 height: 44
                 opacity: status === "Passive" ? 0.55 : 1
@@ -115,9 +116,10 @@ Rectangle {
                         const w = pill.Window.window
                         const gx = (w ? w.x : 0) + p.x + 17
                         const gy = (w ? w.y : 0) + p.y + 22
-                        if (mouse.button === Qt.RightButton)
-                            Tray.contextMenu(trayItem.index, gx, gy)
-                        else if (mouse.button === Qt.MiddleButton)
+                        if (mouse.button === Qt.RightButton) {
+                            if (!(pill.shell && pill.shell.openTrayMenu(trayItem.index, p.x + 17, p.y + 56)))
+                                Tray.contextMenu(trayItem.index, gx, gy)
+                        } else if (mouse.button === Qt.MiddleButton)
                             Tray.secondaryActivate(trayItem.index, gx, gy)
                         else
                             Tray.activate(trayItem.index, gx, gy)

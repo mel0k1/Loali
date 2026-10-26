@@ -42,7 +42,8 @@ public:
         IconNameRole,
         IconSerialRole,
         StatusRole,
-        ToolTipRole
+        ToolTipRole,
+        MenuPathRole
     };
 
     static Tray *create(QQmlEngine *engine, QJSEngine *jsEngine);
@@ -58,6 +59,7 @@ public:
     Q_INVOKABLE void activate(int row, int x, int y) const;
     Q_INVOKABLE void secondaryActivate(int row, int x, int y) const;
     Q_INVOKABLE void contextMenu(int row, int x, int y) const;
+    Q_INVOKABLE QVariantMap itemInfo(int row) const;
 
     QImage iconImage(const QString &key) const;
 
@@ -80,6 +82,8 @@ private:
         QString status;
         QString iconName;
         QString toolTip;
+        QString menuPath;
+        QString menuService;
         QImage icon;
         int serial = 0;
         QDBusServiceWatcher *watcher = nullptr;

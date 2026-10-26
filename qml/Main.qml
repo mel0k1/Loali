@@ -188,6 +188,11 @@ WaylandCompositor {
         snapPreview.opacity = 0
     }
 
+    function openTrayMenu(row, x, y) {
+        launcher.open = false
+        return trayMenuPanel.openAt(row, x, y)
+    }
+
     Component.onCompleted: {
         MatColor.generateFromImage(Settings.wallpaper)
         console.info("Loali socket:", socketName === "" ? "wayland-?" : socketName)
@@ -281,6 +286,12 @@ WaylandCompositor {
                 z: 200
             }
 
+            TrayMenuPanel {
+                id: trayMenuPanel
+                shell: comp
+                z: 210
+            }
+
             NotificationPopups { }
 
             SettingsApp {
@@ -300,9 +311,11 @@ WaylandCompositor {
 
             Shortcut {
                 sequence: "Escape"
-                enabled: (launcher.open || settingsApp.open) && !comp.locked
+                enabled: (launcher.open || settingsApp.open || trayMenuPanel.openState) && !comp.locked
                 onActivated: {
-                    if (settingsApp.open)
+                    if (trayMenuPanel.openState)
+                        trayMenuPanel.close()
+                    else if (settingsApp.open)
                         settingsApp.open = false
                     else
                         launcher.open = false
