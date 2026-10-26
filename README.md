@@ -24,7 +24,14 @@
 
 **Loali** is a lightweight, expressive desktop shell for Linux. It is a real Wayland compositor written in C++ and QML on top of Qt Wayland Compositor — the same technology used by production display servers. Instead of floating windows over an empty canvas, Loali brings a familiar and friendly layout: a **dock pinned to the top**, a **taskbar along the bottom**, and **icons living right on the desktop**, all wrapped in the bold shapes, vivid tonal colors and springy motion of Material 3 Expressive.
 
-<!-- TODO: screenshots -->
+<div align="center">
+  <a href="docs/screenshots/desktop.png"><img src="docs/screenshots/desktop.png" alt="Loali desktop — dock, status pill, taskbar, windows and notifications" width="49%"/></a>
+  <a href="docs/screenshots/expo.png"><img src="docs/screenshots/expo.png" alt="Workspace overview with live window previews" width="49%"/></a>
+  <br/>
+  <a href="docs/screenshots/launcher.png"><img src="docs/screenshots/launcher.png" alt="App launcher with search" width="49%"/></a>
+  <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Settings — appearance, dynamic color and accents" width="49%"/></a>
+  <p><em>Desktop · workspace overview (Super+W) · app launcher (Super+A) · Settings (Super+S)</em></p>
+</div>
 
 ## Features
 
@@ -179,6 +186,14 @@ Loali is licensed under the [GNU GPL-3.0](LICENSE). Material Symbols path data u
 ## Русский
 
 **Loali** — лёгкая и выразительная графическая среда для Linux. Это настоящий Wayland-композитор на C++ и QML поверх Qt Wayland Compositor. Знакомая раскладка в смелом стиле Material 3 Expressive: **док сверху**, **панель задач снизу**, **иконки прямо на рабочем столе**.
+
+<div align="center">
+  <a href="docs/screenshots/desktop.png"><img src="docs/screenshots/desktop.png" alt="Рабочий стол Loali" width="49%"/></a>
+  <a href="docs/screenshots/expo.png"><img src="docs/screenshots/expo.png" alt="Экспо рабочих столов" width="49%"/></a>
+  <br/>
+  <a href="docs/screenshots/launcher.png"><img src="docs/screenshots/launcher.png" alt="Лаунчер приложений" width="49%"/></a>
+  <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Настройки — внешний вид" width="49%"/></a>
+</div>
 
 Возможности: нативный Wayland-композитор (XdgShell, серверные декорации), верхний док с закреплёнными приложениями и пружинными анимациями, статус-пилюля с переключателем рабочих столов, кнопкой экспо, системным треем и переключателем темы, нижний таскбар с кнопками окон и часами, сетка иконок на рабочем столе, лаунчер с поиском, **виртуальные рабочие столы** (2–6, переключение `Super+1…6`, перенос окон `Super+Shift+1…6`), **экспо рабочих столов** (`Super+W`) с живыми превью окон: клик по ячейке переключает стол, перетаскивание окна между ячейками переносит его между столами, **тайлинг окон** — половины и углы по `Super`-стрелкам и перетаскиванием к краям экрана с живым превью, **меню трея по DBusMenu** — правый клик по иконке трея показывает настоящее меню `com.canonical.dbusmenu` (иконки, разделители, галочки, радиокнопки, подменю), **светлая и тёмная темы** — переключение всего набора токенов M3 одним тапом, **демон уведомлений** `org.freedesktop.Notifications` — карточки M3 с действиями, критические алерты и режим «Не беспокоить», **динамический цвет Material You** — палитра генерируется из обоев (квантизатор Wu + HCT/CAM16 из material-color-utilities), интерфейс перекрашивается на лету, есть ручной акцент и подсказки обоев, **приложение «Настройки»** — обои (встроенные, свой файл, затемнение), тёмная тема, динамический и ручной акцент, число рабочих столов, уведомления, шпаргалка по клавишам, перетаскивание, изменение размера с 8 сторон, разворачивание, сворачивание, экран блокировки с большими часами, автоматический поиск приложений по `.desktop`-файлам.
 
