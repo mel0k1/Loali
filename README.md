@@ -22,23 +22,24 @@
 
 ---
 
-**Loali** is a lightweight, expressive desktop shell for Linux. It is a real Wayland compositor written in C++ and QML on top of Qt Wayland Compositor — the same technology used by production display servers. Instead of floating windows over an empty canvas, Loali brings a familiar and friendly layout: a **dock pinned to the top**, a **taskbar along the bottom**, and **icons living right on the desktop**, all wrapped in the bold shapes, vivid tonal colors and springy motion of Material 3 Expressive.
+**Loali** is a lightweight, expressive desktop shell for Linux. It is a real Wayland compositor written in C++ and QML on top of Qt Wayland Compositor — the same technology used by production display servers. Instead of floating windows over an empty canvas, Loali brings a familiar and friendly layout: a **dock up top** (a morphing Dynamic Island or a flat plane), a **taskbar at the bottom** (a streamlined floating pill or a classic full-width bar), and **icons living right on the desktop**, all wrapped in the bold shapes, vivid tonal colors and springy motion of Material 3 Expressive.
 
 <div align="center">
   <a href="docs/screenshots/desktop.png"><img src="docs/screenshots/desktop.png" alt="Loali desktop — dock, status pill, taskbar, windows and notifications" width="49%"/></a>
   <a href="docs/screenshots/expo.png"><img src="docs/screenshots/expo.png" alt="Workspace overview with live window previews" width="49%"/></a>
   <br/>
   <a href="docs/screenshots/launcher.png"><img src="docs/screenshots/launcher.png" alt="App launcher with search" width="49%"/></a>
-  <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Settings — appearance, dynamic color and accents" width="49%"/></a>
-  <p><em>Desktop · workspace overview (Super+W) · app launcher (Super+A) · Settings (Super+S)</em></p>
+  <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Settings — panels, dynamic color and accents" width="49%"/></a>
+  <p><em>Desktop · workspace overview (Super+W) · app launcher (Super+A) · Settings → Panels (Super+S)</em></p>
 </div>
 
 ## Features
 
 - **Native Wayland compositor** — Loali *is* the display server, built with the official Qt Wayland Compositor API (XdgShell, server-side decorations, popups).
-- **Top dock** — a floating pill with pinned apps, springy hover magnification, running indicators and an app grid launcher button.
+- **Top dock** — two looks: a **Dynamic Island** pill that breathes with hover and app launches (it widens, shows the launched app’s title, then tucks back), or a flat full-width plane; pinned apps, springy hover magnification and running indicators in both.
 - **Status pill** — workspace dots, a StatusNotifier system tray and a settings button, floating at the top right.
-- **Bottom taskbar** — window buttons for every open toplevel, a lock shortcut and a live clock.
+- **Bottom taskbar** — two styles: a **streamlined floating pill** that stays out of the corners and widens only when tasks overflow, or a classic full-width bar; window buttons, a lock shortcut and a live clock.
+- **Panel size control** — a single slider in Settings → Panels scales the dock, taskbar and status pill together (70–130 %), and maximized windows keep their work area in sync automatically.
 - **Desktop icons** — a grid of installed applications directly on the wallpaper, with selection and double-click launch.
 - **App launcher** — a searchable full-screen grid of installed applications.
 - **Virtual workspaces** — 2–6 independent desktops with an animated switcher in the status pill, `Super+1…6` to switch and `Super+Shift+1…6` to send windows across.
@@ -49,7 +50,7 @@
 - **Dark / light theme** — a one-tap toggle (status pill or Settings → Appearance) switches the entire M3 token set between the dark and light Material schemes, Obsidian-style; the dynamic Material You palette is regenerated for the chosen mode and persisted.
 - **Notifications daemon** — a real `org.freedesktop.Notifications` server on the session bus: summary, body, app icons and image hints render as M3 cards stacked in the corner, actions are forwarded back to the sender, critical alerts stay on screen, and Do Not Disturb lives in Settings.
 - **Dynamic Material You color** — the seed color is extracted from the wallpaper (Wu quantizer + scoring) and a full Material 3 tonal scheme is generated with Google’s `material-color-utilities` (HCT / CAM16); dock, taskbar, windows, launcher and settings all recolor live, with manual accent and wallpaper-suggested swatches as fallback.
-- **Settings application** — a built-in M3 settings app with wallpaper (bundled art, custom image path, dim overlay), accent color, workspace count, a shortcut cheat-sheet and an about page; everything persists via QSettings.
+- **Settings application** — a built-in M3 settings app with wallpaper (bundled art, custom image path, dim overlay), accent color, panels (taskbar style, dock look, panel size), workspace count, a shortcut cheat-sheet and an about page; everything persists via QSettings.
 - **Wallpapers** — a bundled default artwork plus procedural M3E gradient styles, applied to the desktop and the lock screen.
 - **Window management** — server-side title bars, drag, 8-way resize, maximize, fullscreen, minimize, click-to-focus.
 - **Lock screen** — large M3 display-style clock over a dimmed wallpaper.
@@ -138,14 +139,14 @@ Loali/
 ├── qml/
 │   ├── Main.qml              WaylandCompositor, XdgShell, workspaces, shortcuts
 │   ├── Chrome.qml            server-side decorations, drag/resize, snap/tiling
-│   ├── Dock.qml              top dock (pinned apps, indicators)
+│   ├── Dock.qml              top dock (Dynamic Island / plane modes, pinned apps)
 │   ├── StatusPill.qml        workspaces switcher, expo button, tray icons, theme toggle
 │   ├── TrayMenuPanel.qml     M3 popup renderer for DBusMenu tray menus
 │   ├── Expo.qml              workspace overview with live window previews
-│   ├── Taskbar.qml           bottom taskbar (windows, lock, clock)
+│   ├── Taskbar.qml           bottom taskbar (floating / full modes, lock, clock)
 │   ├── Desktop.qml           wallpaper + desktop icon grid
 │   ├── Launcher.qml          app grid overlay with search
-│   ├── SettingsApp.qml       settings: wallpaper, dynamic color, workspaces, notifications, about
+│   ├── SettingsApp.qml       settings: wallpaper, appearance, panels, workspaces, notifications, about
 │   ├── NotificationPopups.qml  M3 notification cards stacked top-right
 │   ├── LockScreen.qml        lock overlay with big clock
 │   ├── Wallpaper.qml         image / procedural wallpapers with dim overlay
@@ -174,6 +175,7 @@ The shell follows the reference Qt compositor pattern: `XdgShell.onToplevelCreat
 - [x] Notifications daemon
 - [x] Dark / light theme toggle
 - [x] Workspace expo with window previews
+- [x] Floating taskbar and Dynamic Island dock, panel size settings
 
 ## Contributing
 
@@ -185,17 +187,17 @@ Loali is licensed under the [GNU GPL-3.0](LICENSE). Material Symbols path data u
 
 ## Русский
 
-**Loali** — лёгкая и выразительная графическая среда для Linux. Это настоящий Wayland-композитор на C++ и QML поверх Qt Wayland Compositor. Знакомая раскладка в смелом стиле Material 3 Expressive: **док сверху**, **панель задач снизу**, **иконки прямо на рабочем столе**.
+**Loali** — лёгкая и выразительная графическая среда для Linux. Это настоящий Wayland-композитор на C++ и QML поверх Qt Wayland Compositor. Знакомая раскладка в смелом стиле Material 3 Expressive: **док сверху** (морфирующий Dynamic Island или плоская полоса), **панель задач снизу** (обтекаемая плавающая пилюля или классическая полоса во всю ширину), **иконки прямо на рабочем столе**.
 
 <div align="center">
   <a href="docs/screenshots/desktop.png"><img src="docs/screenshots/desktop.png" alt="Рабочий стол Loali" width="49%"/></a>
   <a href="docs/screenshots/expo.png"><img src="docs/screenshots/expo.png" alt="Экспо рабочих столов" width="49%"/></a>
   <br/>
   <a href="docs/screenshots/launcher.png"><img src="docs/screenshots/launcher.png" alt="Лаунчер приложений" width="49%"/></a>
-  <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Настройки — внешний вид" width="49%"/></a>
+  <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Настройки — панели" width="49%"/></a>
 </div>
 
-Возможности: нативный Wayland-композитор (XdgShell, серверные декорации), верхний док с закреплёнными приложениями и пружинными анимациями, статус-пилюля с переключателем рабочих столов, кнопкой экспо, системным треем и переключателем темы, нижний таскбар с кнопками окон и часами, сетка иконок на рабочем столе, лаунчер с поиском, **виртуальные рабочие столы** (2–6, переключение `Super+1…6`, перенос окон `Super+Shift+1…6`), **экспо рабочих столов** (`Super+W`) с живыми превью окон: клик по ячейке переключает стол, перетаскивание окна между ячейками переносит его между столами, **тайлинг окон** — половины и углы по `Super`-стрелкам и перетаскиванием к краям экрана с живым превью, **меню трея по DBusMenu** — правый клик по иконке трея показывает настоящее меню `com.canonical.dbusmenu` (иконки, разделители, галочки, радиокнопки, подменю), **drag-упорядочивание иконок трея** — порядок сохраняется между сессиями, **светлая и тёмная темы** — переключение всего набора токенов M3 одним тапом, **демон уведомлений** `org.freedesktop.Notifications` — карточки M3 с действиями, критические алерты и режим «Не беспокоить», **динамический цвет Material You** — палитра генерируется из обоев (квантизатор Wu + HCT/CAM16 из material-color-utilities), интерфейс перекрашивается на лету, есть ручной акцент и подсказки обоев, **приложение «Настройки»** — обои (встроенные, свой файл, затемнение), тёмная тема, динамический и ручной акцент, число рабочих столов, уведомления, шпаргалка по клавишам, перетаскивание, изменение размера с 8 сторон, разворачивание, сворачивание, экран блокировки с большими часами, автоматический поиск приложений по `.desktop`-файлам.
+Возможности: нативный Wayland-композитор (XdgShell, серверные декорации), верхний док с двумя видами — **Dynamic Island** (пилюля дышит при наведении и запуске приложений: расширяется, показывает название запущенного приложения и складывается обратно) и плоская полоса во всю ширину, статус-пилюля с переключателем рабочих столов, кнопкой экспо, системным треем и переключателем темы, нижний таскбар с двумя стилями — **обтекаемая плавающая пилюля**, которая не тянется по углам и расширяется только при переполнении задачами, либо классическая полоса, сетка иконок на рабочем столе, лаунчер с поиском, **настройка размера панелей** — один слайдер в Настройки → Панели масштабирует док, таскбар и статус-пилюлю (70–130 %), область разворачивания окон синхронизируется автоматически, **виртуальные рабочие столы** (2–6, переключение `Super+1…6`, перенос окон `Super+Shift+1…6`), **экспо рабочих столов** (`Super+W`) с живыми превью окон: клик по ячейке переключает стол, перетаскивание окна между ячейками переносит его между столами, **тайлинг окон** — половины и углы по `Super`-стрелкам и перетаскиванием к краям экрана с живым превью, **меню трея по DBusMenu** — правый клик по иконке трея показывает настоящее меню `com.canonical.dbusmenu` (иконки, разделители, галочки, радиокнопки, подменю), **drag-упорядочивание иконок трея** — порядок сохраняется между сессиями, **светлая и тёмная темы** — переключение всего набора токенов M3 одним тапом, **демон уведомлений** `org.freedesktop.Notifications` — карточки M3 с действиями, критические алерты и режим «Не беспокоить», **динамический цвет Material You** — палитра генерируется из обоев (квантизатор Wu + HCT/CAM16 из material-color-utilities), интерфейс перекрашивается на лету, есть ручной акцент и подсказки обоев, **приложение «Настройки»** — обои (встроенные, свой файл, затемнение), тёмная тема, динамический и ручной акцент, панели (стиль таскбара, вид дока, размер), число рабочих столов, уведомления, шпаргалка по клавишам, перетаскивание, изменение размера с 8 сторон, разворачивание, сворачивание, экран блокировки с большими часами, автоматический поиск приложений по `.desktop`-файлам.
 
 Сборка и запуск:
 
