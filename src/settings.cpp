@@ -19,6 +19,14 @@ LoaliSettings::LoaliSettings(QObject *parent)
     m_workspaces = std::clamp(m_workspaces, 2, 6);
     m_dnd = s.value(QStringLiteral("notifications/dnd"), false).toBool();
     m_dark = s.value(QStringLiteral("appearance/dark"), true).toBool();
+    m_taskbarStyle = s.value(QStringLiteral("panels/taskbarStyle"), Floating).toInt();
+    if (m_taskbarStyle != Full)
+        m_taskbarStyle = Floating;
+    m_dockMode = s.value(QStringLiteral("panels/dockMode"), Island).toInt();
+    if (m_dockMode != Plane)
+        m_dockMode = Island;
+    m_panelScale = s.value(QStringLiteral("panels/scale"), 0.9).toReal();
+    m_panelScale = std::clamp(m_panelScale, 0.7, 1.3);
 }
 
 LoaliSettings *LoaliSettings::create(QQmlEngine *engine, QJSEngine *jsEngine)
@@ -100,4 +108,39 @@ void LoaliSettings::setDnd(bool value)
     QSettings s;
     s.setValue(QStringLiteral("notifications/dnd"), value);
     emit dndChanged();
+}
+
+void LoaliSettings::setTaskbarStyle(int value)
+{
+    if (value != Floating && value != Full)
+        value = Floating;
+    if (m_taskbarStyle == value)
+        return;
+    m_taskbarStyle = value;
+    QSettings s;
+    s.setValue(QStringLiteral("panels/taskbarStyle"), value);
+    emit taskbarStyleChanged();
+}
+
+void LoaliSettings::setDockMode(int value)
+{
+    if (value != Island && value != Plane)
+        value = Island;
+    if (m_dockMode == value)
+        return;
+    m_dockMode = value;
+    QSettings s;
+    s.setValue(QStringLiteral("panels/dockMode"), value);
+    emit dockModeChanged();
+}
+
+void LoaliSettings::setPanelScale(qreal value)
+{
+    value = std::clamp(value, 0.7, 1.3);
+    if (qFuzzyCompare(m_panelScale, value))
+        return;
+    m_panelScale = value;
+    QSettings s;
+    s.setValue(QStringLiteral("panels/scale"), value);
+    emit panelScaleChanged();
 }
