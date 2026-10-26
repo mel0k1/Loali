@@ -5,6 +5,7 @@
 #include <QQuickStyle>
 
 #include "iconprovider.h"
+#include "tray.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,7 +13,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName(QStringLiteral("Loali"));
     QGuiApplication::setOrganizationName(QStringLiteral("Loali"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("0.2.0"));
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QCommandLineParser parser;
@@ -24,6 +25,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QStringLiteral("loali"), new IconProvider());
+    engine.addImageProvider(QStringLiteral("sni"), new SniImageProvider());
     engine.rootContext()->setContextProperty(QStringLiteral("fullscreenMode"),
                                              parser.isSet(fullscreenOption));
     engine.load(QUrl(QStringLiteral("qrc:/Loali/qml/Main.qml")));

@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(Loali VERSION 0.1.0 LANGUAGES CXX)
+project(Loali VERSION 0.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Quick QuickControls2 WaylandCompositor)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Quick QuickControls2 WaylandCompositor DBus)
 
 qt_standard_project_setup()
 
@@ -31,17 +31,27 @@ qt_add_qml_module(loali
         qml/Desktop.qml
         qml/Launcher.qml
         qml/LockScreen.qml
+        qml/StatusPill.qml
+        qml/SettingsApp.qml
     SOURCES
         src/apps.h
         src/apps.cpp
         src/iconprovider.h
         src/iconprovider.cpp
+        src/settings.h
+        src/settings.cpp
+        src/tray.h
+        src/tray.cpp
+    RESOURCES
+        assets/logo.svg
+        assets/wallpapers/dusk.jpg
 )
 
 target_link_libraries(loali PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::WaylandCompositor
+    Qt6::DBus
 )
 
 target_include_directories(loali PRIVATE src)
