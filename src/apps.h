@@ -15,6 +15,8 @@ class Apps : public QAbstractListModel
     QML_ELEMENT
     QML_SINGLETON
     Q_PROPERTY(QVariantList pinnedApps READ pinnedApps NOTIFY pinsChanged)
+    Q_PROPERTY(QString query READ query WRITE setQuery NOTIFY queryChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     enum Roles {
@@ -22,7 +24,8 @@ public:
         IconRole,
         ExecRole,
         IdRole,
-        CommentRole
+        CommentRole,
+        PinnedRole
     };
 
     static Apps *create(QQmlEngine *engine, QJSEngine *jsEngine);
@@ -32,16 +35,24 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     QVariantList pinnedApps() const;
+    QString query() const;
+    void setQuery(const QString &query);
+    int count() const;
 
-    Q_INVOKABLE QVariantList filterApps(const QString &query) const;
     Q_INVOKABLE void launch(int row) const;
     Q_INVOKABLE void launchById(const QString &id) const;
     Q_INVOKABLE bool isPinned(const QString &id) const;
     Q_INVOKABLE void togglePin(const QString &id);
+    Q_INVOKABLE bool isLauncherPinned(const QString &id) const;
+    Q_INVOKABLE void toggleLauncherPin(const QString &id);
+    Q_INVOKABLE void move(int from, int to);
+    Q_INVOKABLE QString firstMatch() const;
     Q_INVOKABLE QString iconForAppId(const QString &appId) const;
 
 signals:
     void pinsChanged();
+    void queryChanged();
+    void countChanged();
 
 private:
     struct Entry {
@@ -57,11 +68,19 @@ private:
 
     void scan();
     void loadPins();
+    void loadLauncherState();
+    void applyOrder();
+    void rebuildVisible();
+    void persistLauncherState();
     const Entry *find(const QString &id) const;
     void launchExec(const QString &exec) const;
     static QString normalizeId(QString id);
 
     static Apps *s_instance;
     QList<Entry> m_entries;
+    QStringList m_order;
     QStringList m_pins;
+    QStringList m_launchPins;
+    QList<int> m_visible;
+    QString m_query;
 };

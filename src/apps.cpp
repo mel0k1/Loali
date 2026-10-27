@@ -28,6 +28,9 @@ Apps::Apps(QObject *parent)
 {
     scan();
     loadPins();
+    loadLauncherState();
+    applyOrder();
+    rebuildVisible();
 }
 
 Apps *Apps::create(QQmlEngine *engine, QJSEngine *jsEngine)
@@ -41,14 +44,14 @@ Apps *Apps::create(QQmlEngine *engine, QJSEngine *jsEngine)
 
 int Apps::rowCount(const QModelIndex &parent) const
 {
-    return parent.isValid() ? 0 : m_entries.size();
+    return parent.isValid() ? 0 : m_visible.size();
 }
 
 QVariant Apps::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() < 0 || index.row() >= m_entries.size())
+    if (!index.isValid() || index.row() < 0 || index.row() >= m_visible.size())
         return QVariant();
-    const Entry &e = m_entries.at(index.row());
+    const Entry &e = m_entries.at(m_visible.at(index.row()));
     switch (role) {
     case NameRole:
         return e.name;
@@ -60,6 +63,8 @@ QVariant Apps::data(const QModelIndex &index, int role) const
         return e.id;
     case CommentRole:
         return e.comment;
+    case PinnedRole:
+        return m_launchPins.contains(e.id);
     default:
         return QVariant();
     }
@@ -73,6 +78,7 @@ QHash<int, QByteArray> Apps::roleNames() const
     roles[ExecRole] = "exec";
     roles[IdRole] = "appId";
     roles[CommentRole] = "comment";
+    roles[PinnedRole] = "pinned";
     return roles;
 }
 
@@ -160,6 +166,56 @@ void Apps::loadPins()
     }
 }
 
+void Apps::loadLauncherState()
+{
+    QSettings settings;
+    m_order = settings.value(QStringLiteral("launcher/order")).toStringList();
+    m_launchPins = settings.value(QStringLiteral("launcher/pins")).toStringList();
+}
+
+void Apps::applyOrder()
+{
+    QHash<QString, int> rank;
+    for (int i = 0; i < m_order.size(); ++i)
+        rank.insert(m_order.at(i), i);
+    std::stable_sort(m_entries.begin(), m_entries.end(), [&rank](const Entry &a, const Entry &b) {
+        const int ra = rank.value(a.id, -1);
+        const int rb = rank.value(b.id, -1);
+        if (ra >= 0 && rb >= 0)
+            return ra < rb;
+        if (ra >= 0)
+            return true;
+        if (rb >= 0)
+            return false;
+        return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
+    });
+}
+
+void Apps::rebuildVisible()
+{
+    beginResetModel();
+    m_visible.clear();
+    const QString q = m_query.trimmed();
+    for (int i = 0; i < m_entries.size(); ++i) {
+        const Entry &e = m_entries.at(i);
+        if (!q.isEmpty()
+            && !e.name.contains(q, Qt::CaseInsensitive)
+            && !e.comment.contains(q, Qt::CaseInsensitive)
+            && !e.id.contains(q, Qt::CaseInsensitive))
+            continue;
+        m_visible.append(i);
+    }
+    endResetModel();
+    emit countChanged();
+}
+
+void Apps::persistLauncherState()
+{
+    QSettings settings;
+    settings.setValue(QStringLiteral("launcher/order"), m_order);
+    settings.setValue(QStringLiteral("launcher/pins"), m_launchPins);
+}
+
 QVariantList Apps::pinnedApps() const
 {
     QVariantList res;
@@ -177,31 +233,30 @@ QVariantList Apps::pinnedApps() const
     return res;
 }
 
-QVariantList Apps::filterApps(const QString &query) const
+QString Apps::query() const
 {
-    QVariantList res;
-    const QString q = query.trimmed();
-    for (const Entry &e : m_entries) {
-        if (!q.isEmpty()
-            && !e.name.contains(q, Qt::CaseInsensitive)
-            && !e.comment.contains(q, Qt::CaseInsensitive)
-            && !e.id.contains(q, Qt::CaseInsensitive))
-            continue;
-        QVariantMap m;
-        m.insert(QStringLiteral("appId"), e.id);
-        m.insert(QStringLiteral("name"), e.name);
-        m.insert(QStringLiteral("icon"), e.icon);
-        m.insert(QStringLiteral("comment"), e.comment);
-        res.append(m);
-    }
-    return res;
+    return m_query;
+}
+
+void Apps::setQuery(const QString &query)
+{
+    if (m_query == query)
+        return;
+    m_query = query;
+    rebuildVisible();
+    emit queryChanged();
+}
+
+int Apps::count() const
+{
+    return m_visible.size();
 }
 
 void Apps::launch(int row) const
 {
-    if (row < 0 || row >= m_entries.size())
+    if (row < 0 || row >= m_visible.size())
         return;
-    launchExec(m_entries.at(row).exec);
+    launchExec(m_entries.at(m_visible.at(row)).exec);
 }
 
 void Apps::launchById(const QString &id) const
@@ -225,6 +280,53 @@ void Apps::togglePin(const QString &id)
     QSettings settings;
     settings.setValue(QStringLiteral("dock/pins"), m_pins);
     emit pinsChanged();
+}
+
+bool Apps::isLauncherPinned(const QString &id) const
+{
+    return m_launchPins.contains(id);
+}
+
+void Apps::toggleLauncherPin(const QString &id)
+{
+    if (m_launchPins.contains(id)) {
+        m_launchPins.removeAll(id);
+    } else {
+        m_launchPins.append(id);
+        m_order.removeAll(id);
+        m_order.prepend(id);
+        applyOrder();
+    }
+    persistLauncherState();
+    rebuildVisible();
+}
+
+void Apps::move(int from, int to)
+{
+    const int n = m_visible.size();
+    if (from < 0 || to < 0 || from >= n || to >= n || from == to)
+        return;
+    if (!m_query.trimmed().isEmpty())
+        return;
+    const int src = m_visible.at(from);
+    const int dst = m_visible.at(to);
+    beginMoveRows(QModelIndex(), from, from, QModelIndex(), to > from ? to + 1 : to);
+    m_entries.move(src, dst);
+    endMoveRows();
+    m_order.clear();
+    for (const Entry &e : m_entries)
+        m_order.append(e.id);
+    m_visible.clear();
+    for (int i = 0; i < m_entries.size(); ++i)
+        m_visible.append(i);
+    persistLauncherState();
+}
+
+QString Apps::firstMatch() const
+{
+    if (m_visible.isEmpty())
+        return QString();
+    return m_entries.at(m_visible.first()).id;
 }
 
 QString Apps::iconForAppId(const QString &appId) const

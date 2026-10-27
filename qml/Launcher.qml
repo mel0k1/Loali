@@ -14,12 +14,23 @@ Item {
     enabled: open
     Behavior on opacity { NumberAnimation { duration: 180 } }
 
-    function filtered() {
-        return Apps.filterApps(field.text)
-    }
-
     function runningFor(appId) {
         return shell ? shell.windowsForApp(appId).length > 0 : false
+    }
+
+    function activate(appId) {
+        if (launcher.runningFor(appId) && launcher.shell) {
+            const wins = launcher.shell.windowsForApp(appId)
+            if (wins.length > 0) {
+                launcher.shell.activate(wins[0])
+                launcher.open = false
+                field.text = ""
+                return
+            }
+        }
+        Apps.launchById(appId)
+        launcher.open = false
+        field.text = ""
     }
 
     Rectangle {
@@ -57,7 +68,7 @@ Item {
         Column {
             anchors.fill: parent
             anchors.margins: 20
-            spacing: 14
+            spacing: 10
 
             Rectangle {
                 width: parent.width
@@ -88,12 +99,12 @@ Item {
                         placeholderTextColor: Theme.onSurfaceVariant
                         font.pixelSize: 15
                         background: null
+                        onTextChanged: Apps.query = field.text
                         onAccepted: {
-                            const list = launcher.filtered()
-                            if (list.length > 0) {
-                                Apps.launchById(list[0].appId)
-                                launcher.open = false
-                                field.text = ""
+                            const id = Apps.firstMatch()
+                            if (id !== "") {
+                                launcher.activate(id)
+                                Apps.query = ""
                             }
                         }
                     }
@@ -103,43 +114,109 @@ Item {
             GridView {
                 id: appsGrid
                 width: parent.width
-                height: parent.height - 66
+                height: parent.height - 88
                 clip: true
                 readonly property int columns: Math.max(4, Math.floor(width / 120))
                 cellWidth: Math.floor(width / columns)
-                cellHeight: 120
-                model: Apps.filterApps(field.text)
+                cellHeight: 116
+                model: Apps
                 boundsBehavior: Flickable.StopAtBounds
+                readonly property bool canDrag: Apps.query === ""
+
+                move: Transition {
+                    NumberAnimation { properties: "x,y"; duration: 220; easing.type: Easing.OutCubic }
+                }
+                moveDisplaced: Transition {
+                    NumberAnimation { properties: "x,y"; duration: 220; easing.type: Easing.OutCubic }
+                }
+
+                Rectangle {
+                    id: dragGhost
+                    parent: appsGrid.contentItem
+                    visible: appsGrid.dragActive
+                    z: 999
+                    width: 64
+                    height: 64
+                    radius: 16
+                    color: Theme.surfaceContainerHighest
+                    border.width: 1
+                    border.color: Qt.alpha(Theme.primary, 0.5)
+                    opacity: 0.96
+                    Image {
+                        anchors.centerIn: parent
+                        width: 44
+                        height: 44
+                        source: appsGrid.dragIcon
+                        sourceSize: Qt.size(88, 88)
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                    }
+                }
+
+                function startDrag(i, icon) {
+                    dragIndex = i
+                    dragIcon = "image://loali/" + icon
+                    dragActive = true
+                }
+
+                function updateDrag(x, y) {
+                    const rows = Math.max(1, Math.ceil(count / columns))
+                    const col = Math.max(0, Math.min(columns - 1, Math.floor(x / cellWidth)))
+                    const row = Math.max(0, Math.min(rows - 1, Math.floor(y / cellHeight)))
+                    const target = Math.min(count - 1, row * columns + col)
+                    if (target !== dragIndex && dragIndex >= 0) {
+                        Apps.move(dragIndex, target)
+                        dragIndex = target
+                    }
+                    dragGhost.x = x - 32
+                    dragGhost.y = y - 32
+                }
+
+                function endDrag() {
+                    dragActive = false
+                    dragIndex = -1
+                }
+
+                property bool dragActive: false
+                property int dragIndex: -1
+                property string dragIcon: ""
 
                 delegate: Item {
                     id: appCell
-                    required property var modelData
+                    required property int index
+                    required property string name
+                    required property string appId
+                    required property string icon
+                    required property bool pinned
                     width: appsGrid.cellWidth
                     height: appsGrid.cellHeight
-                    readonly property bool running: launcher.runningFor(appCell.modelData.appId)
-                    scale: press.pressed ? 0.94 : 1
+                    readonly property bool running: launcher.runningFor(appCell.appId)
+                    readonly property bool dragging: appsGrid.dragActive && appsGrid.dragIndex === appCell.index
+                    scale: press.pressed && !appCell.dragging ? 0.94 : 1
+                    opacity: appCell.dragging ? 0.25 : 1
                     Behavior on scale {
                         NumberAnimation {
                             duration: 160
                             easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized }
                         }
                     }
+                    Behavior on opacity { NumberAnimation { duration: 120 } }
 
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 4
                         radius: 20
-                        color: press.containsMouse ? Qt.alpha(Theme.onSurface, 0.08) : "transparent"
+                        color: press.containsMouse || appCell.dragging ? Qt.alpha(Theme.onSurface, 0.08) : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
 
                     Image {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
-                        anchors.topMargin: 18
+                        anchors.topMargin: 14
                         width: 56
                         height: 56
-                        source: "image://loali/" + appCell.modelData.icon
+                        source: "image://loali/" + appCell.icon
                         sourceSize: Qt.size(112, 112)
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
@@ -150,7 +227,7 @@ Item {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: appCell.running ? 20 : 16
                         width: parent.width - 16
-                        text: appCell.modelData.name
+                        text: appCell.name
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
                         color: appCell.running ? Theme.primary : Theme.onSurface
@@ -171,24 +248,74 @@ Item {
                         Behavior on opacity { NumberAnimation { duration: 150 } }
                     }
 
+                    Rectangle {
+                        id: pinChip
+                        anchors.top: parent.top
+                        anchors.topMargin: 7
+                        anchors.right: parent.right
+                        anchors.rightMargin: 7
+                        width: 20
+                        height: 20
+                        radius: 10
+                        color: Theme.surfaceContainerHighest
+                        border.width: 1
+                        border.color: appCell.pinned ? Theme.primary : Qt.alpha(Theme.outlineVariant, 0.7)
+                        opacity: appCell.pinned ? 1 : (press.containsMouse && appsGrid.canDrag ? 0.85 : 0)
+                        scale: appCell.pinned ? 1 : 0.8
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
+                        MIcon {
+                            anchors.centerIn: parent
+                            width: 12
+                            height: 12
+                            path: Theme.iconPin
+                            color: appCell.pinned ? Theme.primary : Theme.onSurfaceVariant
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Apps.toggleLauncherPin(appCell.appId)
+                        }
+                    }
+
                     MouseArea {
                         id: press
                         anchors.fill: parent
                         hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (appCell.running && launcher.shell) {
-                                const wins = launcher.shell.windowsForApp(appCell.modelData.appId)
-                                if (wins.length > 0) {
-                                    launcher.shell.activate(wins[0])
-                                    launcher.open = false
-                                    field.text = ""
-                                    return
-                                }
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        cursorShape: appCell.dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+                        property point pressPos
+                        property bool moved: false
+                        onPressed: (mouse) => {
+                            if (mouse.button === Qt.RightButton) {
+                                Apps.toggleLauncherPin(appCell.appId)
+                                return
                             }
-                            Apps.launchById(appCell.modelData.appId)
-                            launcher.open = false
-                            field.text = ""
+                            moved = false
+                            pressPos = Qt.point(mouse.x, mouse.y)
+                        }
+                        onPositionChanged: (mouse) => {
+                            if (!press.pressed || !(press.pressedButtons & Qt.LeftButton))
+                                return
+                            const dx = mouse.x - pressPos.x
+                            const dy = mouse.y - pressPos.y
+                            if (!appsGrid.dragActive && appsGrid.canDrag && dx * dx + dy * dy > 100) {
+                                moved = true
+                                appsGrid.startDrag(appCell.index, appCell.icon)
+                                appsGrid.updateDrag(appCell.x + mouse.x, appCell.y + mouse.y)
+                            }
+                            if (appsGrid.dragActive)
+                                appsGrid.updateDrag(appCell.x + mouse.x, appCell.y + mouse.y)
+                        }
+                        onReleased: {
+                            if (appsGrid.dragActive)
+                                appsGrid.endDrag()
+                            else if (!moved)
+                                launcher.activate(appCell.appId)
+                        }
+                        onCanceled: {
+                            if (appsGrid.dragActive)
+                                appsGrid.endDrag()
                         }
                     }
                 }
@@ -207,6 +334,17 @@ Item {
                     anchors.bottom: parent.bottom
                 }
             }
+        }
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 8
+            visible: appsGrid.count > 0 && appsGrid.canDrag
+            text: qsTr("Drag to reorder, click the pin to keep apps on top")
+            color: Theme.onSurfaceVariant
+            opacity: 0.7
+            font.pixelSize: 11
         }
     }
 }
