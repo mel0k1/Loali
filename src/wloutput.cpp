@@ -2,6 +2,7 @@
 
 #include <QWaylandCompositor>
 #include <QWaylandOutput>
+#include <QWindow>
 #include <algorithm>
 #include <wayland-server-protocol.h>
 
