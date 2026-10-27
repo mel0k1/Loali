@@ -9,7 +9,7 @@
 #include <QtWaylandCompositor/QWaylandOutput>
 #include <QtWaylandCompositor/QWaylandQuickExtension>
 
-#include "qwaylandserver-wlr-screencopy-unstable-v1.h"
+#include "qwayland-server-wlr-screencopy-unstable-v1.h"
 
 class QQuickWindow;
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(Loali VERSION 0.5.0 LANGUAGES CXX)
+project(Loali VERSION 0.6.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -80,10 +80,10 @@ target_link_libraries(loali PRIVATE
 target_include_directories(loali PRIVATE src src/mat ${CMAKE_CURRENT_BINARY_DIR})
 
 qt6_generate_wayland_protocol_server_sources(loali
-    FILE ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-output-unstable-v1.xml
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-output-unstable-v1.xml
 )
 qt6_generate_wayland_protocol_server_sources(loali
-    FILE ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-screencopy-unstable-v1.xml
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-screencopy-unstable-v1.xml
 )
 
 find_package(PkgConfig QUIET)

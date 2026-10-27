@@ -7,7 +7,7 @@
 #include <QtWaylandCompositor/QWaylandOutput>
 #include <QtWaylandCompositor/QWaylandQuickExtension>
 
-#include "qwaylandserver-xdg-output-unstable-v1.h"
+#include "qwayland-server-xdg-output-unstable-v1.h"
 
 class XdgOutput : public QObject, public QtWaylandServer::zxdg_output_v1
 {
