@@ -127,7 +127,7 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_LAYER_SHELL_XML} ${LOALI_LAYER_CLIENT_C}
         DEPENDS ${LOALI_LAYER_SHELL_XML}
     )
-    add_executable(lolayer tools/lolayer.c ${LOALI_LAYER_CLIENT_C})
+    add_executable(lolayer tools/lolayer.c tools/lolayer_iface.c ${LOALI_LAYER_CLIENT_C})
     target_include_directories(lolayer PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(lolayer PRIVATE PkgConfig::WAYLAND_CLIENT)
     install(TARGETS lolayer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
