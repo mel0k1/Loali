@@ -13,17 +13,17 @@
 
 #include "layer-shell-client-protocol.h"
 
-static wl_compositor *g_compositor = NULL;
-static wl_shm *g_shm = NULL;
-static wl_output *g_output = NULL;
-static zwlr_layer_shell_v1 *g_layerShell = NULL;
+static struct wl_compositor *g_compositor = NULL;
+static struct wl_shm *g_shm = NULL;
+static struct wl_output *g_output = NULL;
+static struct zwlr_layer_shell_v1 *g_layerShell = NULL;
 
 static bool g_configured = false;
 static bool g_running = true;
 static uint32_t g_confWidth = 0;
 static uint32_t g_confHeight = 0;
 
-static void registryAdd(void *data, wl_registry *reg, uint32_t name, const char *iface,
+static void registryAdd(void *data, struct wl_registry *reg, uint32_t name, const char *iface,
                         uint32_t version)
 {
     (void)data;
@@ -40,16 +40,16 @@ static void registryAdd(void *data, wl_registry *reg, uint32_t name, const char 
     }
 }
 
-static void registryRemove(void *data, wl_registry *reg, uint32_t name)
+static void registryRemove(void *data, struct wl_registry *reg, uint32_t name)
 {
     (void)data;
     (void)reg;
     (void)name;
 }
 
-static const wl_registry_listener g_registryListener = { registryAdd, registryRemove };
+static const struct wl_registry_listener g_registryListener = { registryAdd, registryRemove };
 
-static void layerConfigure(void *data, zwlr_layer_surface_v1 *surf, uint32_t serial, uint32_t w,
+static void layerConfigure(void *data, struct zwlr_layer_surface_v1 *surf, uint32_t serial, uint32_t w,
                            uint32_t h)
 {
     (void)data;
@@ -59,14 +59,14 @@ static void layerConfigure(void *data, zwlr_layer_surface_v1 *surf, uint32_t ser
     g_configured = true;
 }
 
-static void layerClosed(void *data, zwlr_layer_surface_v1 *surf)
+static void layerClosed(void *data, struct zwlr_layer_surface_v1 *surf)
 {
     (void)data;
     (void)surf;
     g_running = false;
 }
 
-static const zwlr_layer_surface_v1_listener g_layerListener = { layerConfigure, layerClosed };
+static const struct zwlr_layer_surface_v1_listener g_layerListener = { layerConfigure, layerClosed };
 
 static uint32_t blend(uint32_t a, uint32_t b, int t, int maxT)
 {
@@ -125,12 +125,12 @@ int main(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
-    wl_display *display = wl_display_connect(NULL);
+    struct wl_display *display = wl_display_connect(NULL);
     if (!display) {
         fprintf(stderr, "lolayer: cannot connect to display\n");
         return 1;
     }
-    wl_registry *registry = wl_display_get_registry(display);
+    struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &g_registryListener, NULL);
     wl_display_roundtrip(display);
     wl_display_roundtrip(display);
@@ -141,8 +141,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    wl_surface *surface = wl_compositor_create_surface(g_compositor);
-    zwlr_layer_surface_v1 *lsurf = zwlr_layer_shell_v1_get_layer_surface(
+    struct wl_surface *surface = wl_compositor_create_surface(g_compositor);
+    struct zwlr_layer_surface_v1 *lsurf = zwlr_layer_shell_v1_get_layer_surface(
         g_layerShell, surface, g_output, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "loali-panel");
     zwlr_layer_surface_v1_add_listener(lsurf, &g_layerListener, NULL);
     zwlr_layer_surface_v1_set_anchor(lsurf, ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
@@ -188,9 +188,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    wl_shm_pool *pool = wl_shm_create_pool(g_shm, fd, (int32_t)size);
-    wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, (int32_t)w, (int32_t)h, (int32_t)stride,
-                                                  WL_SHM_FORMAT_ARGB8888);
+    struct wl_shm_pool *pool = wl_shm_create_pool(g_shm, fd, (int32_t)size);
+    struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, (int32_t)w, (int32_t)h, (int32_t)stride,
+                                                         WL_SHM_FORMAT_ARGB8888);
     drawPanel(map, w, h);
     munmap(map, size);
 

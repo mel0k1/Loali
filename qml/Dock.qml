@@ -190,13 +190,17 @@ Rectangle {
             SpringAnimation { spring: 5; mass: 0.55; damping: 0.35 }
         }
         Rectangle {
+            id: btnBg
             anchors.centerIn: parent
             width: Theme.sz(38)
             height: Theme.sz(38)
-            radius: width / 2
+            radius: (ma.containsMouse || btn.engaged) ? width / 2 : width / 4
             color: btn.engaged ? Theme.primary
                  : ma.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.1)
                  : "transparent"
+            Behavior on radius {
+                NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
+            }
             Behavior on color { ColorAnimation { duration: 150 } }
         }
         MIcon {
