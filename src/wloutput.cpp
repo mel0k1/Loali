@@ -53,11 +53,13 @@ void WlOutputFix::outputBind(wl_client *client, void *userData, uint32_t version
 
 bool WlOutputFix::globalFilter(const wl_client *client, const wl_global *global, void *data)
 {
-    Q_UNUSED(client)
     auto *self = static_cast<WlOutputFix *>(data);
-    if (wl_global_get_interface(global) == &wl_output_interface && global != self->m_global)
-        return false;
-    return true;
+    const struct wl_interface *iface = wl_global_get_interface(global);
+    const bool foreign = iface == &wl_output_interface && global != self->m_global;
+    if (foreign)
+        qInfo() << "WlOutputFix: filtering out foreign wl_output global" << global
+                << "for new client" << client;
+    return !foreign;
 }
 
 WlOutputFix::WlOutputFix(QObject *parent)
