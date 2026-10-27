@@ -62,8 +62,9 @@ run_shot() {
         if [ "$SHOT_TOOL" = "grim" ]; then
             socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
             echo "grim: WAYLAND_DISPLAY=${socket:-wayland-0}"
-            WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= grim "$OUT" >build/shots/grim.log 2>&1 || status=1
-            cat build/shots/grim.log || true
+            WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= WAYLAND_DEBUG=1 grim "$OUT" >build/shots/grim.log 2>&1 || status=1
+            echo "--- grim.log summary ---"
+            grep -E "global@|wl_registry@|bind|wl_output@" build/shots/grim.log | head -40 || true
             kill $comp 2>/dev/null || true
             wait $comp 2>/dev/null || true
         else
