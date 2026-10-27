@@ -62,7 +62,7 @@ WaylandCompositor {
         activeWin = c
         if (!c.minimized)
             c.z = ++zTop
-        defaultSeat.setKeyboardFocus(c.content.surface)
+        defaultSeat.setKeyboardFocus(c.surface)
     }
 
     function deactivateAll() {
@@ -672,6 +672,11 @@ WaylandCompositor {
     XdgOutputManager { }
 
     ScreencopyManager { }
+
+    WlOutputFix {
+        compositor: comp
+        Component.onCompleted: apply()
+    }
 
     Component {
         id: chromeComponent

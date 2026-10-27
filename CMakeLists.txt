@@ -63,6 +63,8 @@ qt_add_qml_module(loali
         src/matcolor.cpp
         src/screencopy.h
         src/screencopy.cpp
+        src/wloutput.h
+        src/wloutput.cpp
         src/xdgoutput.h
         src/xdgoutput.cpp
     RESOURCES

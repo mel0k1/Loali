@@ -17,6 +17,7 @@
 #include "screencopy.h"
 #include "settings.h"
 #include "tray.h"
+#include "wloutput.h"
 #include "xdgoutput.h"
 
 #include <QQuickWindow>
@@ -122,6 +123,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<ScreencopyManagerQuickExtension>("Loali", 1, 0, "ScreencopyManager");
     qmlRegisterType<XdgOutputManagerQuickExtension>("Loali", 1, 0, "XdgOutputManager");
     qmlRegisterType<DesktopModel>("Loali", 1, 0, "DesktopModel");
+    qmlRegisterType<WlOutputFix>("Loali", 1, 0, "WlOutputFix");
 
     applyUiFont();
     Apps::create(nullptr, nullptr);
