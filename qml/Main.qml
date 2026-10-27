@@ -345,6 +345,7 @@ WaylandCompositor {
 
             Launcher {
                 id: launcher
+                shell: comp
                 z: 200
             }
 
