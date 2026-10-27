@@ -29,10 +29,8 @@ jobs:
           for p in $(apt-cache pkgnames qml6-module-qtwayland); do
             sudo apt-get install -y "$p" || true
           done
-          test -x /usr/lib/qt6/bin/qtwaylandscanner || sudo apt-get install -y qt6-wayland-dev-tools
-          /usr/lib/qt6/bin/qtwaylandscanner --version || true
-          ls /usr/lib/qt6/qml/QtWayland 2>/dev/null || true
-          test -d /usr/lib/qt6/qml/QtWayland/Compositor || { echo "FATAL: QtWayland.Compositor QML missing"; exit 1; }
+          test -x /usr/lib/qt6/bin/qtwaylandscanner || test -x /usr/lib/qt6/libexec/qtwaylandscanner || true
+          dpkg -L qml6-module-qtwayland-compositor | grep -m1 "QtWayland/Compositor$" || { echo "FATAL: QtWayland.Compositor QML missing"; exit 1; }
 
       - name: lint
         continue-on-error: true
