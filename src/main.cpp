@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<XdgOutputManagerQuickExtension>("Loali", 1, 0, "XdgOutputManager");
     qmlRegisterType<DesktopModel>("Loali", 1, 0, "DesktopModel");
     qmlRegisterType<WlOutputFix>("Loali", 1, 0, "WlOutputFix");
-    qmlRegisterType<LayerShell>("Loali", 1, 0, "LayerShell");
+    qmlRegisterType<LayerShellQuickExtension>("Loali", 1, 0, "LayerShell");
     qmlRegisterType<LayerSurface>("Loali", 1, 0, "LayerSurface");
 
     applyUiFont();
