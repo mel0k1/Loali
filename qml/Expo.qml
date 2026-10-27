@@ -131,6 +131,20 @@ Item {
         }
     }
 
+    Connections {
+        target: shell ? shell.windows : null
+        function onCountChanged() {
+            if (!expo.active || !winLayer)
+                return
+            for (let k = 0; k < shell.windows.count; ++k) {
+                const w = shell.windows.get(k).win
+                const h = holderOf(w.ws)
+                if (h && w.parent !== h)
+                    w.parent = h
+            }
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Theme.scrim
