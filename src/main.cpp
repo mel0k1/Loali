@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName(QStringLiteral("Loali"));
     QGuiApplication::setOrganizationName(QStringLiteral("Loali"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("0.4.0"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("0.5.0"));
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QCommandLineParser parser;
