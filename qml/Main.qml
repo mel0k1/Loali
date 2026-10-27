@@ -266,11 +266,6 @@ WaylandCompositor {
         if (demoTimer.mode !== "")
             demoTimer.restart()
         console.info("Loali socket:", socketName === "" ? "wayland-?" : socketName)
-        console.info("DBG colors:", "dark=" + Settings.dark,
-                     "scheme=" + (Theme.scheme === null ? "null" : "obj"),
-                     "onSurface=" + Theme.onSurface,
-                     "textOnSurface=" + Theme.textOnSurface,
-                     "fbTextOn=" + Theme.fb.textOn)
     }
 
     Timer {
