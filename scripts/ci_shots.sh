@@ -29,7 +29,8 @@ run_shot() {
     pkill -f build/lodemo 2>/dev/null || true
     DEMO_ARGS="$demo" EXTRA_ARGS="$extra" DEMO_CLIENTS="$4" OUT="$out" SHOT_TOOL="$SHOT_TOOL" dbus-run-session -- sh -c '
         if [ "$SHOT_TOOL" = "grim" ]; then
-            ./build/loali $DEMO_ARGS $EXTRA_ARGS >build/shots/loali.log 2>&1 &
+            gdb -q -batch -ex run -ex "echo === BACKTRACE ===" -ex "thread apply all bt 20" \
+                --args ./build/loali $DEMO_ARGS $EXTRA_ARGS >build/shots/loali.log 2>&1 &
         else
             ./build/loali $DEMO_ARGS $EXTRA_ARGS --screenshot "$OUT" --screenshot-delay 8000 >build/shots/loali.log 2>&1 &
         fi
