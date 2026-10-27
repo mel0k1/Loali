@@ -32,11 +32,15 @@ run_shot() {
         echo "--- loali.log ---"
         tail -6 build/shots/loali.log || true
         if [ "$DEMO_CLIENTS" = "1" ]; then
-            ./build/lodemo -t Files -c "#7C4DFF" -m "Browsing files" >/dev/null 2>&1 &
-            ./build/lodemo -t Terminal -c "#2E7D32" -m "native capture" >/dev/null 2>&1 &
+            socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
+            WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
+                ./build/lodemo -t Files -c "#7C4DFF" -m "native capture" >build/shots/lodemo1.log 2>&1 &
+            WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
+                ./build/lodemo -t Terminal -c "#2E7D32" -m "wl_shm client" >build/shots/lodemo2.log 2>&1 &
         fi
         wait $comp
         status=$?
+        head -4 build/shots/lodemo1.log 2>/dev/null || true
         if [ -f "$OUT" ]; then
             echo "saved: $OUT"
         else
