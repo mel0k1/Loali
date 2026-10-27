@@ -492,6 +492,78 @@ Item {
             }
 
             SectionLabel {
+                visible: Settings.autoAccent
+                text: qsTr("Wallpaper style")
+            }
+
+            Flow {
+                visible: Settings.autoAccent
+                spacing: 10
+                width: Math.min(560, parent.width)
+
+                Repeater {
+                    model: [
+                        { v: Settings.TonalSpot, n: qsTr("Tonal spot") },
+                        { v: Settings.Vibrant, n: qsTr("Vibrant") },
+                        { v: Settings.Expressive, n: qsTr("Expressive") },
+                        { v: Settings.Content, n: qsTr("Content") },
+                        { v: Settings.FruitSalad, n: qsTr("Fruit salad") },
+                        { v: Settings.Rainbow, n: qsTr("Rainbow") },
+                        { v: Settings.Monochrome, n: qsTr("Monochrome") }
+                    ]
+
+                    delegate: Rectangle {
+                        id: styleChip
+                        required property var modelData
+                        width: styleLbl.width + 24
+                        height: 34
+                        radius: 17
+                        readonly property bool on: Settings.colorStyle === styleChip.modelData.v
+                        color: styleChip.on ? Theme.secondaryContainer
+                                            : styleMa.containsMouse ? Theme.surfaceContainerHighest
+                                            : Theme.surfaceContainerHigh
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            id: styleLbl
+                            anchors.centerIn: parent
+                            text: styleChip.modelData.n
+                            font.pixelSize: 13
+                            font.weight: styleChip.on ? Font.Medium : Font.Normal
+                            color: styleChip.on ? Theme.onSecondaryContainer : Theme.onSurface
+                        }
+
+                        MouseArea {
+                            id: styleMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: Settings.colorStyle = styleChip.modelData.v
+                        }
+                    }
+                }
+            }
+
+            SettingRow {
+                Layout.fillWidth: true
+                visible: Settings.autoAccent
+                title: qsTr("Contrast")
+                subtitle: qsTr("Material You contrast level, from muted (-1) to high (1)")
+                control: Slider {
+                    width: 260
+                    from: -1
+                    to: 1
+                    stepSize: 0.25
+                    value: Settings.contrast
+                    onMoved: Settings.contrast = value
+                }
+            }
+
+            SectionLabel {
+                visible: Settings.autoAccent
+                text: qsTr("Contrast: %1").arg(Settings.contrast > 0 ? "+" + Settings.contrast : "" + Settings.contrast)
+            }
+
+            SectionLabel {
                 visible: Settings.autoAccent && MatColor.suggested.length > 0
                 text: qsTr("Suggested from wallpaper")
             }
