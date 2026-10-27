@@ -62,14 +62,14 @@ WaylandCompositor {
         activeWin = c
         if (!c.minimized)
             c.z = ++zTop
-        defaultSeat.setKeyboardFocus(c.surface)
+        Util.focus(defaultSeat, c.surface)
     }
 
     function deactivateAll() {
         for (let i = 0; i < windows.count; ++i)
             windows.get(i).win.active = false
         activeWin = null
-        defaultSeat.setKeyboardFocus(null)
+        Util.focus(defaultSeat, null)
     }
 
     function topMost() {
@@ -95,7 +95,7 @@ WaylandCompositor {
         if (c.active) {
             c.active = false
             activeWin = null
-            defaultSeat.setKeyboardFocus(null)
+            Util.focus(defaultSeat, null)
         }
     }
 
@@ -134,7 +134,7 @@ WaylandCompositor {
         if (c.active) {
             c.active = false
             activeWin = null
-            defaultSeat.setKeyboardFocus(null)
+            Util.focus(defaultSeat, null)
             const t = topMost()
             if (t)
                 activate(t)

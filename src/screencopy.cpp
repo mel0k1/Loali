@@ -11,6 +11,7 @@ ScreencopyFrame::ScreencopyFrame(wl_client *client, uint32_t id, uint32_t versio
                                  const QRect &region, bool withDamage)
     : m_output(output)
     , m_region(region)
+    , m_version(version)
     , m_withDamage(withDamage)
 {
     const QList<QWindow *> windows = QGuiApplication::topLevelWindows();
@@ -46,7 +47,8 @@ void ScreencopyFrame::announce()
         return;
     }
     send_buffer(0, uint32_t(rect.width()), uint32_t(rect.height()), uint32_t(rect.width() * 4));
-    send_buffer_done();
+    if (m_version >= 3)
+        send_buffer_done();
 }
 
 QImage ScreencopyFrame::grab() const
@@ -136,6 +138,11 @@ void ScreencopyManager::capture(Resource *resource, uint32_t id, ::wl_resource *
                                 bool withDamage)
 {
     QWaylandOutput *out = QWaylandOutput::fromResource(output);
+    if (!out) {
+        auto *comp = qobject_cast<QWaylandCompositor *>(extensionContainer());
+        if (comp)
+            out = comp->defaultOutput();
+    }
     if (!out)
         return;
     new ScreencopyFrame(resource->client(), id, uint32_t(wl_resource_get_version(resource->handle)), out, region,

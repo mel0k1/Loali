@@ -14,7 +14,8 @@ XdgOutput::XdgOutput(wl_client *client, uint32_t id, uint32_t version, QWaylandO
         send_name(name);
         send_description(QStringLiteral("Loali compositor output"));
     }
-    send_done();
+    if (version < 3)
+        send_done();
 }
 
 void XdgOutput::zxdg_output_v1_destroy_resource(Resource *resource)
@@ -41,6 +42,11 @@ void XdgOutputManager::initialize()
 void XdgOutputManager::zxdg_output_manager_v1_get_xdg_output(Resource *resource, uint32_t id, ::wl_resource *output)
 {
     QWaylandOutput *out = QWaylandOutput::fromResource(output);
+    if (!out) {
+        auto *comp = qobject_cast<QWaylandCompositor *>(extensionContainer());
+        if (comp)
+            out = comp->defaultOutput();
+    }
     if (!out)
         return;
     new XdgOutput(resource->client(), id, uint32_t(wl_resource_get_version(resource->handle)), out);

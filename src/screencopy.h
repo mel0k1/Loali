@@ -35,6 +35,7 @@ private:
     QPointer<QWaylandOutput> m_output;
     QQuickWindow *m_window = nullptr;
     QRect m_region;
+    uint32_t m_version = 3;
     bool m_withDamage = false;
     bool m_copied = false;
 };

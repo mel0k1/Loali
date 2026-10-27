@@ -104,4 +104,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: screenshots-grim
-          path: build/shots/*.png
+          path: build/shots/
+          if-no-files-found: warn

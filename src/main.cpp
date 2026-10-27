@@ -17,6 +17,7 @@
 #include "screencopy.h"
 #include "settings.h"
 #include "tray.h"
+#include "util.h"
 #include "wloutput.h"
 #include "xdgoutput.h"
 
@@ -119,6 +120,8 @@ int main(int argc, char *argv[])
                                        [](QQmlEngine *e, QJSEngine *j) -> QObject * { return MatColor::create(e, j); });
     qmlRegisterSingletonType<Notifications>("Loali", 1, 0, "Notifications",
                                             [](QQmlEngine *e, QJSEngine *j) -> QObject * { return Notifications::create(e, j); });
+    qmlRegisterSingletonType<LoaliUtil>("Loali", 1, 0, "Util",
+                                        [](QQmlEngine *e, QJSEngine *j) -> QObject * { return LoaliUtil::create(e, j); });
     qmlRegisterType<TrayMenu>("Loali", 1, 0, "TrayMenu");
     qmlRegisterType<ScreencopyManagerQuickExtension>("Loali", 1, 0, "ScreencopyManager");
     qmlRegisterType<XdgOutputManagerQuickExtension>("Loali", 1, 0, "XdgOutputManager");
