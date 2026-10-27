@@ -294,7 +294,7 @@
         See the documentation of xdg_popup for more details about what an
         xdg_popup is and how it is used.
       </description>
-      <arg name="popup" type="object" interface="xdg_popup"/>
+      <arg name="popup" type="object"/>
     </request>
 
     <request name="ack_configure">
