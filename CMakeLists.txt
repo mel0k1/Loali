@@ -44,6 +44,7 @@ qt_add_qml_module(loali
         qml/NotificationPopups.qml
         qml/TrayMenuPanel.qml
         qml/Expo.qml
+        qml/LayerChrome.qml
     SOURCES
         src/apps.h
         src/apps.cpp
@@ -51,6 +52,8 @@ qt_add_qml_module(loali
         src/desktopmodel.cpp
         src/iconprovider.h
         src/iconprovider.cpp
+        src/layershell.h
+        src/layershell.cpp
         src/settings.h
         src/settings.cpp
         src/tray.h
@@ -90,6 +93,9 @@ qt6_generate_wayland_protocol_server_sources(loali
 qt6_generate_wayland_protocol_server_sources(loali
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-screencopy-unstable-v1.xml
 )
+qt6_generate_wayland_protocol_server_sources(loali
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-layer-shell-unstable-v1.xml
+)
 
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
@@ -108,6 +114,26 @@ target_link_libraries(lodemo PRIVATE
     Qt6::Quick
     Qt6::Gui
 )
+
+find_program(WAYLAND_SCANNER_EXE wayland-scanner)
+pkg_check_modules(WAYLAND_CLIENT IMPORTED_TARGET wayland-client)
+if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
+    set(LOALI_LAYER_SHELL_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-layer-shell-unstable-v1.xml)
+    set(LOALI_LAYER_CLIENT_H ${CMAKE_CURRENT_BINARY_DIR}/layer-shell-client-protocol.h)
+    set(LOALI_LAYER_CLIENT_C ${CMAKE_CURRENT_BINARY_DIR}/layer-shell-protocol.c)
+    add_custom_command(
+        OUTPUT ${LOALI_LAYER_CLIENT_H} ${LOALI_LAYER_CLIENT_C}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_LAYER_SHELL_XML} ${LOALI_LAYER_CLIENT_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_LAYER_SHELL_XML} ${LOALI_LAYER_CLIENT_C}
+        DEPENDS ${LOALI_LAYER_SHELL_XML}
+    )
+    add_executable(lolayer tools/lolayer.cpp ${LOALI_LAYER_CLIENT_C})
+    target_include_directories(lolayer PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    target_link_libraries(lolayer PRIVATE PkgConfig::WAYLAND_CLIENT)
+    install(TARGETS lolayer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+else()
+    message(STATUS "lolayer demo client skipped: wayland-scanner or wayland-client missing")
+endif()
 
 include(GNUInstallDirs)
 

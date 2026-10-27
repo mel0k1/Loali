@@ -12,6 +12,7 @@
 #include "dbusmenu.h"
 #include "desktopmodel.h"
 #include "iconprovider.h"
+#include "layershell.h"
 #include "matcolor.h"
 #include "notifications.h"
 #include "screencopy.h"
@@ -127,6 +128,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<XdgOutputManagerQuickExtension>("Loali", 1, 0, "XdgOutputManager");
     qmlRegisterType<DesktopModel>("Loali", 1, 0, "DesktopModel");
     qmlRegisterType<WlOutputFix>("Loali", 1, 0, "WlOutputFix");
+    qmlRegisterType<LayerShell>("Loali", 1, 0, "LayerShell");
+    qmlRegisterType<LayerSurface>("Loali", 1, 0, "LayerSurface");
 
     applyUiFont();
     Apps::create(nullptr, nullptr);

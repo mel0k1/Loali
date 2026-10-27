@@ -34,7 +34,37 @@ WaylandCompositor {
     }
 
     function maxArea() {
-        return Qt.rect(10, topInset, win.width - 20, win.height - topInset - bottomInset)
+        const x = 10 + layerInsetLeft
+        const y = topInset + layerInsetTop
+        const w = win.width - x - (10 + layerInsetRight)
+        const h = win.height - y - (bottomInset + layerInsetBottom)
+        return Qt.rect(x, y, Math.max(120, w), Math.max(120, h))
+    }
+
+    readonly property var layerWins: []
+    property int layerInsetLeft: 0
+    property int layerInsetTop: 0
+    property int layerInsetRight: 0
+    property int layerInsetBottom: 0
+
+    function recomputeLayerInsets() {
+        let l = 0
+        let t = 0
+        let r = 0
+        let b = 0
+        for (let i = 0; i < layerWins.length; ++i) {
+            const s = layerWins[i]
+            if (!s)
+                continue
+            l = Math.max(l, s.edgeInsetLeft)
+            t = Math.max(t, s.edgeInsetTop)
+            r = Math.max(r, s.edgeInsetRight)
+            b = Math.max(b, s.edgeInsetBottom)
+        }
+        layerInsetLeft = l
+        layerInsetTop = t
+        layerInsetRight = r
+        layerInsetBottom = b
     }
 
     function canOp() {
@@ -327,8 +357,25 @@ WaylandCompositor {
             }
 
             Item {
+                id: layerUnder
+                anchors.fill: parent
+            }
+
+            Item {
                 id: workspace
                 anchors.fill: parent
+            }
+
+            Item {
+                id: layerTopItem
+                anchors.fill: parent
+                z: 95
+            }
+
+            Item {
+                id: layerOverlayItem
+                anchors.fill: parent
+                z: 450
             }
 
             Rectangle {
@@ -680,6 +727,28 @@ WaylandCompositor {
         }
     }
 
+    LayerShell {
+        onLayerSurfaceCreated: (surf) => {
+            layerWins.push(surf)
+            const holder = surf.layer <= 1 ? layerUnder
+                         : (surf.layer === 2 ? layerTopItem : layerOverlayItem)
+            const item = layerChromeComponent.createObject(holder, {
+                shellSurface: surf
+            })
+            surf.surfaceClosed.connect(() => {
+                const idx = layerWins.indexOf(surf)
+                if (idx >= 0)
+                    layerWins.splice(idx, 1)
+                if (item)
+                    item.destroy()
+                comp.recomputeLayerInsets()
+            })
+            surf.placementChanged.connect(() => comp.recomputeLayerInsets())
+            surf.stateChanged.connect(() => comp.recomputeLayerInsets())
+            comp.recomputeLayerInsets()
+        }
+    }
+
     XdgDecorationManagerV1 {
         preferredMode: XdgToplevel.ServerSideDecoration
     }
@@ -696,5 +765,10 @@ WaylandCompositor {
     Component {
         id: chromeComponent
         Chrome {}
+    }
+
+    Component {
+        id: layerChromeComponent
+        LayerChrome {}
     }
 }

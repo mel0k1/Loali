@@ -46,7 +46,8 @@ run_shot() {
     extra="$3"
     echo "== shot: $out (demo: ${demo:-none}, tool: $SHOT_TOOL) =="
     pkill -f build/lodemo 2>/dev/null || true
-    DEMO_ARGS="$demo" EXTRA_ARGS="$extra" DEMO_CLIENTS="$4" OUT="$out" SHOT_TOOL="$SHOT_TOOL" dbus-run-session -- sh -c '
+    pkill -f build/lolayer 2>/dev/null || true
+    DEMO_ARGS="$demo" EXTRA_ARGS="$extra" DEMO_CLIENTS="$4" OUT="$out" SHOT_TOOL="$SHOT_TOOL" LOALI_LAYER="${LOALI_LAYER:-0}" dbus-run-session -- sh -c '
         if [ "$SHOT_TOOL" = "grim" ]; then
             gdb -q -batch -ex run -ex "echo === BACKTRACE ===" -ex "thread apply all bt 20" \
                 --args ./build/loali $DEMO_ARGS $EXTRA_ARGS >build/shots/loali.log 2>&1 &
@@ -68,6 +69,12 @@ run_shot() {
                 ./build/lodemo -t Files -c "#7C4DFF" -m "native capture" >build/shots/lodemo1.log 2>&1 &
             WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
                 ./build/lodemo -t Terminal -c "#2E7D32" -m "wl_shm client" >build/shots/lodemo2.log 2>&1 &
+            if [ "$LOALI_LAYER" = "1" ]; then
+                WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= ./build/lolayer >build/shots/lolayer.log 2>&1 &
+                echo "--- lolayer.log ---"
+                sleep 2
+                cat build/shots/lolayer.log 2>/dev/null || true
+            fi
             sleep 3
             echo "--- loali.log after clients (tail 12) ---"
             tail -12 build/shots/loali.log || true
@@ -110,6 +117,7 @@ run_shot() {
 }
 
 run_shot build/shots/desktop.png "" "" 1
+LOALI_LAYER=1 run_shot build/shots/layer.png "" "" 1
 run_shot build/shots/launcher.png "--demo launcher" "" 1
 run_shot build/shots/settings.png "--demo settings" "" 1
 run_shot build/shots/expo.png "--demo expo" "" 1
