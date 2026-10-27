@@ -34,6 +34,7 @@ public:
         QString id;
         QString name;
         QStringList appIds;
+        bool operator==(const Folder &other) const { return id == other.id; }
     };
 
     static Apps *create(QQmlEngine *engine, QJSEngine *jsEngine);
