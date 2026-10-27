@@ -365,7 +365,6 @@ Rectangle {
         height: chrome.height - chrome.barHeight
         shellSurface: chrome.shellSurface
         moveItem: chrome
-        focusOnClicked: true
         onSurfaceDestroyed: chrome.windowClosed()
     }
 
