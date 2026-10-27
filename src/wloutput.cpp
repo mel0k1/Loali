@@ -4,6 +4,7 @@
 #include <QWaylandOutput>
 #include <QWindow>
 #include <algorithm>
+#include <cstring>
 #include <wayland-server-protocol.h>
 
 void WlOutputFix::outputBind(wl_client *client, void *userData, uint32_t version, uint32_t id)
@@ -55,10 +56,11 @@ bool WlOutputFix::globalFilter(const wl_client *client, const wl_global *global,
 {
     auto *self = static_cast<WlOutputFix *>(data);
     const struct wl_interface *iface = wl_global_get_interface(global);
-    const bool foreign = iface == &wl_output_interface && global != self->m_global;
-    if (foreign)
-        qInfo() << "WlOutputFix: filtering out foreign wl_output global" << global
-                << "for new client" << client;
+    const bool isOutput = iface && std::strcmp(iface->name, "wl_output") == 0;
+    const bool foreign = isOutput && global != self->m_global;
+    if (isOutput)
+        qInfo() << "WlOutputFix: filter sees wl_output global" << global << "ours" << self->m_global
+                << "foreign" << foreign << "for client" << client;
     return !foreign;
 }
 
@@ -70,11 +72,21 @@ WlOutputFix::WlOutputFix(QObject *parent)
         if (tryApply())
             m_retry.stop();
     });
+    m_watch.setInterval(2000);
+    connect(&m_watch, &QTimer::timeout, this, [this] {
+        if (m_applied && !m_compositor.isNull() && m_global) {
+            wl_display *display = m_compositor->display();
+            if (display)
+                wl_display_set_global_filter(display, &WlOutputFix::globalFilter, this);
+        }
+    });
+    m_watch.start();
 }
 
 WlOutputFix::~WlOutputFix()
 {
     m_retry.stop();
+    m_watch.stop();
     if (m_global) {
         wl_global_remove(m_global);
         wl_global_destroy(m_global);

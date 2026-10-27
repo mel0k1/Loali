@@ -40,6 +40,7 @@ private:
     struct wl_global *m_global = nullptr;
     bool m_applied = false;
     QTimer m_retry;
+    QTimer m_watch;
 
     friend void outputBindThunk(wl_client *, void *, uint32_t, uint32_t);
 };
