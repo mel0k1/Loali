@@ -335,6 +335,7 @@ Rectangle {
             WaylandQuickItem {
                 id: pv
                 anchors.centerIn: parent
+                visible: taskbar.previewWin !== null
                 readonly property real sw: taskbar.previewWin ? Math.max(taskbar.previewWin.width, 1) : 1
                 readonly property real sh: taskbar.previewWin
                     ? Math.max(taskbar.previewWin.height - taskbar.previewWin.barHeight, 1) : 1

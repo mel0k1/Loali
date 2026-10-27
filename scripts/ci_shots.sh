@@ -14,6 +14,7 @@ fi
 export QT_QPA_PLATFORM=xcb
 export LIBGL_ALWAYS_SOFTWARE=1
 export QSG_INFO=1
+export LANG=C.UTF-8
 unset QT_QUICK_BACKEND
 unset WAYLAND_DISPLAY
 
@@ -34,8 +35,13 @@ run_shot() {
         fi
         comp=$!
         sleep 5
-        echo "--- loali.log ---"
-        tail -4 build/shots/loali.log || true
+        echo "--- loali.log (tail 40) ---"
+        tail -40 build/shots/loali.log || true
+        if kill -0 $comp 2>/dev/null; then
+            echo "loali: running"
+        else
+            echo "loali: exited early"
+        fi
         if [ "$DEMO_CLIENTS" = "1" ]; then
             socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
             WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
@@ -43,10 +49,18 @@ run_shot() {
             WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
                 ./build/lodemo -t Terminal -c "#2E7D32" -m "wl_shm client" >build/shots/lodemo2.log 2>&1 &
             sleep 3
+            echo "--- loali.log after clients (tail 12) ---"
+            tail -12 build/shots/loali.log || true
+            if kill -0 $comp 2>/dev/null; then
+                echo "loali: running after clients"
+            else
+                echo "loali: DIED after clients"
+            fi
         fi
         status=0
         if [ "$SHOT_TOOL" = "grim" ]; then
             socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
+            echo "grim: WAYLAND_DISPLAY=${socket:-wayland-0}"
             WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= grim "$OUT" >build/shots/grim.log 2>&1 || status=1
             cat build/shots/grim.log || true
             kill $comp 2>/dev/null || true
@@ -54,7 +68,8 @@ run_shot() {
         else
             wait $comp || status=$?
         fi
-        head -4 build/shots/lodemo1.log 2>/dev/null || true
+        echo "--- lodemo1.log ---"
+        cat build/shots/lodemo1.log 2>/dev/null || true
         if [ -f "$OUT" ]; then
             echo "saved: $OUT"
         else
