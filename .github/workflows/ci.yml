@@ -44,7 +44,7 @@ jobs:
 
       - name: shots
         continue-on-error: true
-        run: ./scripts/ci_shots.sh
+        run: sh scripts/ci_shots.sh
 
       - name: upload shots
         if: always()
