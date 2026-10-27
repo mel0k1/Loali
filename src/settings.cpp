@@ -39,7 +39,8 @@ LoaliSettings *LoaliSettings::create(QQmlEngine *engine, QJSEngine *jsEngine)
     Q_UNUSED(jsEngine)
     if (!s_instance)
         s_instance = new LoaliSettings();
-    engine->setObjectOwnership(s_instance, QQmlEngine::CppOwnership);
+    if (engine)
+        engine->setObjectOwnership(s_instance, QQmlEngine::CppOwnership);
     return s_instance;
 }
 

@@ -47,6 +47,8 @@ qt_add_qml_module(loali
     SOURCES
         src/apps.h
         src/apps.cpp
+        src/desktopmodel.h
+        src/desktopmodel.cpp
         src/iconprovider.h
         src/iconprovider.cpp
         src/settings.h

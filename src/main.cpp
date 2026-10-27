@@ -1,5 +1,8 @@
 #include <QCommandLineParser>
+#include <QFont>
+#include <QFontDatabase>
 #include <QGuiApplication>
+#include <QPalette>
 #include <QQuickStyle>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -7,6 +10,7 @@
 
 #include "apps.h"
 #include "dbusmenu.h"
+#include "desktopmodel.h"
 #include "iconprovider.h"
 #include "matcolor.h"
 #include "notifications.h"
@@ -17,6 +21,59 @@
 
 #include <QQuickWindow>
 #include <QTimer>
+
+namespace {
+
+void applyUiPalette()
+{
+    LoaliSettings *s = LoaliSettings::instance();
+    if (!s)
+        return;
+    QGuiApplication *app = qobject_cast<QGuiApplication *>(QGuiApplication::instance());
+    if (!app)
+        return;
+    QPalette pal = app->palette();
+    const QColor windowText = s->dark() ? QColor(0xE6, 0xE0, 0xE9) : QColor(0x1D, 0x1B, 0x20);
+    const QColor window = s->dark() ? QColor(0x14, 0x12, 0x18) : QColor(0xFE, 0xF7, 0xFF);
+    const QColor surface = s->dark() ? QColor(0x2B, 0x29, 0x30) : QColor(0xF3, 0xED, 0xF7);
+    const QColor tipBase = s->dark() ? QColor(0x36, 0x34, 0x3B) : QColor(0xE6, 0xE0, 0xE9);
+    const QColor tipText = s->dark() ? QColor(0xE6, 0xE0, 0xE9) : QColor(0x1D, 0x1B, 0x20);
+    const QColor placeholder = s->dark() ? QColor(0xCA, 0xC4, 0xD0) : QColor(0x49, 0x45, 0x4F);
+    const QColor highlight = s->dark() ? QColor(0x4F, 0x37, 0x8B) : QColor(0x67, 0x50, 0xA4);
+    const QColor highlightedText = s->dark() ? QColor(0xEA, 0xDD, 0xFF) : QColor(0xFF, 0xFF, 0xFF);
+    for (QPalette::ColorGroup g : { QPalette::Active, QPalette::Inactive }) {
+        pal.setColor(g, QPalette::Window, window);
+        pal.setColor(g, QPalette::WindowText, windowText);
+        pal.setColor(g, QPalette::Base, surface);
+        pal.setColor(g, QPalette::AlternateBase, surface);
+        pal.setColor(g, QPalette::Text, windowText);
+        pal.setColor(g, QPalette::Button, surface);
+        pal.setColor(g, QPalette::ButtonText, windowText);
+        pal.setColor(g, QPalette::ToolTipBase, tipBase);
+        pal.setColor(g, QPalette::ToolTipText, tipText);
+        pal.setColor(g, QPalette::PlaceholderText, placeholder);
+        pal.setColor(g, QPalette::Highlight, highlight);
+        pal.setColor(g, QPalette::HighlightedText, highlightedText);
+        pal.setColor(g, QPalette::BrightText, windowText);
+        pal.setColor(g, QPalette::Link, highlight);
+    }
+    app->setPalette(pal);
+}
+
+void applyUiFont()
+{
+    const QStringList prefs = { QStringLiteral("Noto Sans"), QStringLiteral("Inter"),
+                                QStringLiteral("Carlito"), QStringLiteral("DejaVu Sans") };
+    const QStringList fams = QFontDatabase::families();
+    for (const QString &f : prefs) {
+        if (fams.contains(f)) {
+            QGuiApplication::setFont(QFont(f));
+            return;
+        }
+    }
+}
+
+} // namespace
 
 int main(int argc, char *argv[])
 {
@@ -64,6 +121,15 @@ int main(int argc, char *argv[])
     qmlRegisterType<TrayMenu>("Loali", 1, 0, "TrayMenu");
     qmlRegisterType<ScreencopyManagerQuickExtension>("Loali", 1, 0, "ScreencopyManager");
     qmlRegisterType<XdgOutputManagerQuickExtension>("Loali", 1, 0, "XdgOutputManager");
+    qmlRegisterType<DesktopModel>("Loali", 1, 0, "DesktopModel");
+
+    applyUiFont();
+    Apps::create(nullptr, nullptr);
+    LoaliSettings::create(nullptr, nullptr);
+    applyUiPalette();
+    if (LoaliSettings::instance())
+        QObject::connect(LoaliSettings::instance(), &LoaliSettings::darkChanged,
+                         LoaliSettings::instance(), &applyUiPalette);
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QStringLiteral("loali"), new IconProvider());

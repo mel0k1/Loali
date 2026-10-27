@@ -49,6 +49,7 @@ public:
     Q_ENUM(ColorStyle)
 
     static LoaliSettings *create(QQmlEngine *engine, QJSEngine *jsEngine);
+    static LoaliSettings *instance() { return s_instance; }
 
     QString wallpaper() const { return m_wallpaper; }
     void setWallpaper(const QString &value);

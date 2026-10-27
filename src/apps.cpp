@@ -3,6 +3,10 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QUuid>
 #include <QQmlEngine>
 #include <QRegularExpression>
 #include <QSettings>
@@ -29,6 +33,7 @@ Apps::Apps(QObject *parent)
     scan();
     loadPins();
     loadLauncherState();
+    loadFolders();
     applyOrder();
     rebuildVisible();
 }
@@ -38,7 +43,8 @@ Apps *Apps::create(QQmlEngine *engine, QJSEngine *jsEngine)
     Q_UNUSED(jsEngine)
     if (!s_instance)
         s_instance = new Apps();
-    engine->setObjectOwnership(s_instance, QQmlEngine::CppOwnership);
+    if (engine)
+        engine->setObjectOwnership(s_instance, QQmlEngine::CppOwnership);
     return s_instance;
 }
 
@@ -320,6 +326,7 @@ void Apps::move(int from, int to)
     for (int i = 0; i < m_entries.size(); ++i)
         m_visible.append(i);
     persistLauncherState();
+    emit countChanged();
 }
 
 QString Apps::firstMatch() const
@@ -358,6 +365,222 @@ const Apps::Entry *Apps::find(const QString &id) const
 void Apps::launchExec(const QString &exec) const
 {
     QProcess::startDetached(QStringLiteral("sh"), {QStringLiteral("-c"), exec});
+}
+
+void Apps::loadFolders()
+{
+    QSettings settings;
+    const QByteArray raw = settings.value(QStringLiteral("desktop/folders")).toByteArray();
+    if (raw.isEmpty())
+        return;
+    const QJsonDocument doc = QJsonDocument::fromJson(raw);
+    if (!doc.isArray())
+        return;
+    const QJsonArray arr = doc.array();
+    for (const QJsonValue &v : arr) {
+        const QJsonObject o = v.toObject();
+        Folder f;
+        f.id = o.value(QStringLiteral("id")).toString();
+        f.name = o.value(QStringLiteral("name")).toString();
+        if (f.name.isEmpty())
+            f.name = QStringLiteral("Folder");
+        const QJsonArray apps = o.value(QStringLiteral("apps")).toArray();
+        for (const QJsonValue &a : apps) {
+            const QString id = a.toString();
+            if (find(id) && !f.appIds.contains(id))
+                f.appIds.append(id);
+        }
+        if (!f.id.isEmpty() && !f.appIds.isEmpty() && !hasFolder(f.id))
+            m_folders.append(f);
+    }
+}
+
+void Apps::persistFolders()
+{
+    QSettings settings;
+    QJsonArray arr;
+    for (const Folder &f : m_folders) {
+        QJsonObject o;
+        o.insert(QStringLiteral("id"), f.id);
+        o.insert(QStringLiteral("name"), f.name);
+        QJsonArray apps;
+        for (const QString &id : f.appIds)
+            apps.append(id);
+        o.insert(QStringLiteral("apps"), apps);
+        arr.append(o);
+    }
+    settings.setValue(QStringLiteral("desktop/folders"),
+                      QJsonDocument(arr).toJson(QJsonDocument::Compact));
+}
+
+Apps::Folder *Apps::findFolder(const QString &id)
+{
+    for (Folder &f : m_folders) {
+        if (f.id == id)
+            return &f;
+    }
+    return nullptr;
+}
+
+void Apps::detachApp(const QString &appId)
+{
+    for (int i = m_folders.size() - 1; i >= 0; --i) {
+        m_folders[i].appIds.removeAll(appId);
+        if (m_folders.at(i).appIds.isEmpty())
+            m_folders.removeAt(i);
+    }
+}
+
+QVariantList Apps::folders() const
+{
+    QVariantList res;
+    for (const Folder &f : m_folders) {
+        const Entry *first = nullptr;
+        for (const QString &id : f.appIds) {
+            first = find(id);
+            if (first)
+                break;
+        }
+        QVariantMap m;
+        m.insert(QStringLiteral("id"), f.id);
+        m.insert(QStringLiteral("name"), f.name);
+        m.insert(QStringLiteral("icon"), first ? first->icon : QString());
+        m.insert(QStringLiteral("count"), f.appIds.size());
+        res.append(m);
+    }
+    return res;
+}
+
+QVariantList Apps::folderEntries(const QString &folderId) const
+{
+    QVariantList res;
+    const Folder *f = nullptr;
+    for (const Folder &folder : m_folders) {
+        if (folder.id == folderId) {
+            f = &folder;
+            break;
+        }
+    }
+    if (!f)
+        return res;
+    for (const QString &id : f->appIds) {
+        const Entry *e = find(id);
+        if (!e)
+            continue;
+        QVariantMap m;
+        m.insert(QStringLiteral("appId"), e->id);
+        m.insert(QStringLiteral("name"), e->name);
+        m.insert(QStringLiteral("icon"), e->icon);
+        res.append(m);
+    }
+    return res;
+}
+
+QString Apps::folderName(const QString &folderId) const
+{
+    for (const Folder &f : m_folders) {
+        if (f.id == folderId)
+            return f.name;
+    }
+    return QString();
+}
+
+bool Apps::hasFolder(const QString &folderId) const
+{
+    for (const Folder &f : m_folders) {
+        if (f.id == folderId)
+            return true;
+    }
+    return false;
+}
+
+bool Apps::isAppInFolder(const QString &appId) const
+{
+    for (const Folder &f : m_folders) {
+        if (f.appIds.contains(appId))
+            return true;
+    }
+    return false;
+}
+
+QString Apps::createFolder(const QString &appIdA, const QString &appIdB)
+{
+    if (!find(appIdA) || !find(appIdB) || appIdA == appIdB)
+        return QString();
+    detachApp(appIdA);
+    detachApp(appIdB);
+    Folder f;
+    f.id = QStringLiteral("f")
+           + QUuid::createUuid().toString(QUuid::WithoutBraces).left(8);
+    f.name = QStringLiteral("Folder");
+    f.appIds.append(appIdA);
+    f.appIds.append(appIdB);
+    m_folders.append(f);
+    persistFolders();
+    emit foldersChanged();
+    return f.id;
+}
+
+void Apps::addToFolder(const QString &folderId, const QString &appId)
+{
+    Folder *f = findFolder(folderId);
+    if (!f || !find(appId))
+        return;
+    detachApp(appId);
+    f = findFolder(folderId);
+    if (!f)
+        return;
+    if (!f->appIds.contains(appId))
+        f->appIds.append(appId);
+    persistFolders();
+    emit foldersChanged();
+}
+
+void Apps::removeFromFolder(const QString &folderId, const QString &appId)
+{
+    Folder *f = findFolder(folderId);
+    if (!f)
+        return;
+    f->appIds.removeAll(appId);
+    if (f->appIds.isEmpty())
+        m_folders.removeOne(*f);
+    persistFolders();
+    emit foldersChanged();
+}
+
+void Apps::renameFolder(const QString &folderId, const QString &name)
+{
+    Folder *f = findFolder(folderId);
+    if (!f || name.trimmed().isEmpty() || f->name == name)
+        return;
+    f->name = name.trimmed();
+    persistFolders();
+    emit foldersChanged();
+}
+
+void Apps::destroyFolder(const QString &folderId)
+{
+    for (const Folder &f : m_folders) {
+        if (f.id == folderId) {
+            m_folders.removeOne(f);
+            break;
+        }
+    }
+    persistFolders();
+    emit foldersChanged();
+}
+
+QVariantList Apps::allApps() const
+{
+    QVariantList res;
+    for (const Entry &e : m_entries) {
+        QVariantMap m;
+        m.insert(QStringLiteral("appId"), e.id);
+        m.insert(QStringLiteral("name"), e.name);
+        m.insert(QStringLiteral("icon"), e.icon);
+        res.append(m);
+    }
+    return res;
 }
 
 QString Apps::normalizeId(QString id)
