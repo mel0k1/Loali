@@ -2,6 +2,7 @@
 
 #include <QGuiApplication>
 #include <QQuickWindow>
+#include <QtWaylandCompositor/QWaylandCompositor>
 
 #include <cstring>
 #include <ctime>
@@ -117,8 +118,9 @@ void ScreencopyFrame::zwlr_screencopy_frame_v1_destroy_resource(Resource *resour
 }
 
 ScreencopyManager::ScreencopyManager(QObject *parent)
-    : QWaylandCompositorExtensionTemplate<ScreencopyManager>(parent)
+    : QWaylandCompositorExtensionTemplate<ScreencopyManager>()
 {
+    Q_UNUSED(parent)
 }
 
 void ScreencopyManager::initialize()

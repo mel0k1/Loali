@@ -24,8 +24,9 @@ void XdgOutput::zxdg_output_v1_destroy_resource(Resource *resource)
 }
 
 XdgOutputManager::XdgOutputManager(QObject *parent)
-    : QWaylandCompositorExtensionTemplate<XdgOutputManager>(parent)
+    : QWaylandCompositorExtensionTemplate<XdgOutputManager>()
 {
+    Q_UNUSED(parent)
 }
 
 void XdgOutputManager::initialize()
