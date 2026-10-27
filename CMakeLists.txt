@@ -77,6 +77,7 @@ qt_add_qml_module(loali
 )
 
 target_sources(loali PRIVATE ${MAT_SOURCES})
+target_sources(loali PRIVATE tools/lolayer_iface.c)
 
 target_link_libraries(loali PRIVATE
     Qt6::Quick
