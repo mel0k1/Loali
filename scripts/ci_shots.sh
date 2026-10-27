@@ -27,6 +27,10 @@ run_shot() {
         ./build/loali $DEMO_ARGS >build/shots/loali.log 2>&1 &
         comp=$!
         sleep 5
+        echo "--- loali.log ---"
+        cat build/shots/loali.log || true
+        echo "--- sockets ---"
+        ls -la "$XDG_RUNTIME_DIR" || true
         if [ "$DEMO_CLIENTS" = "1" ]; then
             ./build/lodemo -t Files -c "#7C4DFF" -m "Browsing files" >/dev/null 2>&1 &
             ./build/lodemo -t Terminal -c "#2E7D32" -m "wl_shm capture ready" >/dev/null 2>&1 &
