@@ -5,8 +5,12 @@
 #include <QQmlContext>
 #include <QtQml>
 
+#include "apps.h"
+#include "dbusmenu.h"
 #include "iconprovider.h"
+#include "matcolor.h"
 #include "screencopy.h"
+#include "settings.h"
 #include "tray.h"
 #include "xdgoutput.h"
 
@@ -34,6 +38,15 @@ int main(int argc, char *argv[])
     parser.addOption(demoDelayOption);
     parser.process(app);
 
+    qmlRegisterSingletonType("Loali", 1, 0, "Apps",
+                             [](QQmlEngine *e, QJSEngine *j) -> QObject * { return Apps::create(e, j); });
+    qmlRegisterSingletonType("Loali", 1, 0, "Settings",
+                             [](QQmlEngine *e, QJSEngine *j) -> QObject * { return LoaliSettings::create(e, j); });
+    qmlRegisterSingletonType("Loali", 1, 0, "Tray",
+                             [](QQmlEngine *e, QJSEngine *j) -> QObject * { return Tray::create(e, j); });
+    qmlRegisterSingletonType("Loali", 1, 0, "MatColor",
+                             [](QQmlEngine *e, QJSEngine *j) -> QObject * { return MatColor::create(e, j); });
+    qmlRegisterType<TrayMenu>("Loali", 1, 0, "TrayMenu");
     qmlRegisterType<ScreencopyManagerQuickExtension>("Loali", 1, 0, "ScreencopyManager");
     qmlRegisterType<XdgOutputManagerQuickExtension>("Loali", 1, 0, "XdgOutputManager");
 
