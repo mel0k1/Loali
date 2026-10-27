@@ -110,17 +110,28 @@ bool WlOutputFix::tryApply()
 {
     if (m_applied)
         return true;
-    if (m_compositor.isNull())
+    if (m_compositor.isNull()) {
+        qWarning() << "WlOutputFix: no compositor";
         return false;
+    }
     wl_display *display = m_compositor->display();
-    if (!display)
+    if (!display) {
+        qWarning() << "WlOutputFix: no display yet";
         return false;
+    }
     QWaylandOutput *out = m_compositor->defaultOutput();
-    if (!out)
+    if (!out) {
+        qWarning() << "WlOutputFix: no output yet";
         return false;
+    }
 
     publish();
+    if (!m_global) {
+        qWarning() << "WlOutputFix: wl_global_create failed";
+        return false;
+    }
     wl_display_set_global_filter(display, &WlOutputFix::globalFilter, this);
+    qInfo() << "WlOutputFix: own wl_output v4 global published, Qt global filtered";
     m_applied = true;
     emit appliedChanged();
     return true;
