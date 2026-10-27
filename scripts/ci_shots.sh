@@ -12,7 +12,9 @@ if [ -z "$DISPLAY" ]; then
 fi
 
 export QT_QPA_PLATFORM=xcb
-export QT_QUICK_BACKEND=software
+export LIBGL_ALWAYS_SOFTWARE=1
+export QSG_INFO=1
+unset QT_QUICK_BACKEND
 unset WAYLAND_DISPLAY
 
 mkdir -p build/shots
