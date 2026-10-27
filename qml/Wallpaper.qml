@@ -45,13 +45,14 @@ Item {
     Image {
         anchors.fill: parent
         visible: wallpaper.isImage
-        source: wallpaper.imageSource
+        source: wallpaper.isImage ? wallpaper.imageSource : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         cache: true
     }
 
     Canvas {
+        id: canvas
         anchors.fill: parent
         visible: !wallpaper.isImage
         onPaint: wallpaper.paint()
@@ -71,7 +72,7 @@ Item {
     }
 
     function paint() {
-        const ctx = getContext("2d")
+        const ctx = canvas.getContext("2d")
         ctx.reset()
         const r = Math.max(width, height)
         for (const b of wallpaper.pal.blobs)

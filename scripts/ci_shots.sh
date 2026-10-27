@@ -26,29 +26,23 @@ run_shot() {
     echo "== shot: $out (demo: ${demo:-none}) =="
     pkill -f build/lodemo 2>/dev/null || true
     DEMO_ARGS="$demo" DEMO_CLIENTS="$clients" OUT="$out" dbus-run-session -- sh -c '
-        ./build/loali $DEMO_ARGS >build/shots/loali.log 2>&1 &
+        ./build/loali $DEMO_ARGS --screenshot "$OUT" --screenshot-delay 8000 >build/shots/loali.log 2>&1 &
         comp=$!
         sleep 5
         echo "--- loali.log ---"
-        cat build/shots/loali.log || true
-        echo "--- sockets ---"
-        ls -la "$XDG_RUNTIME_DIR" || true
+        tail -6 build/shots/loali.log || true
         if [ "$DEMO_CLIENTS" = "1" ]; then
             ./build/lodemo -t Files -c "#7C4DFF" -m "Browsing files" >/dev/null 2>&1 &
-            ./build/lodemo -t Terminal -c "#2E7D32" -m "wl_shm capture ready" >/dev/null 2>&1 &
-            sleep 3
+            ./build/lodemo -t Terminal -c "#2E7D32" -m "native capture" >/dev/null 2>&1 &
         fi
-        socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
-        if [ -z "$socket" ]; then
-            echo "no wayland socket found"
-            kill $comp 2>/dev/null
-            exit 1
-        fi
-        echo "socket: $socket"
-        WAYLAND_DISPLAY="$socket" grim "$OUT"
+        wait $comp
         status=$?
-        kill $comp 2>/dev/null || true
-        wait $comp 2>/dev/null || true
+        if [ -f "$OUT" ]; then
+            echo "saved: $OUT"
+        else
+            echo "screenshot missing"
+            status=1
+        fi
         exit $status
     '
 }

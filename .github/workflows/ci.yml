@@ -16,7 +16,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build qt6-base-dev qt6-declarative-dev qt6-wayland-dev libwayland-dev \
-            xvfb grim dbus pkg-config qt6-wayland-dev-tools libgl1-mesa-dri libegl-mesa0 mesa-utils
+            xvfb grim dbus pkg-config qt6-wayland-dev-tools libgl1-mesa-dri libegl-mesa0 mesa-utils libqt6svg6
           for p in qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-templates \
                    qml6-module-qtquick-window qml6-module-qtquick-shapes qml6-module-qtquick-layouts \
                    qml6-module-qtqml-workerscript qml6-module-qtwayland-compositor; do
@@ -45,7 +45,6 @@ jobs:
         run: cmake --build build
 
       - name: shots
-        continue-on-error: true
         run: sh scripts/ci_shots.sh
 
       - name: upload shots
