@@ -67,6 +67,7 @@ qt_add_qml_module(loali
         src/wloutput.cpp
         src/xdgoutput.h
         src/xdgoutput.cpp
+        src/util.h
     RESOURCES
         assets/logo.svg
         assets/wallpapers/dusk.jpg

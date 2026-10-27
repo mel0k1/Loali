@@ -77,7 +77,7 @@ jobs:
             libwayland-dev xvfb xfonts-base grim \
             libgl1-mesa-dri libegl-mesa0 mesa-utils fonts-noto-core
           apt-get install -y --no-install-recommends dbus dbus-bin || apt-get install -y --no-install-recommends dbus-bin
-          apt-get install -y --no-install-recommends libqt6svg6 || apt-get install -y --no-install-recommends qt6-svg || echo "svg plugin skipped"
+          apt-get install -y --no-install-recommends libqt6svg6 || apt-get install -y --no-install-recommends libqt6svg6t64 || apt-get install -y --no-install-recommends qt6-svg || echo "svg plugin skipped"
           for p in qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-templates \
                    qml6-module-qtquick-window qml6-module-qtquick-shapes qml6-module-qtquick-layouts \
                    qml6-module-qtqml-workerscript qml6-module-qtwayland-compositor; do
