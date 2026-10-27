@@ -157,6 +157,9 @@ Rectangle {
         height = prevRect.height
     }
 
+    property bool appearing: true
+    opacity: appearing ? 0 : 1
+    scale: appearing ? 0.94 : 1
     visible: !minimized && (compositor.expoActive || ws === compositor.currentWorkspace)
     enabled: !compositor.expoActive
     radius: maximized || fullscreen ? 0 : 18
@@ -166,21 +169,28 @@ Rectangle {
                             : (active ? Theme.primary : Theme.outlineVariant)
     clip: true
 
+    Behavior on opacity {
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } }
+    }
+    Behavior on scale {
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
+    }
+
     Behavior on x {
         enabled: !resizing && !dragHandler.active && !compositor.expoActive
-        NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
     }
     Behavior on y {
         enabled: !resizing && !dragHandler.active && !compositor.expoActive
-        NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
     }
     Behavior on width {
         enabled: !resizing && !instant
-        NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
     }
     Behavior on height {
         enabled: !resizing && !instant
-        NumberAnimation { duration: 300; easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
     }
     Behavior on radius {
         NumberAnimation { duration: 200 }
@@ -194,6 +204,7 @@ Rectangle {
         height = gh + barHeight
         x = Math.max(a.x, a.x + (a.width - width) / 2 + (Math.random() * 90 - 45))
         y = Math.max(a.y, a.y + (a.height - height) / 2 + (Math.random() * 60 - 30))
+        Qt.callLater(() => { appearing = false })
     }
 
     Connections {

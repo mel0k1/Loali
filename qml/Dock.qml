@@ -54,10 +54,10 @@ Rectangle {
 
     Behavior on width {
         enabled: !plane
-        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
     }
     Behavior on radius {
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } }
     }
 
     Shadow {
@@ -88,10 +88,10 @@ Rectangle {
         spacing: dock.plane ? Theme.sz(8) : dock.hot ? Theme.sz(10) : Theme.sz(6)
 
         Behavior on x {
-            NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
         }
         Behavior on spacing {
-            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
         }
 
         DockButton {
@@ -133,7 +133,7 @@ Rectangle {
             visible: width > 0
 
             Behavior on width {
-                NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Theme.durSlow; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
             }
 
             Text {
@@ -148,7 +148,7 @@ Rectangle {
                 color: Theme.primary
                 opacity: dock.pulsing ? 1 : 0
                 Behavior on opacity {
-                    NumberAnimation { duration: 200 }
+                    NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } }
                 }
             }
         }
@@ -225,7 +225,7 @@ Rectangle {
             radius: 1.5
             color: Theme.primary
             visible: btn.running
-            Behavior on width { NumberAnimation { duration: 200 } }
+            Behavior on width { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } } }
         }
         MouseArea {
             id: ma

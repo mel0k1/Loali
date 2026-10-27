@@ -388,10 +388,10 @@ WaylandCompositor {
                 border.width: 2
                 border.color: Theme.primary
                 Behavior on opacity { NumberAnimation { duration: 140 } }
-                Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on x { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
+                Behavior on y { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
+                Behavior on width { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
+                Behavior on height { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
             }
 
             Dock {
@@ -404,7 +404,7 @@ WaylandCompositor {
                 z: 100
                 Behavior on x {
                     enabled: !comp.dockPlane
-                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
                 }
                 onLauncherToggled: launcher.open = !launcher.open
             }
@@ -415,10 +415,10 @@ WaylandCompositor {
                 y: comp.dockPlane ? Math.round((comp.dockHeight - height) / 2) : 12
                 z: 100
                 Behavior on x {
-                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
                 }
                 Behavior on y {
-                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
                 }
                 onSettingsRequested: {
                     launcher.open = false

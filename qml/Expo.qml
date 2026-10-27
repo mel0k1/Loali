@@ -29,7 +29,7 @@ Item {
     opacity: active ? 1 : 0
     visible: opacity > 0
     enabled: active
-    Behavior on opacity { NumberAnimation { duration: 180 } }
+    Behavior on opacity { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } } }
 
     function holderOf(i) {
         if (i < 0 || i >= cellsRep.count)
@@ -180,11 +180,11 @@ Item {
                 clip: true
                 opacity: expo.active ? 1 : 0
                 scale: expo.active ? 1 : 0.9
-                Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } } }
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 280
-                        easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized }
+                        duration: Theme.durDefault
+                        easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault }
                     }
                 }
                 Behavior on border.width { NumberAnimation { duration: 120 } }

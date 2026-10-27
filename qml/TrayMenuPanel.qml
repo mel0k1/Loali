@@ -13,7 +13,7 @@ Item {
     visible: opacity > 0
     enabled: openState
     opacity: openState ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: 150 } }
+    Behavior on opacity { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsFast } } }
 
     TrayMenu { id: menu }
 
@@ -54,8 +54,8 @@ Item {
         scale: openState ? 1 : 0.92
         Behavior on scale {
             NumberAnimation {
-                duration: 220
-                easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized }
+                duration: Theme.durDefault
+                easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault }
             }
         }
 

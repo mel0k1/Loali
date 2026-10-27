@@ -74,6 +74,17 @@ QtObject {
 
     readonly property list<real> emphasized: [0.2, 0, 0, 1, 1, 1]
 
+    readonly property int durFast: 140
+    readonly property int durDefault: 220
+    readonly property int durSlow: 340
+
+    readonly property list<real> spatialFast: [0.2, 1.35, 0.4, 1, 1, 1]
+    readonly property list<real> spatialDefault: [0.25, 1.25, 0.45, 1, 1, 1]
+    readonly property list<real> spatialSlow: [0.3, 1.2, 0.5, 1, 1, 1]
+    readonly property list<real> effectsFast: [0.2, 0, 0, 1, 1, 1]
+    readonly property list<real> effectsDefault: emphasized
+    readonly property list<real> effectsSlow: [0.3, 0, 0.1, 1, 1, 1]
+
     readonly property string iconClose: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
     readonly property string iconMaximize: "M18 4H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H6V6h12v12z"
     readonly property string iconMinimize: "M19 13H5v-2h14v2z"

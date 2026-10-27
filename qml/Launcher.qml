@@ -12,7 +12,9 @@ Item {
     opacity: open ? 1 : 0
     visible: opacity > 0
     enabled: open
-    Behavior on opacity { NumberAnimation { duration: 180 } }
+    Behavior on opacity {
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } }
+    }
 
     onOpenChanged: {
         if (!open) {
@@ -62,8 +64,8 @@ Item {
         scale: launcher.open ? 1 : 0.92
         Behavior on scale {
             NumberAnimation {
-                duration: 260
-                easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized }
+                duration: Theme.durDefault
+                easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault }
             }
         }
 
@@ -160,8 +162,8 @@ Item {
                     id: pageAnim
                     target: appsGrid
                     property: "contentY"
-                    duration: 240
-                    easing.type: Easing.OutCubic
+                    duration: 260
+                    easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault }
                 }
 
                 Timer {
@@ -179,10 +181,10 @@ Item {
                 }
 
                 move: Transition {
-                    NumberAnimation { properties: "x,y"; duration: 220; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "x,y"; duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
                 }
                 moveDisplaced: Transition {
-                    NumberAnimation { properties: "x,y"; duration: 220; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "x,y"; duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
                 }
 
                 Rectangle {
@@ -260,11 +262,11 @@ Item {
                     opacity: appCell.dragging ? 0.25 : 1
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 160
-                            easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized }
+                            duration: Theme.durFast
+                            easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialFast }
                         }
                     }
-                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsFast } } }
 
                     Rectangle {
                         anchors.fill: parent
@@ -326,8 +328,8 @@ Item {
                         border.color: appCell.pinned ? Theme.primary : Qt.alpha(Theme.outlineVariant, 0.7)
                         opacity: appCell.pinned ? 1 : (press.containsMouse && appsGrid.canDrag ? 0.85 : 0)
                         scale: appCell.pinned ? 1 : 0.8
-                        Behavior on opacity { NumberAnimation { duration: 120 } }
-                        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsFast } } }
+                        Behavior on scale { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialFast } } }
                         MIcon {
                             anchors.centerIn: parent
                             width: 12
@@ -477,7 +479,7 @@ Item {
                         radius: 4
                         color: appsGrid.curPage === dot.index ? Theme.primary
                                                               : Qt.alpha(Theme.onSurfaceVariant, 0.45)
-                        Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
+                        Behavior on width { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialFast } } }
                         Behavior on color { ColorAnimation { duration: 150 } }
                         MouseArea {
                             anchors.fill: parent

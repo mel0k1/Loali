@@ -12,10 +12,10 @@ Item {
     opacity: locked ? 1 : 0
     visible: opacity > 0
     enabled: locked
-    Behavior on opacity { NumberAnimation { duration: 250 } }
+    Behavior on opacity { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } } }
     transform: Translate {
         y: lock.locked ? 0 : -40
-        Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on y { NumberAnimation { duration: Theme.durSlow; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialSlow } } }
     }
 
     Wallpaper {

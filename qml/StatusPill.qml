@@ -46,7 +46,7 @@ Rectangle {
                     color: wsDot.current ? Theme.primary
                                         : dotHover.containsMouse ? Theme.onSurfaceVariant
                                         : Qt.alpha(Theme.onSurfaceVariant, 0.5)
-                    Behavior on width { NumberAnimation { duration: 220; easing.type: Easing.OutBack } }
+                    Behavior on width { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialFast } } }
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }
 
@@ -164,7 +164,7 @@ Rectangle {
                     }
                     Behavior on x {
                         enabled: trayDrag.active !== trayItem.index
-                        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialFast } }
                     }
                     Component.onDestruction: {
                         if (trayDrag.active === trayItem.index)
@@ -287,7 +287,7 @@ Rectangle {
                 path: Settings.dark ? Theme.iconSun : Theme.iconMoon
                 color: Theme.onSurfaceVariant
                 rotation: Settings.dark ? 0 : 180
-                Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                Behavior on rotation { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
             }
 
             MouseArea {

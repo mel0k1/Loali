@@ -25,14 +25,14 @@ Item {
         model: Notifications
 
         add: Transition {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 220 }
-            NumberAnimation { property: "scale"; from: 0.92; to: 1; duration: 260;
-                              easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } }
+            NumberAnimation { property: "scale"; from: 0.92; to: 1; duration: Theme.durDefault;
+                              easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
         }
 
         displaced: Transition {
-            NumberAnimation { property: "y"; duration: 260;
-                              easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized } }
+            NumberAnimation { property: "y"; duration: Theme.durDefault;
+                              easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
         }
 
         delegate: Rectangle {
@@ -56,7 +56,7 @@ Item {
             border.width: 1
             border.color: urgency === 2 ? Theme.error : Qt.alpha(Theme.outlineVariant, 0.6)
 
-            Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Behavior on height { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
 
             Shadow {
                 extent: 8

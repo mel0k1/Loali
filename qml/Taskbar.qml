@@ -60,16 +60,16 @@ Rectangle {
     clip: true
 
     Behavior on x {
-        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
     }
     Behavior on y {
-        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
     }
     Behavior on width {
-        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
     }
     Behavior on radius {
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } }
     }
 
     Shadow {
@@ -93,7 +93,7 @@ Rectangle {
         spacing: 10
 
         Behavior on x {
-            NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
         }
 
         Row {
@@ -235,12 +235,12 @@ Rectangle {
         border.color: Qt.alpha(Theme.outlineVariant, 0.7)
         clip: true
 
-        Behavior on opacity { NumberAnimation { duration: 140 } }
-        Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsFast } } }
+        Behavior on x { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialFast } } }
         Behavior on scale {
             NumberAnimation {
-                duration: 180
-                easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized }
+                duration: Theme.durFast
+                easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialFast }
             }
         }
 
