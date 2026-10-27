@@ -207,8 +207,10 @@ Item {
                     anchors.centerIn: parent
                     visible: cell.winCount === 0
                     text: qsTr("No windows")
-                    color: Theme.onSurfaceVariant
+                    color: "#FFFFFF"
                     font.pixelSize: 13
+                    styleColor: "#99000000"
+                    style: Text.Raised
                 }
 
                 Rectangle {
@@ -227,9 +229,11 @@ Item {
                         anchors.centerIn: parent
                         text: qsTr("Workspace %1").arg(cell.index + 1)
                               + (cell.winCount > 0 ? " · " + cell.winCount : "")
-                        color: cell.current ? Theme.onPrimary : Theme.onSurface
+                        color: cell.current ? Theme.onPrimary : "#FFFFFF"
                         font.pixelSize: 12
                         font.weight: Font.Medium
+                        styleColor: "#99000000"
+                        style: cell.current ? Text.Normal : Text.Raised
                     }
                 }
 

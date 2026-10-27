@@ -39,7 +39,9 @@ Item {
             text: Qt.formatDateTime(new Date(), "HH:mm")
             font.pixelSize: 96
             font.weight: Font.Medium
-            color: Theme.onSurface
+            color: "#FFFFFF"
+            styleColor: "#66000000"
+            style: Text.Raised
         }
 
         Text {
@@ -47,7 +49,9 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDate(new Date(), "dddd, d MMMM")
             font.pixelSize: 20
-            color: Theme.onSurfaceVariant
+            color: "#FFFFFF"
+            styleColor: "#66000000"
+            style: Text.Raised
         }
 
         Timer {
