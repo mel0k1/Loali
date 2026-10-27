@@ -231,7 +231,7 @@ void LayerShell::initialize()
 
 void LayerShell::zwlr_layer_shell_v1_get_layer_surface(Resource *resource, uint32_t id,
                                                        ::wl_resource *surface, ::wl_resource *output,
-                                                       uint32_t layer, const QString &namespace_)
+                                                       uint32_t layer, const QString &namespace_name)
 {
     QWaylandSurface *qs = QWaylandSurface::fromResource(surface);
     if (!qs) {

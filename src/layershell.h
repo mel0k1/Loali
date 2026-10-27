@@ -91,7 +91,7 @@ protected:
                                                           uint32_t interactivity) override;
     void zwlr_layer_surface_v1_set_layer(Resource *resource, uint32_t layer) override;
     void zwlr_layer_surface_v1_get_popup(Resource *resource, ::wl_resource *popup,
-                                         ::wl_resource *parent) override;
+                                         ::wl_resource *parent);
     void zwlr_layer_surface_v1_ack_configure(Resource *resource, uint32_t serial) override;
     void zwlr_layer_surface_v1_destroy(Resource *resource) override;
     void zwlr_layer_surface_v1_destroy_resource(Resource *resource) override;
