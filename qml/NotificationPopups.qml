@@ -128,7 +128,7 @@ Item {
                         text: card.summary
                         font.pixelSize: 14
                         font.weight: Font.Medium
-                        color: Theme.onSurface
+                        color: Theme.textOnSurface
                         elide: Text.ElideRight
                     }
 
@@ -164,7 +164,7 @@ Item {
                         width: 28
                         height: 28
                         radius: 14
-                        color: closeMa.containsMouse ? Qt.alpha(Theme.onSurface, 0.12) : "transparent"
+                        color: closeMa.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.12) : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
 

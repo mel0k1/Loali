@@ -138,7 +138,7 @@ Rectangle {
                     width: Theme.sz(30)
                     height: Theme.sz(30)
                     radius: width / 2
-                    color: lockMa.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
+                    color: lockMa.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.1) : "transparent"
                     Behavior on color { ColorAnimation { duration: 120 } }
                 }
 
@@ -171,7 +171,7 @@ Rectangle {
                     text: Qt.formatDateTime(new Date(), "HH:mm")
                     font.pixelSize: 13
                     font.weight: Font.Medium
-                    color: Theme.onSurface
+                    color: Theme.textOnSurface
                 }
 
                 Text {
@@ -280,7 +280,7 @@ Rectangle {
                 elide: Text.ElideRight
                 font.pixelSize: 12
                 font.weight: Font.Medium
-                color: Theme.onSurface
+                color: Theme.textOnSurface
             }
 
             Item {
@@ -406,7 +406,7 @@ Rectangle {
                 text: taskBtn.winRef ? taskBtn.winRef.toplevel.title : ""
                 elide: Text.ElideRight
                 font.pixelSize: 12
-                color: Theme.onSurface
+                color: Theme.textOnSurface
             }
         }
 

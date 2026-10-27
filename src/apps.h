@@ -74,6 +74,7 @@ signals:
     void queryChanged();
     void countChanged();
     void foldersChanged();
+    void builtinRequested(const QString &id);
 
 private:
     struct Entry {

@@ -258,18 +258,37 @@ int Apps::count() const
     return m_visible.size();
 }
 
+namespace {
+
+bool isBuiltinEntry(const QString &id)
+{
+    return Apps::normalizeId(id) == QStringLiteral("loali-settings");
+}
+
+}
+
 void Apps::launch(int row) const
 {
     if (row < 0 || row >= m_visible.size())
         return;
-    launchExec(m_entries.at(m_visible.at(row)).exec);
+    const Entry &e = m_entries.at(m_visible.at(row));
+    if (isBuiltinEntry(e.id)) {
+        emit builtinRequested(e.id);
+        return;
+    }
+    launchExec(e.exec);
 }
 
 void Apps::launchById(const QString &id) const
 {
     const Entry *e = find(id);
-    if (e)
-        launchExec(e->exec);
+    if (!e)
+        return;
+    if (isBuiltinEntry(e->id)) {
+        emit builtinRequested(e->id);
+        return;
+    }
+    launchExec(e->exec);
 }
 
 bool Apps::isPinned(const QString &id) const

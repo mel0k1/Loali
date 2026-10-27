@@ -195,7 +195,7 @@ Rectangle {
             height: Theme.sz(38)
             radius: width / 2
             color: btn.engaged ? Theme.primary
-                 : ma.containsMouse ? Qt.alpha(Theme.onSurface, 0.1)
+                 : ma.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.1)
                  : "transparent"
             Behavior on color { ColorAnimation { duration: 150 } }
         }

@@ -38,11 +38,6 @@ EOT
 write_desktop Files folder
 write_desktop Terminal utilities-terminal
 write_desktop Settings preferences-system
-write_desktop Editor accessories-text-editor
-write_desktop Calculator accessories-calculator
-write_desktop Archive archive-manager
-write_desktop Camera camera-photo
-write_desktop Music audio-headphones
 export XDG_DATA_DIRS="$APPDIR:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 
 run_shot() {

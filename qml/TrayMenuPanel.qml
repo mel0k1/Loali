@@ -86,7 +86,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: 20
-                        color: backHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.08) : "transparent"
+                        color: backHover.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.08) : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
 
@@ -151,7 +151,7 @@ Item {
                                 anchors.fill: parent
                                 radius: 22
                                 color: entryHover.containsMouse && entry.modelData.enabled
-                                       ? Qt.alpha(Theme.onSurface, 0.08) : "transparent"
+                                       ? Qt.alpha(Theme.textOnSurface, 0.08) : "transparent"
                                 Behavior on color { ColorAnimation { duration: 120 } }
                             }
 
@@ -180,7 +180,7 @@ Item {
                                 width: parent.width - (entry.modelData.hasChildren ? 126 : 96)
                                 text: entry.modelData.label
                                 elide: Text.ElideRight
-                                color: Theme.onSurface
+                                color: Theme.textOnSurface
                                 font.pixelSize: 14
                             }
 

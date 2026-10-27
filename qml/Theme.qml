@@ -16,7 +16,7 @@ QtObject {
         tertiary: "#EFB8C8", tertiaryContainer: "#633B48",
         surface: "#141218", surfaceContainerLow: "#1D1B20", surfaceContainer: "#211F26",
         surfaceContainerHigh: "#2B2930", surfaceContainerHighest: "#36343B",
-        onSurface: "#E6E0E9", onSurfaceVariant: "#CAC4D0",
+        textOn: "#E6E0E9", onSurfaceVariant: "#CAC4D0",
         outline: "#938F99", outlineVariant: "#49454F",
         error: "#F2B8B5", scrim: "#000000"
     })
@@ -27,7 +27,7 @@ QtObject {
         tertiary: "#7D5260", tertiaryContainer: "#FFD8E4",
         surface: "#FEF7FF", surfaceContainerLow: "#F7F2FA", surfaceContainer: "#F3EDF7",
         surfaceContainerHigh: "#ECE6F0", surfaceContainerHighest: "#E6E0E9",
-        onSurface: "#1D1B20", onSurfaceVariant: "#49454F",
+        textOn: "#1D1B20", onSurfaceVariant: "#49454F",
         outline: "#79747E", outlineVariant: "#CAC4D0",
         error: "#B3261E", scrim: "#000000"
     })
@@ -50,7 +50,8 @@ QtObject {
     readonly property color surfaceContainer: scheme ? scheme.surfaceContainer : fb.surfaceContainer
     readonly property color surfaceContainerHigh: scheme ? scheme.surfaceContainerHigh : fb.surfaceContainerHigh
     readonly property color surfaceContainerHighest: scheme ? scheme.surfaceContainerHighest : fb.surfaceContainerHighest
-    readonly property color onSurface: scheme ? scheme.onSurface : fb.onSurface
+    readonly property color textOnSurface: scheme ? scheme.onSurface : fb.textOn
+    readonly property color onSurface: textOnSurface
     readonly property color onSurfaceVariant: scheme ? scheme.onSurfaceVariant : fb.onSurfaceVariant
     readonly property color outline: scheme ? scheme.outline : fb.outline
     readonly property color outlineVariant: scheme ? scheme.outlineVariant : fb.outlineVariant

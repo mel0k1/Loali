@@ -242,7 +242,7 @@ Rectangle {
             width: 16
             height: 16
             path: btn.glyph
-            color: ma.containsMouse && btn.danger ? "#FFFFFF" : Theme.onSurface
+            color: ma.containsMouse && btn.danger ? "#FFFFFF" : Theme.textOnSurface
         }
         MouseArea {
             id: ma
@@ -305,7 +305,7 @@ Rectangle {
             width: parent.width - windowButtons.width - 28
             text: chrome.toplevel.title
             elide: Text.ElideRight
-            color: Theme.onSurface
+            color: Theme.textOnSurface
             font.pixelSize: 13
         }
 

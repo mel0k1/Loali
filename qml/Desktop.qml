@@ -82,8 +82,8 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: 18
-                color: cell.GridView.isCurrentItem ? Qt.alpha(Theme.onSurface, 0.14)
-                     : hover.containsMouse ? Qt.alpha(Theme.onSurface, 0.07)
+                color: cell.GridView.isCurrentItem ? Qt.alpha(Theme.textOnSurface, 0.14)
+                     : hover.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.07)
                      : desktop.dropIndex === cell.index && desktop.dragActive ? Qt.alpha(Theme.primary, 0.18)
                      : "transparent"
                 border.width: desktop.dropIndex === cell.index && desktop.dragActive ? 2
@@ -306,7 +306,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width - 36
                     text: folderPopup.folderName
-                    color: Theme.onSurface
+                    color: Theme.textOnSurface
                     font.pixelSize: 14
                     font.weight: Font.Medium
                     selectByMouse: true
@@ -341,7 +341,7 @@ Item {
                         anchors.fill: parent
                         anchors.margins: 4
                         radius: 14
-                        color: fhover.containsMouse ? Qt.alpha(Theme.onSurface, 0.08) : "transparent"
+                        color: fhover.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.08) : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
 
@@ -365,7 +365,7 @@ Item {
                         text: parent.modelData ? parent.modelData.name : ""
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
-                        color: Theme.onSurface
+                        color: Theme.textOnSurface
                         font.pixelSize: 11
                     }
 
@@ -412,7 +412,7 @@ Item {
                         id: ugroupLbl
                         anchors.centerIn: parent
                         text: qsTr("Ungroup all")
-                        color: Theme.onSurface
+                        color: Theme.textOnSurface
                         font.pixelSize: 12
                     }
 

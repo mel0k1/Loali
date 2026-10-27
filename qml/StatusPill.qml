@@ -85,7 +85,7 @@ Rectangle {
                 width: Theme.sz(34)
                 height: Theme.sz(34)
                 radius: width / 2
-                color: expoHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
+                color: expoHover.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.1) : "transparent"
                 Behavior on color { ColorAnimation { duration: 150 } }
             }
 
@@ -176,7 +176,7 @@ Rectangle {
                         width: Theme.sz(26)
                         height: Theme.sz(26)
                         radius: width / 2
-                        color: trayHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
+                        color: trayHover.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.1) : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
 
@@ -276,7 +276,7 @@ Rectangle {
                 width: Theme.sz(34)
                 height: Theme.sz(34)
                 radius: width / 2
-                color: themeHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
+                color: themeHover.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.1) : "transparent"
                 Behavior on color { ColorAnimation { duration: 150 } }
             }
 
@@ -316,7 +316,7 @@ Rectangle {
                 width: Theme.sz(34)
                 height: Theme.sz(34)
                 radius: width / 2
-                color: gearHover.containsMouse ? Qt.alpha(Theme.onSurface, 0.1) : "transparent"
+                color: gearHover.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.1) : "transparent"
                 Behavior on color { ColorAnimation { duration: 150 } }
             }
 

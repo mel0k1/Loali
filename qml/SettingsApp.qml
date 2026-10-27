@@ -78,7 +78,7 @@ Item {
                         width: 22
                         height: 22
                         path: Theme.iconSettings
-                        color: Theme.onSurface
+                        color: Theme.textOnSurface
                     }
 
                     Text {
@@ -86,7 +86,7 @@ Item {
                         text: qsTr("Settings")
                         font.pixelSize: 20
                         font.weight: Font.Medium
-                        color: Theme.onSurface
+                        color: Theme.textOnSurface
                     }
                 }
 
@@ -105,7 +105,7 @@ Item {
                         width: 16
                         height: 16
                         path: Theme.iconClose
-                        color: Theme.onSurface
+                        color: Theme.textOnSurface
                     }
 
                     MouseArea {
@@ -139,7 +139,7 @@ Item {
                             radius: 23
                             readonly property bool selected: pageStack.currentIndex === navItem.index
                             color: navItem.selected ? Theme.secondaryContainer
-                                                    : navMa.containsMouse ? Qt.alpha(Theme.onSurface, 0.08)
+                                                    : navMa.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.08)
                                                     : "transparent"
                             Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -161,7 +161,7 @@ Item {
                                     text: navItem.modelData.title
                                     font.pixelSize: 14
                                     font.weight: navItem.selected ? Font.Medium : Font.Normal
-                                    color: navItem.selected ? Theme.onSecondaryContainer : Theme.onSurface
+                                    color: navItem.selected ? Theme.onSecondaryContainer : Theme.textOnSurface
                                 }
                             }
 
@@ -196,7 +196,7 @@ Item {
             text: ""
             font.pixelSize: 22
             font.weight: Font.Medium
-            color: Theme.onSurface
+            color: Theme.textOnSurface
         }
 
         component SectionLabel: Text {
@@ -325,7 +325,7 @@ Item {
                     text: srow.title
                     font.pixelSize: 14
                     font.weight: Font.Medium
-                    color: Theme.onSurface
+                    color: Theme.textOnSurface
                 }
 
                 Text {
@@ -429,7 +429,7 @@ Item {
                     width: 420
                     height: 40
                     placeholderText: "/path/to/wallpaper.jpg"
-                    color: Theme.onSurface
+                    color: Theme.textOnSurface
                     placeholderTextColor: Theme.onSurfaceVariant
                     font.pixelSize: 14
                     text: Settings.wallpaper.indexOf("file:") === 0 ? Settings.wallpaper.substring(5) : ""
@@ -530,7 +530,7 @@ Item {
                             text: styleChip.modelData.n
                             font.pixelSize: 13
                             font.weight: styleChip.on ? Font.Medium : Font.Normal
-                            color: styleChip.on ? Theme.onSecondaryContainer : Theme.onSurface
+                            color: styleChip.on ? Theme.onSecondaryContainer : Theme.textOnSurface
                         }
 
                         MouseArea {
@@ -650,7 +650,7 @@ Item {
                                     width: 14
                                     height: 14
                                     path: Theme.iconCheck
-                                    color: Theme.onSurface
+                                    color: Theme.textOnSurface
                                 }
                             }
 
@@ -790,7 +790,7 @@ Item {
                             text: chip.modelData
                             font.pixelSize: 15
                             font.weight: chip.selected ? Font.Medium : Font.Normal
-                            color: chip.selected ? Theme.onSecondaryContainer : Theme.onSurface
+                            color: chip.selected ? Theme.onSecondaryContainer : Theme.textOnSurface
                         }
 
                         MouseArea {
@@ -843,7 +843,7 @@ Item {
                                 text: keyRow.modelData.k
                                 font.pixelSize: 12
                                 font.family: "monospace"
-                                color: Theme.onSurface
+                                color: Theme.textOnSurface
                             }
                         }
 
@@ -877,7 +877,7 @@ Item {
                 text: "Hi! Loali"
                 font.pixelSize: 28
                 font.weight: Font.Medium
-                color: Theme.onSurface
+                color: Theme.textOnSurface
             }
 
             Text {

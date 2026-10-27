@@ -102,7 +102,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - 30
                         placeholderText: qsTr("Search apps")
-                        color: Theme.onSurface
+                        color: Theme.textOnSurface
                         placeholderTextColor: Theme.onSurfaceVariant
                         font.pixelSize: 15
                         background: null
@@ -270,7 +270,7 @@ Item {
                         anchors.fill: parent
                         anchors.margins: 4
                         radius: 20
-                        color: press.containsMouse || appCell.dragging ? Qt.alpha(Theme.onSurface, 0.08) : "transparent"
+                        color: press.containsMouse || appCell.dragging ? Qt.alpha(Theme.textOnSurface, 0.08) : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
 
@@ -294,7 +294,7 @@ Item {
                         text: appCell.name
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
-                        color: appCell.running ? Theme.primary : Theme.onSurface
+                        color: appCell.running ? Theme.primary : Theme.textOnSurface
                         font.pixelSize: 12
                         Behavior on color { ColorAnimation { duration: 150 } }
                         Behavior on anchors.bottomMargin { NumberAnimation { duration: 150 } }
@@ -423,7 +423,7 @@ Item {
                     width: 16
                     height: 16
                     path: Theme.iconBack
-                    color: Theme.onSurface
+                    color: Theme.textOnSurface
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -450,7 +450,7 @@ Item {
                     width: 16
                     height: 16
                     path: Theme.iconChevron
-                    color: Theme.onSurface
+                    color: Theme.textOnSurface
                 }
                 MouseArea {
                     anchors.fill: parent

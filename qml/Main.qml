@@ -236,6 +236,11 @@ WaylandCompositor {
         if (demoTimer.mode !== "")
             demoTimer.restart()
         console.info("Loali socket:", socketName === "" ? "wayland-?" : socketName)
+        console.info("DBG colors:", "dark=" + Settings.dark,
+                     "scheme=" + (Theme.scheme === null ? "null" : "obj"),
+                     "onSurface=" + Theme.onSurface,
+                     "textOnSurface=" + Theme.textOnSurface,
+                     "fbTextOn=" + Theme.fb.textOn)
     }
 
     Timer {
@@ -253,6 +258,16 @@ WaylandCompositor {
                 const t = comp.topMost()
                 if (t)
                     taskbarPanel.showPreviewFor(t)
+            }
+        }
+    }
+
+    Connections {
+        target: Apps
+        function onBuiltinRequested(id) {
+            if (id.toLowerCase().indexOf("settings") >= 0) {
+                launcher.open = false
+                settingsApp.open = true
             }
         }
     }
