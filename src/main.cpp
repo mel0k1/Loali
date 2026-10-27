@@ -1,11 +1,14 @@
 #include <QCommandLineParser>
 #include <QGuiApplication>
+#include <QQuickStyle>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QQuickStyle>
+#include <QtQml>
 
 #include "iconprovider.h"
+#include "screencopy.h"
 #include "tray.h"
+#include "xdgoutput.h"
 
 int main(int argc, char *argv[])
 {
@@ -13,15 +16,26 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName(QStringLiteral("Loali"));
     QGuiApplication::setOrganizationName(QStringLiteral("Loali"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("0.5.0"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("0.6.0"));
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QCommandLineParser parser;
     parser.addHelpOption();
     QCommandLineOption fullscreenOption(QStringLiteral("fullscreen"),
                                         QStringLiteral("Run the output window in fullscreen mode."));
+    QCommandLineOption demoOption(QStringLiteral("demo"),
+                                  QStringLiteral("Open <launcher|settings|expo> after start."),
+                                  QStringLiteral("mode"));
+    QCommandLineOption demoDelayOption(QStringLiteral("demo-delay"),
+                                       QStringLiteral("Delay before the demo action, ms."),
+                                       QStringLiteral("ms"));
     parser.addOption(fullscreenOption);
+    parser.addOption(demoOption);
+    parser.addOption(demoDelayOption);
     parser.process(app);
+
+    qmlRegisterType<ScreencopyManagerQuickExtension>("Loali", 1, 0, "ScreencopyManager");
+    qmlRegisterType<XdgOutputManagerQuickExtension>("Loali", 1, 0, "XdgOutputManager");
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QStringLiteral("loali"), new IconProvider());

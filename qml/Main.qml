@@ -226,7 +226,30 @@ WaylandCompositor {
 
     Component.onCompleted: {
         paletteSource()
+        const args = Qt.application.arguments
+        for (let i = 0; i < args.length; ++i) {
+            if (args[i] === "--demo" && i + 1 < args.length)
+                demoTimer.mode = args[i + 1]
+            if (args[i] === "--demo-delay" && i + 1 < args.length)
+                demoTimer.interval = parseInt(args[i + 1]) || 3200
+        }
+        if (demoTimer.mode !== "")
+            demoTimer.restart()
         console.info("Loali socket:", socketName === "" ? "wayland-?" : socketName)
+    }
+
+    Timer {
+        id: demoTimer
+        repeat: false
+        property string mode: ""
+        onTriggered: {
+            if (mode === "launcher")
+                launcher.open = true
+            else if (mode === "settings")
+                settingsApp.open = true
+            else if (mode === "expo")
+                comp.toggleExpo()
+        }
     }
 
     Connections {
@@ -639,6 +662,10 @@ WaylandCompositor {
     XdgDecorationManagerV1 {
         preferredMode: XdgToplevel.ServerSideDecoration
     }
+
+    XdgOutputManager { }
+
+    ScreencopyManager { }
 
     Component {
         id: chromeComponent

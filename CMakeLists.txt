@@ -59,6 +59,10 @@ qt_add_qml_module(loali
         src/notifications.cpp
         src/matcolor.h
         src/matcolor.cpp
+        src/screencopy.h
+        src/screencopy.cpp
+        src/xdgoutput.h
+        src/xdgoutput.cpp
     RESOURCES
         assets/logo.svg
         assets/wallpapers/dusk.jpg
@@ -73,11 +77,36 @@ target_link_libraries(loali PRIVATE
     Qt6::DBus
 )
 
-target_include_directories(loali PRIVATE src src/mat)
+target_include_directories(loali PRIVATE src src/mat ${CMAKE_CURRENT_BINARY_DIR})
+
+qt6_generate_wayland_protocol_server_sources(loali
+    FILE ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-output-unstable-v1.xml
+)
+qt6_generate_wayland_protocol_server_sources(loali
+    FILE ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-screencopy-unstable-v1.xml
+)
+
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(WAYLAND_SERVER IMPORTED_TARGET wayland-server)
+    if(TARGET PkgConfig::WAYLAND_SERVER)
+        target_link_libraries(loali PRIVATE PkgConfig::WAYLAND_SERVER)
+    endif()
+endif()
+
+qt_add_executable(lodemo
+    tools/lodemo.cpp
+)
+
+target_link_libraries(lodemo PRIVATE
+    Qt6::Qml
+    Qt6::Quick
+    Qt6::Gui
+)
 
 include(GNUInstallDirs)
 
-install(TARGETS loali RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS loali lodemo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES assets/loali.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
 install(FILES assets/loali-session.desktop RENAME loali.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/wayland-sessions)
 install(FILES assets/logo.svg RENAME loali.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
