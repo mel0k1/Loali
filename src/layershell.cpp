@@ -214,8 +214,9 @@ void LayerSurface::grabKeyboard()
 }
 
 LayerShell::LayerShell(QObject *parent)
-    : QWaylandCompositorExtensionTemplate<LayerShell>(parent)
+    : QWaylandCompositorExtensionTemplate<LayerShell>()
 {
+    Q_UNUSED(parent)
 }
 
 void LayerShell::initialize()
@@ -252,8 +253,6 @@ void LayerShell::zwlr_layer_shell_v1_get_layer_surface(Resource *resource, uint3
     if (!surfResource.resource())
         return;
 
-    LayerSurface *ls = new LayerSurface(this, qs, output, layer, namespace_, surfResource);
+    LayerSurface *ls = new LayerSurface(this, qs, output, layer, namespace_name, surfResource);
     emit layerSurfaceCreated(ls);
 }
-
-Q_COMPOSITOR_DECLARE_QUICK_EXTENSION_CLASS(LayerShell)

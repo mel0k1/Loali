@@ -47,8 +47,8 @@ public:
     void setQuery(const QString &query);
     int count() const;
 
-    Q_INVOKABLE void launch(int row) const;
-    Q_INVOKABLE void launchById(const QString &id) const;
+    Q_INVOKABLE void launch(int row);
+    Q_INVOKABLE void launchById(const QString &id);
     Q_INVOKABLE bool isPinned(const QString &id) const;
     Q_INVOKABLE void togglePin(const QString &id);
     Q_INVOKABLE bool isLauncherPinned(const QString &id) const;
@@ -56,6 +56,7 @@ public:
     Q_INVOKABLE void move(int from, int to);
     Q_INVOKABLE QString firstMatch() const;
     Q_INVOKABLE QString iconForAppId(const QString &appId) const;
+    static QString normalizeId(QString id);
 
     QVariantList folders() const;
     Q_INVOKABLE QVariantList folderEntries(const QString &folderId) const;
@@ -98,7 +99,6 @@ private:
     void persistFolders();
     const Entry *find(const QString &id) const;
     void launchExec(const QString &exec) const;
-    static QString normalizeId(QString id);
     void detachApp(const QString &appId);
     Folder *findFolder(const QString &id);
 

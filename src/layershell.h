@@ -145,7 +145,7 @@ signals:
 protected:
     void zwlr_layer_shell_v1_get_layer_surface(Resource *resource, uint32_t id,
                                                ::wl_resource *surface, ::wl_resource *output,
-                                               uint32_t layer, const QString &namespace_) override;
+                                               uint32_t layer, const QString &namespace_name) override;
 };
 
 Q_COMPOSITOR_DECLARE_QUICK_EXTENSION_CLASS(LayerShell)

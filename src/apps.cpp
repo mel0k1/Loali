@@ -267,7 +267,7 @@ bool isBuiltinEntry(const QString &id)
 
 }
 
-void Apps::launch(int row) const
+void Apps::launch(int row)
 {
     if (row < 0 || row >= m_visible.size())
         return;
@@ -279,7 +279,7 @@ void Apps::launch(int row) const
     launchExec(e.exec);
 }
 
-void Apps::launchById(const QString &id) const
+void Apps::launchById(const QString &id)
 {
     const Entry *e = find(id);
     if (!e)
