@@ -14,6 +14,13 @@ Item {
     enabled: open
     Behavior on opacity { NumberAnimation { duration: 180 } }
 
+    onOpenChanged: {
+        if (!open) {
+            field.text = ""
+            Apps.query = ""
+        }
+    }
+
     function runningFor(appId) {
         return shell ? shell.windowsForApp(appId).length > 0 : false
     }
@@ -111,10 +118,14 @@ Item {
                 }
             }
 
+            Item {
+                id: gridWrap
+                width: parent.width
+                height: parent.height - 112 - dotsRow.height
+
             GridView {
                 id: appsGrid
-                width: parent.width
-                height: parent.height - 88
+                anchors.fill: parent
                 clip: true
                 readonly property int columns: Math.max(4, Math.floor(width / 120))
                 cellWidth: Math.floor(width / columns)
@@ -122,6 +133,50 @@ Item {
                 model: Apps
                 boundsBehavior: Flickable.StopAtBounds
                 readonly property bool canDrag: Apps.query === ""
+                readonly property int pageCount: Math.max(1, Math.ceil((contentHeight - 1) / Math.max(height, 1)))
+                readonly property int curPage: pageCount < 2 ? 0
+                    : Math.max(0, Math.min(pageCount - 1, Math.round(contentY / height)))
+                property bool edgeUp: false
+                property bool edgeDown: false
+                property real lastVX: 0
+                property real lastVY: 0
+
+                function snapToPage(p) {
+                    if (pageCount < 2)
+                        return
+                    const max = Math.max(0, contentHeight - height)
+                    pageAnim.to = Math.max(0, Math.min(p * height, max))
+                    pageAnim.restart()
+                }
+
+                function snapBack() {
+                    snapToPage(Math.round(contentY / height))
+                }
+
+                onDragEnded: snapBack()
+                onFlickEnded: snapBack()
+
+                NumberAnimation {
+                    id: pageAnim
+                    target: appsGrid
+                    property: "contentY"
+                    duration: 240
+                    easing.type: Easing.OutCubic
+                }
+
+                Timer {
+                    id: dragScroll
+                    interval: 16
+                    repeat: true
+                    running: appsGrid.dragActive && (appsGrid.edgeUp || appsGrid.edgeDown)
+                    onTriggered: {
+                        const dir = appsGrid.edgeUp ? -1 : 1
+                        appsGrid.contentY = Math.max(0, Math.min(
+                            appsGrid.contentHeight - appsGrid.height,
+                            appsGrid.contentY + dir * 9))
+                        appsGrid.updateDrag(appsGrid.lastVX, appsGrid.lastVY)
+                    }
+                }
 
                 move: Transition {
                     NumberAnimation { properties: "x,y"; duration: 220; easing.type: Easing.OutCubic }
@@ -159,17 +214,26 @@ Item {
                     dragActive = true
                 }
 
-                function updateDrag(x, y) {
+                function updateDrag(vx, vy) {
+                    lastVX = vx
+                    lastVY = vy
+                    const cx = vx
+                    const cy = contentY + vy
                     const rows = Math.max(1, Math.ceil(count / columns))
-                    const col = Math.max(0, Math.min(columns - 1, Math.floor(x / cellWidth)))
-                    const row = Math.max(0, Math.min(rows - 1, Math.floor(y / cellHeight)))
+                    const col = Math.max(0, Math.min(columns - 1, Math.floor(cx / cellWidth)))
+                    const row = Math.max(0, Math.min(rows - 1, Math.floor(cy / cellHeight)))
                     const target = Math.min(count - 1, row * columns + col)
                     if (target !== dragIndex && dragIndex >= 0) {
                         Apps.move(dragIndex, target)
                         dragIndex = target
                     }
-                    dragGhost.x = x - 32
-                    dragGhost.y = y - 32
+                    dragGhost.x = cx - 32
+                    dragGhost.y = cy - 32
+                }
+
+                function checkEdges(vy) {
+                    edgeUp = vy < 34
+                    edgeDown = vy > height - 34
                 }
 
                 function endDrag() {
@@ -297,19 +361,24 @@ Item {
                         onPositionChanged: (mouse) => {
                             if (!press.pressed || !(press.pressedButtons & Qt.LeftButton))
                                 return
+                            const vx = appCell.x + mouse.x
+                            const vy = appCell.y + mouse.y - appsGrid.contentY
                             const dx = mouse.x - pressPos.x
                             const dy = mouse.y - pressPos.y
                             if (!appsGrid.dragActive && appsGrid.canDrag && dx * dx + dy * dy > 100) {
                                 moved = true
                                 appsGrid.startDrag(appCell.index, appCell.icon)
-                                appsGrid.updateDrag(appCell.x + mouse.x, appCell.y + mouse.y)
                             }
-                            if (appsGrid.dragActive)
-                                appsGrid.updateDrag(appCell.x + mouse.x, appCell.y + mouse.y)
+                            if (appsGrid.dragActive) {
+                                appsGrid.updateDrag(vx, vy)
+                                appsGrid.checkEdges(vy)
+                            }
                         }
                         onReleased: {
-                            if (appsGrid.dragActive)
+                            if (appsGrid.dragActive) {
                                 appsGrid.endDrag()
+                                appsGrid.snapBack()
+                            }
                             else if (!moved)
                                 launcher.activate(appCell.appId)
                         }
@@ -332,6 +401,90 @@ Item {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
+                }
+            }
+
+            Rectangle {
+                id: pageUpBtn
+                anchors.left: parent.left
+                anchors.leftMargin: 6
+                anchors.verticalCenter: parent.verticalCenter
+                visible: appsGrid.pageCount > 1
+                opacity: appsGrid.contentY > 4 ? 0.92 : 0.25
+                width: 32
+                height: 32
+                radius: 16
+                color: Theme.surfaceContainerHigh
+                border.width: 1
+                border.color: Qt.alpha(Theme.outlineVariant, 0.6)
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+                MIcon {
+                    anchors.centerIn: parent
+                    width: 16
+                    height: 16
+                    path: Theme.iconBack
+                    color: Theme.onSurface
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: appsGrid.snapToPage(appsGrid.curPage - 1)
+                }
+            }
+
+            Rectangle {
+                id: pageDownBtn
+                anchors.right: parent.right
+                anchors.rightMargin: 6
+                anchors.verticalCenter: parent.verticalCenter
+                visible: appsGrid.pageCount > 1
+                opacity: appsGrid.contentY < appsGrid.contentHeight - appsGrid.height - 4 ? 0.92 : 0.25
+                width: 32
+                height: 32
+                radius: 16
+                color: Theme.surfaceContainerHigh
+                border.width: 1
+                border.color: Qt.alpha(Theme.outlineVariant, 0.6)
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+                MIcon {
+                    anchors.centerIn: parent
+                    width: 16
+                    height: 16
+                    path: Theme.iconChevron
+                    color: Theme.onSurface
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: appsGrid.snapToPage(appsGrid.curPage + 1)
+                }
+            }
+            }
+
+            Row {
+                id: dotsRow
+                anchors.horizontalCenter: parent.horizontalCenter
+                visible: appsGrid.pageCount > 1
+                height: appsGrid.pageCount > 1 ? 18 : 0
+                spacing: 6
+
+                Repeater {
+                    model: appsGrid.pageCount
+
+                    delegate: Rectangle {
+                        id: dot
+                        required property int index
+                        width: appsGrid.curPage === dot.index ? 18 : 8
+                        height: 8
+                        radius: 4
+                        color: appsGrid.curPage === dot.index ? Theme.primary
+                                                              : Qt.alpha(Theme.onSurfaceVariant, 0.45)
+                        Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -5
+                            onClicked: appsGrid.snapToPage(dot.index)
+                        }
+                    }
                 }
             }
         }
