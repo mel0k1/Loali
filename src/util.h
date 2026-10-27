@@ -13,10 +13,13 @@ class LoaliUtil : public QObject
 public:
     static QObject *create(QQmlEngine *qml, QJSEngine *js)
     {
-        Q_UNUSED(qml)
         Q_UNUSED(js)
-        static LoaliUtil inst;
-        return &inst;
+        static LoaliUtil *inst = nullptr;
+        if (!inst)
+            inst = new LoaliUtil();
+        if (qml)
+            qml->setObjectOwnership(inst, QQmlEngine::CppOwnership);
+        return inst;
     }
 
     Q_INVOKABLE void focus(const QVariant &seat, const QVariant &surface)
