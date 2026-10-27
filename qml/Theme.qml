@@ -4,8 +4,6 @@ import Loali
 
 QtObject {
     readonly property var scheme: {
-        if (!Settings.autoAccent)
-            return null
         const s = Settings.dark ? MatColor.dark : MatColor.light
         return s && s.primary !== undefined ? s : null
     }

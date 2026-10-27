@@ -27,6 +27,11 @@ LoaliSettings::LoaliSettings(QObject *parent)
         m_dockMode = Island;
     m_panelScale = s.value(QStringLiteral("panels/scale"), 0.9).toReal();
     m_panelScale = std::clamp(m_panelScale, 0.7, 1.3);
+    m_colorStyle = s.value(QStringLiteral("appearance/colorStyle"), TonalSpot).toInt();
+    if (m_colorStyle < TonalSpot || m_colorStyle > Monochrome)
+        m_colorStyle = TonalSpot;
+    m_contrast = s.value(QStringLiteral("appearance/contrast"), 0.0).toReal();
+    m_contrast = std::clamp(m_contrast, -1.0, 1.0);
 }
 
 LoaliSettings *LoaliSettings::create(QQmlEngine *engine, QJSEngine *jsEngine)
@@ -143,4 +148,27 @@ void LoaliSettings::setPanelScale(qreal value)
     QSettings s;
     s.setValue(QStringLiteral("panels/scale"), value);
     emit panelScaleChanged();
+}
+
+void LoaliSettings::setColorStyle(int value)
+{
+    if (value < TonalSpot || value > Monochrome)
+        value = TonalSpot;
+    if (m_colorStyle == value)
+        return;
+    m_colorStyle = value;
+    QSettings s;
+    s.setValue(QStringLiteral("appearance/colorStyle"), value);
+    emit colorStyleChanged();
+}
+
+void LoaliSettings::setContrast(qreal value)
+{
+    value = std::clamp(value, -1.0, 1.0);
+    if (qFuzzyCompare(m_contrast, value))
+        return;
+    m_contrast = value;
+    QSettings s;
+    s.setValue(QStringLiteral("appearance/contrast"), value);
+    emit contrastChanged();
 }

@@ -28,6 +28,8 @@ public:
 
     Q_INVOKABLE void generateFromImage(const QString &source);
     Q_INVOKABLE void generateFromColor(const QColor &color);
+    Q_INVOKABLE void setStyle(int style);
+    Q_INVOKABLE void setContrast(qreal contrast);
 
 signals:
     void paletteChanged();
@@ -36,10 +38,14 @@ private:
     explicit MatColor(QObject *parent = nullptr);
 
     void apply(uint32_t argb);
+    void rebuild();
 
     static MatColor *s_instance;
     QVariantMap m_dark;
     QVariantMap m_light;
     QVariantList m_suggested;
     QString m_source;
+    uint32_t m_argb = 0xff6750a4u;
+    int m_style = 0;
+    qreal m_contrast = 0.0;
 };

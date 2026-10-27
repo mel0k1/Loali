@@ -217,8 +217,15 @@ WaylandCompositor {
         return trayMenuPanel.openAt(row, x, y)
     }
 
+    function paletteSource() {
+        if (Settings.autoAccent)
+            MatColor.generateFromImage(Settings.wallpaper)
+        else
+            MatColor.generateFromColor(Settings.accent)
+    }
+
     Component.onCompleted: {
-        MatColor.generateFromImage(Settings.wallpaper)
+        paletteSource()
         console.info("Loali socket:", socketName === "" ? "wayland-?" : socketName)
     }
 
@@ -229,8 +236,17 @@ WaylandCompositor {
                 MatColor.generateFromImage(Settings.wallpaper)
         }
         function onAutoAccentChanged() {
-            if (Settings.autoAccent)
-                MatColor.generateFromImage(Settings.wallpaper)
+            paletteSource()
+        }
+        function onAccentChanged() {
+            if (!Settings.autoAccent)
+                MatColor.generateFromColor(Settings.accent)
+        }
+        function onColorStyleChanged() {
+            MatColor.setStyle(Settings.colorStyle)
+        }
+        function onContrastChanged() {
+            MatColor.setContrast(Settings.contrast)
         }
         function onPanelScaleChanged() {
             comp.reapplyLayouts()

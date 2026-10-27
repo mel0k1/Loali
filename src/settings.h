@@ -20,7 +20,10 @@ class LoaliSettings : public QObject
     Q_PROPERTY(int taskbarStyle READ taskbarStyle WRITE setTaskbarStyle NOTIFY taskbarStyleChanged)
     Q_PROPERTY(int dockMode READ dockMode WRITE setDockMode NOTIFY dockModeChanged)
     Q_PROPERTY(qreal panelScale READ panelScale WRITE setPanelScale NOTIFY panelScaleChanged)
+    Q_PROPERTY(int colorStyle READ colorStyle WRITE setColorStyle NOTIFY colorStyleChanged)
+    Q_PROPERTY(qreal contrast READ contrast WRITE setContrast NOTIFY contrastChanged)
 
+public:
     enum BarStyle
     {
         Floating,
@@ -33,8 +36,18 @@ class LoaliSettings : public QObject
         Plane
     };
     Q_ENUM(DockLook)
+    enum ColorStyle
+    {
+        TonalSpot,
+        Vibrant,
+        Expressive,
+        Content,
+        FruitSalad,
+        Rainbow,
+        Monochrome
+    };
+    Q_ENUM(ColorStyle)
 
-public:
     static LoaliSettings *create(QQmlEngine *engine, QJSEngine *jsEngine);
 
     QString wallpaper() const { return m_wallpaper; }
@@ -67,6 +80,12 @@ public:
     qreal panelScale() const { return m_panelScale; }
     void setPanelScale(qreal value);
 
+    int colorStyle() const { return m_colorStyle; }
+    void setColorStyle(int value);
+
+    qreal contrast() const { return m_contrast; }
+    void setContrast(qreal value);
+
 signals:
     void wallpaperChanged();
     void dimChanged();
@@ -78,6 +97,8 @@ signals:
     void taskbarStyleChanged();
     void dockModeChanged();
     void panelScaleChanged();
+    void colorStyleChanged();
+    void contrastChanged();
 
 private:
     explicit LoaliSettings(QObject *parent = nullptr);
@@ -93,4 +114,6 @@ private:
     int m_taskbarStyle = Floating;
     int m_dockMode = Island;
     qreal m_panelScale = 0.9;
+    int m_colorStyle = TonalSpot;
+    qreal m_contrast = 0.0;
 };

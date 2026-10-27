@@ -14,7 +14,13 @@
 #include "cpp/cam/hct.h"
 #include "cpp/dynamiccolor/material_dynamic_colors.h"
 #include "cpp/quantize/wu.h"
+#include "cpp/scheme/scheme_content.h"
+#include "cpp/scheme/scheme_expressive.h"
+#include "cpp/scheme/scheme_fruit_salad.h"
+#include "cpp/scheme/scheme_monochrome.h"
+#include "cpp/scheme/scheme_rainbow.h"
 #include "cpp/scheme/scheme_tonal_spot.h"
+#include "cpp/scheme/scheme_vibrant.h"
 #include "cpp/score/score.h"
 #include "cpp/utils/utils.h"
 
@@ -175,13 +181,83 @@ void MatColor::generateFromColor(const QColor &color)
     apply(toArgb(color));
 }
 
+void MatColor::setStyle(int style)
+{
+    if (style == m_style)
+        return;
+    m_style = style;
+    rebuild();
+}
+
+void MatColor::setContrast(qreal contrast)
+{
+    if (qFuzzyCompare(m_contrast, contrast))
+        return;
+    m_contrast = contrast;
+    rebuild();
+}
+
 void MatColor::apply(uint32_t argb)
 {
-    const material_color_utilities::Hct hct(argb);
-    const material_color_utilities::SchemeTonalSpot light(hct, false, 0.0);
-    const material_color_utilities::SchemeTonalSpot dark(hct, true, 0.0);
-    m_light = schemeRoles(light);
-    m_dark = schemeRoles(dark);
-    m_source = toColor(argb).name(QColor::HexArgb);
+    m_argb = argb;
+    rebuild();
+}
+
+void MatColor::rebuild()
+{
+    using namespace material_color_utilities;
+    const Hct hct(m_argb);
+    switch (m_style) {
+    case 1: {
+        SchemeVibrant light(hct, false, m_contrast);
+        SchemeVibrant dark(hct, true, m_contrast);
+        m_light = schemeRoles(light);
+        m_dark = schemeRoles(dark);
+        break;
+    }
+    case 2: {
+        SchemeExpressive light(hct, false, m_contrast);
+        SchemeExpressive dark(hct, true, m_contrast);
+        m_light = schemeRoles(light);
+        m_dark = schemeRoles(dark);
+        break;
+    }
+    case 3: {
+        SchemeContent light(hct, false, m_contrast);
+        SchemeContent dark(hct, true, m_contrast);
+        m_light = schemeRoles(light);
+        m_dark = schemeRoles(dark);
+        break;
+    }
+    case 4: {
+        SchemeFruitSalad light(hct, false, m_contrast);
+        SchemeFruitSalad dark(hct, true, m_contrast);
+        m_light = schemeRoles(light);
+        m_dark = schemeRoles(dark);
+        break;
+    }
+    case 5: {
+        SchemeRainbow light(hct, false, m_contrast);
+        SchemeRainbow dark(hct, true, m_contrast);
+        m_light = schemeRoles(light);
+        m_dark = schemeRoles(dark);
+        break;
+    }
+    case 6: {
+        SchemeMonochrome light(hct, false, m_contrast);
+        SchemeMonochrome dark(hct, true, m_contrast);
+        m_light = schemeRoles(light);
+        m_dark = schemeRoles(dark);
+        break;
+    }
+    default: {
+        SchemeTonalSpot light(hct, false, m_contrast);
+        SchemeTonalSpot dark(hct, true, m_contrast);
+        m_light = schemeRoles(light);
+        m_dark = schemeRoles(dark);
+        break;
+    }
+    }
+    m_source = toColor(m_argb).name(QColor::HexArgb);
     emit paletteChanged();
 }
