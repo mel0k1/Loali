@@ -332,22 +332,10 @@ Rectangle {
             color: Theme.surfaceContainerLow
             clip: true
 
-            WaylandQuickItem {
-                id: pv
-                anchors.centerIn: parent
-                visible: taskbar.previewWin !== null
-                readonly property real sw: taskbar.previewWin ? Math.max(taskbar.previewWin.width, 1) : 1
-                readonly property real sh: taskbar.previewWin
-                    ? Math.max(taskbar.previewWin.height - taskbar.previewWin.barHeight, 1) : 1
-                readonly property real fit: Math.min(shotArea.width / sw, shotArea.height / sh)
-                width: sw * fit
-                height: sh * fit
-                surface: taskbar.previewWin && taskbar.previewWin.surface
-                         ? taskbar.previewWin.surface : null
-                output: taskbar.shell ? taskbar.shell.defaultOutput : null
-                enabled: false
-                focusOnClick: false
-                bufferLocked: true
+            Loader {
+                anchors.fill: parent
+                active: taskbar.previewWin !== null
+                sourceComponent: previewSurfaceComp
             }
 
             MouseArea {
@@ -360,6 +348,27 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    Component {
+        id: previewSurfaceComp
+
+        WaylandQuickItem {
+            id: pv
+            anchors.centerIn: parent
+            readonly property real sw: taskbar.previewWin ? Math.max(taskbar.previewWin.width, 1) : 1
+            readonly property real sh: taskbar.previewWin
+                ? Math.max(taskbar.previewWin.height - taskbar.previewWin.barHeight, 1) : 1
+            readonly property real fit: Math.min(shotArea.width / sw, shotArea.height / sh)
+            width: sw * fit
+            height: sh * fit
+            surface: taskbar.previewWin && taskbar.previewWin.surface
+                     ? taskbar.previewWin.surface : null
+            output: taskbar.shell ? taskbar.shell.defaultOutput : null
+            enabled: false
+            focusOnClick: false
+            bufferLocked: true
         }
     }
 
