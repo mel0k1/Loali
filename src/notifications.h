@@ -12,8 +12,6 @@
 class Notifications : public QAbstractListModel
 {
     Q_OBJECT
-    QML_ELEMENT
-    QML_SINGLETON
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:

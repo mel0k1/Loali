@@ -7,9 +7,6 @@
 class LoaliSettings : public QObject
 {
     Q_OBJECT
-    QML_ELEMENT
-    QML_SINGLETON
-    QML_NAMED_ELEMENT(Settings)
     Q_PROPERTY(QString wallpaper READ wallpaper WRITE setWallpaper NOTIFY wallpaperChanged)
     Q_PROPERTY(qreal dim READ dim WRITE setDim NOTIFY dimChanged)
     Q_PROPERTY(QColor accent READ accent WRITE setAccent NOTIFY accentChanged)

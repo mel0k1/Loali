@@ -10,8 +10,6 @@
 class MatColor : public QObject
 {
     Q_OBJECT
-    QML_ELEMENT
-    QML_SINGLETON
     Q_PROPERTY(QVariantMap dark READ dark NOTIFY paletteChanged)
     Q_PROPERTY(QVariantMap light READ light NOTIFY paletteChanged)
     Q_PROPERTY(QVariantList suggested READ suggested NOTIFY paletteChanged)

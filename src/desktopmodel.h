@@ -13,7 +13,6 @@ class Apps;
 class DesktopModel : public QAbstractListModel
 {
     Q_OBJECT
-    QML_ELEMENT
 
 public:
     enum Roles {

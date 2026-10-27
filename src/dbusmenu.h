@@ -26,7 +26,6 @@ QDBusArgument &operator<<(QDBusArgument &arg, const DbusMenuNode &node);
 class TrayMenu : public QObject
 {
     Q_OBJECT
-    QML_ELEMENT
     Q_PROPERTY(QString bus READ bus WRITE setBus NOTIFY targetChanged)
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY targetChanged)
     Q_PROPERTY(QVariantList items READ items NOTIFY levelChanged)

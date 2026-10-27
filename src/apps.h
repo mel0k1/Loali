@@ -12,8 +12,6 @@
 class Apps : public QAbstractListModel
 {
     Q_OBJECT
-    QML_ELEMENT
-    QML_SINGLETON
     Q_PROPERTY(QVariantList pinnedApps READ pinnedApps NOTIFY pinsChanged)
     Q_PROPERTY(QString query READ query WRITE setQuery NOTIFY queryChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
