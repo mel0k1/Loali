@@ -249,6 +249,11 @@ WaylandCompositor {
                 settingsApp.open = true
             else if (mode === "expo")
                 comp.toggleExpo()
+            else if (mode === "preview") {
+                const t = comp.topMost()
+                if (t)
+                    taskbarPanel.showPreviewFor(t)
+            }
         }
     }
 
@@ -360,6 +365,7 @@ WaylandCompositor {
             }
 
             Taskbar {
+                id: taskbarPanel
                 shell: comp
                 windows: comp.windows
                 z: 100

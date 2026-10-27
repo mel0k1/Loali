@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtWayland.Compositor
 import Loali
 
 Rectangle {
@@ -10,11 +11,43 @@ Rectangle {
     property var shell
     property var windows
 
+    property var previewWin: null
+    property real previewX: 0
+
     readonly property bool fullMode: Settings.taskbarStyle === Settings.Full
     readonly property bool stretched: fullMode || overflow
     readonly property int pad: 12
     readonly property real contentW: tasksPart.implicitWidth + rightPart.implicitWidth + 12 + pad * 2
     readonly property bool overflow: !fullMode && parent ? contentW > parent.width - 16 : false
+
+    function buttonFor(w) {
+        for (let i = 0; i < tasksPart.children.length; ++i) {
+            const it = tasksPart.children[i]
+            if (it.winRef === w)
+                return it
+        }
+        return null
+    }
+
+    function showPreviewFor(w) {
+        if (!w || !w.surface) {
+            hidePreview()
+            return
+        }
+        const btn = buttonFor(w)
+        const pw = 264
+        if (btn && parent) {
+            const cx = btn.mapToItem(parent, btn.width / 2, 0).x
+            previewX = Math.max(8, Math.min(parent.width - pw - 8, cx - pw / 2))
+        } else if (parent) {
+            previewX = Math.round((parent.width - pw) / 2)
+        }
+        previewWin = w
+    }
+
+    function hidePreview() {
+        previewWin = null
+    }
 
     x: stretched ? 0 : Math.round((parent.width - width) / 2)
     y: stretched ? parent.height - height : parent.height - height - 12
@@ -162,6 +195,173 @@ Rectangle {
         }
     }
 
+    Timer {
+        id: previewHide
+        interval: 320
+        onTriggered: taskbar.hidePreview()
+    }
+
+    Connections {
+        target: taskbar.windows
+        function onCountChanged() {
+            if (!taskbar.previewWin)
+                return
+            let found = false
+            for (let i = 0; i < taskbar.windows.count; ++i) {
+                if (taskbar.windows.get(i).win === taskbar.previewWin) {
+                    found = true
+                    break
+                }
+            }
+            if (!found)
+                taskbar.hidePreview()
+        }
+    }
+
+    Rectangle {
+        id: preview
+        parent: taskbar.parent
+        visible: opacity > 0
+        opacity: taskbar.previewWin !== null ? 1 : 0
+        scale: opacity > 0.5 ? 1 : 0.94
+        z: 120
+        width: 264
+        height: 218
+        x: taskbar.previewX
+        y: taskbar.y - height - 10
+        radius: 22
+        color: Theme.surfaceContainerHigh
+        border.width: 1
+        border.color: Qt.alpha(Theme.outlineVariant, 0.7)
+        clip: true
+
+        Behavior on opacity { NumberAnimation { duration: 140 } }
+        Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on scale {
+            NumberAnimation {
+                duration: 180
+                easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized }
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            onEntered: previewHide.stop()
+            onExited: previewHide.restart()
+        }
+
+        Item {
+            id: previewHead
+            x: 14
+            y: 10
+            width: parent.width - 28
+            height: 28
+
+            Image {
+                id: previewIcon
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                width: 18
+                height: 18
+                source: "image://loali/" + (taskbar.previewWin
+                    ? Apps.iconForAppId(taskbar.previewWin.toplevel.appId) : "")
+                sourceSize: Qt.size(36, 36)
+                asynchronous: true
+            }
+
+            Text {
+                anchors.left: previewIcon.right
+                anchors.leftMargin: 8
+                anchors.right: previewClose.left
+                anchors.rightMargin: 6
+                anchors.verticalCenter: parent.verticalCenter
+                text: taskbar.previewWin ? taskbar.previewWin.toplevel.title : ""
+                elide: Text.ElideRight
+                font.pixelSize: 12
+                font.weight: Font.Medium
+                color: Theme.onSurface
+            }
+
+            Item {
+                id: previewClose
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                width: 26
+                height: 26
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 24
+                    height: 24
+                    radius: 12
+                    color: closeMa.containsMouse ? Theme.error : "transparent"
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                }
+
+                MIcon {
+                    anchors.centerIn: parent
+                    width: 14
+                    height: 14
+                    path: Theme.iconClose
+                    color: closeMa.containsMouse ? "#FFFFFF" : Theme.onSurfaceVariant
+                }
+
+                MouseArea {
+                    id: closeMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onEntered: previewHide.stop()
+                    onExited: previewHide.restart()
+                    onClicked: {
+                        if (taskbar.previewWin)
+                            taskbar.previewWin.toplevel.sendClose()
+                        taskbar.hidePreview()
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            id: shotArea
+            x: 12
+            y: 46
+            width: parent.width - 24
+            height: parent.height - 58
+            radius: 14
+            color: Theme.surfaceContainerLow
+            clip: true
+
+            WaylandQuickItem {
+                id: pv
+                anchors.centerIn: parent
+                readonly property real sw: taskbar.previewWin ? Math.max(taskbar.previewWin.width, 1) : 1
+                readonly property real sh: taskbar.previewWin
+                    ? Math.max(taskbar.previewWin.height - taskbar.previewWin.barHeight, 1) : 1
+                readonly property real fit: Math.min(shotArea.width / sw, shotArea.height / sh)
+                width: sw * fit
+                height: sh * fit
+                surface: taskbar.previewWin && taskbar.previewWin.surface
+                         ? taskbar.previewWin.surface : null
+                output: taskbar.shell ? taskbar.shell.defaultOutput : null
+                enabled: false
+                focusOnClick: false
+                bufferLocked: true
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (taskbar.previewWin) {
+                        taskbar.shell.restore(taskbar.previewWin)
+                        taskbar.hidePreview()
+                    }
+                }
+            }
+        }
+    }
+
     component TaskButton: Rectangle {
         id: taskBtn
         property var winRef
@@ -205,12 +405,21 @@ Rectangle {
             id: taskMa
             anchors.fill: parent
             hoverEnabled: true
+            onContainsMouseChanged: {
+                if (containsMouse) {
+                    previewHide.stop()
+                    taskbar.showPreviewFor(taskBtn.winRef)
+                } else if (taskbar.previewWin === taskBtn.winRef) {
+                    previewHide.restart()
+                }
+            }
             onClicked: {
                 const w = taskBtn.winRef
                 if (w.active && !w.minimized)
                     taskbar.shell.minimize(w)
                 else
                     taskbar.shell.restore(w)
+                taskbar.hidePreview()
             }
         }
     }

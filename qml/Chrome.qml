@@ -11,6 +11,7 @@ Rectangle {
     property var shellSurface
     property var toplevel
     property var compositor
+    readonly property alias surface: content.surface
     property bool active: false
     property bool minimized: false
     property bool maximized: false
