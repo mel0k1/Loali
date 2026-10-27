@@ -368,7 +368,6 @@ Rectangle {
             output: taskbar.shell ? taskbar.shell.defaultOutput : null
             enabled: false
             focusOnClick: false
-            bufferLocked: true
         }
     }
 
