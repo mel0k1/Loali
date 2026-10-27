@@ -17,29 +17,43 @@ export QSG_INFO=1
 unset QT_QUICK_BACKEND
 unset WAYLAND_DISPLAY
 
+SHOT_TOOL="${SHOT_TOOL:-native}"
 mkdir -p build/shots
 
 run_shot() {
     out="$1"
     demo="$2"
-    clients="$3"
-    echo "== shot: $out (demo: ${demo:-none}) =="
+    extra="$3"
+    echo "== shot: $out (demo: ${demo:-none}, tool: $SHOT_TOOL) =="
     pkill -f build/lodemo 2>/dev/null || true
-    DEMO_ARGS="$demo" DEMO_CLIENTS="$clients" OUT="$out" dbus-run-session -- sh -c '
-        ./build/loali $DEMO_ARGS --screenshot "$OUT" --screenshot-delay 8000 >build/shots/loali.log 2>&1 &
+    DEMO_ARGS="$demo" EXTRA_ARGS="$extra" DEMO_CLIENTS="$4" OUT="$out" SHOT_TOOL="$SHOT_TOOL" dbus-run-session -- sh -c '
+        if [ "$SHOT_TOOL" = "grim" ]; then
+            ./build/loali $DEMO_ARGS $EXTRA_ARGS >build/shots/loali.log 2>&1 &
+        else
+            ./build/loali $DEMO_ARGS $EXTRA_ARGS --screenshot "$OUT" --screenshot-delay 8000 >build/shots/loali.log 2>&1 &
+        fi
         comp=$!
         sleep 5
         echo "--- loali.log ---"
-        tail -6 build/shots/loali.log || true
+        tail -4 build/shots/loali.log || true
         if [ "$DEMO_CLIENTS" = "1" ]; then
             socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
             WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
                 ./build/lodemo -t Files -c "#7C4DFF" -m "native capture" >build/shots/lodemo1.log 2>&1 &
             WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
                 ./build/lodemo -t Terminal -c "#2E7D32" -m "wl_shm client" >build/shots/lodemo2.log 2>&1 &
+            sleep 3
         fi
-        wait $comp
-        status=$?
+        status=0
+        if [ "$SHOT_TOOL" = "grim" ]; then
+            socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
+            WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= grim "$OUT" >build/shots/grim.log 2>&1 || status=1
+            cat build/shots/grim.log || true
+            kill $comp 2>/dev/null || true
+            wait $comp 2>/dev/null || true
+        else
+            wait $comp || status=$?
+        fi
         head -4 build/shots/lodemo1.log 2>/dev/null || true
         if [ -f "$OUT" ]; then
             echo "saved: $OUT"
@@ -51,9 +65,10 @@ run_shot() {
     '
 }
 
-run_shot build/shots/desktop.png "" 1
-run_shot build/shots/launcher.png "--demo launcher" 1
-run_shot build/shots/settings.png "--demo settings" 1
-run_shot build/shots/expo.png "--demo expo" 1
+run_shot build/shots/desktop.png "" "" 1
+run_shot build/shots/launcher.png "--demo launcher" "" 1
+run_shot build/shots/settings.png "--demo settings" "" 1
+run_shot build/shots/expo.png "--demo expo" "" 1
+run_shot build/shots/taskbar.png "--demo preview" "--demo-delay 7000 --screenshot-delay 15000" 1
 
 ls -la build/shots

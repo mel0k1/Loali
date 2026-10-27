@@ -16,7 +16,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build qt6-base-dev qt6-declarative-dev qt6-wayland-dev libwayland-dev \
-            xvfb grim dbus pkg-config qt6-wayland-dev-tools libgl1-mesa-dri libegl-mesa0 mesa-utils libqt6svg6
+            xvfb grim dbus pkg-config qt6-wayland-dev-tools libgl1-mesa-dri libegl-mesa0 mesa-utils libqt6svg6 \
+            fonts-noto-core
           for p in qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-templates \
                    qml6-module-qtquick-window qml6-module-qtquick-shapes qml6-module-qtquick-layouts \
                    qml6-module-qtqml-workerscript qml6-module-qtwayland-compositor; do
@@ -52,4 +53,54 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
+          path: build/shots/*.png
+
+  newqt:
+    runs-on: ubuntu-24.04
+    container:
+      image: ubuntu:25.10
+      options: --privileged
+    steps:
+      - name: bootstrap
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git ca-certificates
+
+      - uses: actions/checkout@v4
+
+      - name: deps
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config ca-certificates \
+            qt6-base-dev qt6-declarative-dev qt6-wayland-dev qt6-wayland-dev-tools \
+            libwayland-dev xvfb xfonts-base grim \
+            libgl1-mesa-dri libegl-mesa0 mesa-utils fonts-noto-core
+          apt-get install -y --no-install-recommends dbus dbus-bin || apt-get install -y --no-install-recommends dbus-bin
+          for p in qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-templates \
+                   qml6-module-qtquick-window qml6-module-qtquick-shapes qml6-module-qtquick-layouts \
+                   qml6-module-qtqml-workerscript qml6-module-qtwayland-compositor; do
+            apt-get install -y "$p" || echo "skip missing $p"
+          done
+          for p in $(apt-cache pkgnames qml6-module-qtwayland); do
+            apt-get install -y "$p" || true
+          done
+          qmake6 --version || true
+
+      - name: configure
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: build
+        run: cmake --build build
+
+      - name: grim shots
+        env:
+          SHOT_TOOL: grim
+        run: sh scripts/ci_shots.sh
+
+      - name: upload shots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-grim
           path: build/shots/*.png
