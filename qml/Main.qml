@@ -800,6 +800,10 @@ WaylandCompositor {
         onLockedChanged: console.info("loali: session lock", locked)
     }
 
+    InputMethodManager { }
+
+    VirtualKeyboardManager { }
+
     ScreencopyManager { }
 
     WlOutputFix {

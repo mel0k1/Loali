@@ -26,8 +26,11 @@ public:
     {
         auto *s = qvariant_cast<QWaylandSeat *>(seat);
         auto *f = qvariant_cast<QWaylandSurface *>(surface);
-        if (s)
-            s->setKeyboardFocus(f);
+        if (s) {
+            const bool ok = s->setKeyboardFocus(f);
+            if (!ok)
+                qWarning() << "loali: setKeyboardFocus failed for" << f;
+        }
     }
 
 private:

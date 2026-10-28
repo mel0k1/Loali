@@ -24,6 +24,7 @@
 #include "xdgoutput.h"
 #include "datacontrol.h"
 #include "idle.h"
+#include "inputmethod.h"
 #include "portals.h"
 #include "sessionlock.h"
 #include "sessionlockview.h"
@@ -151,6 +152,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<OutputPowerManagerQuickExtension>("Loali", 1, 0, "OutputPowerManager");
     qmlRegisterType<DataControlManagerQuickExtension>("Loali", 1, 0, "DataControlManager");
     qmlRegisterType<SessionLockManagerQuickExtension>("Loali", 1, 0, "SessionLockManager");
+    qmlRegisterType<InputMethodManagerQuickExtension>("Loali", 1, 0, "InputMethodManager");
+    qmlRegisterType<VirtualKeyboardManagerQuickExtension>("Loali", 1, 0, "VirtualKeyboardManager");
     qmlRegisterUncreatableType<SessionLockSurface>("Loali", 1, 0, "SessionLockSurface",
                                                    QStringLiteral("created by the compositor"));
     qmlRegisterType<SessionLockView>("Loali", 1, 0, "SessionLockView");

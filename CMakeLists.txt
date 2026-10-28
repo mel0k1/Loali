@@ -84,6 +84,8 @@ qt_add_qml_module(loali
         src/datacontrol.cpp
         src/sessionlock.h
         src/sessionlock.cpp
+        src/inputmethod.h
+        src/inputmethod.cpp
         src/sessionlockview.h
         src/sessionlockview.cpp
         src/wallpaperbg.h
@@ -132,6 +134,12 @@ qt6_generate_wayland_protocol_server_sources(loali
 qt6_generate_wayland_protocol_server_sources(loali
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-session-lock-v1.xml
 )
+qt6_generate_wayland_protocol_server_sources(loali
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/input-method-unstable-v2.xml
+)
+qt6_generate_wayland_protocol_server_sources(loali
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/virtual-keyboard-unstable-v1.xml
+)
 
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
@@ -156,6 +164,28 @@ if(PkgConfig_FOUND)
         endforeach()
         if(_wcp_ok)
             target_link_libraries(loali PRIVATE Qt6::WaylandCompositorPrivate)
+            set(_qti_header "")
+            foreach(_p ${_wcp_dirs})
+                if(NOT "${_p}" STREQUAL "_wcp_dirs-NOTFOUND")
+                    get_filename_component(_p_abs "${_p}" ABSOLUTE BASE_DIR "${QT6_INSTALL_PREFIX}")
+                    foreach(_sub "" "/private")
+                        set(_cand "${_p_abs}${_sub}/qwayland-server-qt-text-input-method-unstable-v1.h")
+                        if(EXISTS "${_cand}")
+                            set(_qti_header "${_cand}")
+                            break()
+                        endif()
+                    endforeach()
+                    if(_qti_header)
+                        break()
+                    endif()
+                endif()
+            endforeach()
+            if(_qti_header)
+                target_compile_definitions(loali PRIVATE HAVE_QT_TEXTINPUT_BRIDGE)
+                message(STATUS "qt-text-input bridge header found: ${_qti_header}")
+            else()
+                message(STATUS "qt-text-input bridge disabled: private header missing")
+            endif()
         else()
             message(STATUS "QtWaylandCompositor private headers missing: selection bridge off")
         endif()
@@ -192,6 +222,12 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
     set(LOALI_IDLE_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-idle-notify-v1.xml)
     set(LOALI_POWER_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-output-power-management-unstable-v1.xml)
     set(LOALI_SLOCK_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-session-lock-v1.xml)
+    set(LOALI_IM_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/input-method-unstable-v2.xml)
+    set(LOALI_VK_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/virtual-keyboard-unstable-v1.xml)
+    set(LOALI_IM_H ${CMAKE_CURRENT_BINARY_DIR}/input-method-unstable-v2-client-protocol.h)
+    set(LOALI_IM_C ${CMAKE_CURRENT_BINARY_DIR}/input-method-unstable-v2-protocol.c)
+    set(LOALI_VK_H ${CMAKE_CURRENT_BINARY_DIR}/virtual-keyboard-unstable-v1-client-protocol.h)
+    set(LOALI_VK_C ${CMAKE_CURRENT_BINARY_DIR}/virtual-keyboard-unstable-v1-protocol.c)
     set(LOALI_LOTEST_H ${CMAKE_CURRENT_BINARY_DIR}/ext-idle-notify-v1-client-protocol.h)
     set(LOALI_LOTEST_C ${CMAKE_CURRENT_BINARY_DIR}/ext-idle-notify-v1-protocol.c)
     set(LOALI_POWER_H ${CMAKE_CURRENT_BINARY_DIR}/wlr-output-power-management-unstable-v1-client-protocol.h)
@@ -200,19 +236,27 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
     set(LOALI_SLOCK_C ${CMAKE_CURRENT_BINARY_DIR}/ext-session-lock-v1-protocol.c)
     add_custom_command(
         OUTPUT ${LOALI_LOTEST_H} ${LOALI_LOTEST_C} ${LOALI_POWER_H} ${LOALI_POWER_C}
-               ${LOALI_SLOCK_H} ${LOALI_SLOCK_C}
+               ${LOALI_SLOCK_H} ${LOALI_SLOCK_C} ${LOALI_IM_H} ${LOALI_IM_C}
+               ${LOALI_VK_H} ${LOALI_VK_C}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_IDLE_XML} ${LOALI_LOTEST_H}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_POWER_XML} ${LOALI_POWER_H}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_SLOCK_XML} ${LOALI_SLOCK_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_IM_XML} ${LOALI_IM_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_VK_XML} ${LOALI_VK_H}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_IDLE_XML} ${LOALI_LOTEST_C}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_POWER_XML} ${LOALI_POWER_C}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_SLOCK_XML} ${LOALI_SLOCK_C}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_IM_XML} ${LOALI_IM_C}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_VK_XML} ${LOALI_VK_C}
         DEPENDS ${LOALI_IDLE_XML} ${LOALI_POWER_XML} ${LOALI_SLOCK_XML}
+                ${LOALI_IM_XML} ${LOALI_VK_XML}
     )
     add_executable(lotest tools/lotest.c
         ${LOALI_LOTEST_C}
         ${LOALI_POWER_C}
         ${LOALI_SLOCK_C}
+        ${LOALI_IM_C}
+        ${LOALI_VK_C}
     )
     target_include_directories(lotest PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(lotest PRIVATE PkgConfig::WAYLAND_CLIENT)

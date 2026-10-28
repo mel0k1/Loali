@@ -14,6 +14,8 @@
 #include "ext-idle-notify-v1-client-protocol.h"
 #include "wlr-output-power-management-unstable-v1-client-protocol.h"
 #include "ext-session-lock-v1-client-protocol.h"
+#include "input-method-unstable-v2-client-protocol.h"
+#include "virtual-keyboard-unstable-v1-client-protocol.h"
 
 static struct ext_idle_notifier_v1 *g_idle_mgr = NULL;
 static struct zwlr_output_power_manager_v1 *g_power_mgr = NULL;
@@ -31,6 +33,10 @@ static int g_lock_want_unlock = 0;
 static struct wl_shm_pool *g_lock_pool = NULL;
 static struct wl_buffer *g_lock_buffer = NULL;
 static int g_lock_fd = -1;
+static struct zwp_input_method_manager_v2 *g_im_mgr = NULL;
+static struct zwp_virtual_keyboard_manager_v1 *g_vk_mgr = NULL;
+static int g_im_activated = 0;
+static int g_im_deactivated = 0;
 
 static void idle_handle_idled(void *data, struct ext_idle_notification_v1 *n)
 {
@@ -161,6 +167,67 @@ static const struct ext_session_lock_surface_v1_listener lock_surface_listener =
     lock_surface_destroy,
 };
 
+static void im_handle_activate(void *data, struct zwp_input_method_v2 *im)
+{
+    (void)data;
+    (void)im;
+    printf("ACTIVATED\n");
+    fflush(stdout);
+    g_im_activated = 1;
+    g_done = 1;
+}
+
+static void im_handle_deactivate(void *data, struct zwp_input_method_v2 *im)
+{
+    (void)data;
+    (void)im;
+    printf("DEACTIVATED\n");
+    fflush(stdout);
+    g_im_deactivated = 1;
+}
+
+static void im_handle_surrounding_text(void *data, struct zwp_input_method_v2 *im,
+                                       const char *text, uint32_t cursor, uint32_t anchor)
+{
+    (void)data; (void)im; (void)text; (void)cursor; (void)anchor;
+}
+
+static void im_handle_text_change_cause(void *data, struct zwp_input_method_v2 *im, uint32_t cause)
+{
+    (void)data; (void)im; (void)cause;
+}
+
+static void im_handle_content_type(void *data, struct zwp_input_method_v2 *im, uint32_t hint,
+                                   uint32_t purpose)
+{
+    (void)data; (void)im; (void)hint; (void)purpose;
+}
+
+static void im_handle_done(void *data, struct zwp_input_method_v2 *im)
+{
+    (void)data;
+    (void)im;
+}
+
+static void im_handle_unavailable(void *data, struct zwp_input_method_v2 *im)
+{
+    (void)data;
+    (void)im;
+    printf("UNAVAILABLE\n");
+    fflush(stdout);
+    g_done = 1;
+}
+
+static const struct zwp_input_method_v2_listener im_listener = {
+    im_handle_activate,
+    im_handle_deactivate,
+    im_handle_surrounding_text,
+    im_handle_text_change_cause,
+    im_handle_content_type,
+    im_handle_done,
+    im_handle_unavailable,
+};
+
 static void output_handle_geometry(void *data, struct wl_output *o, int32_t x, int32_t y,
                                    int32_t pw, int32_t ph, int32_t sub, const char *make,
                                    const char *model, int32_t transform)
@@ -213,6 +280,10 @@ static void registry_global(void *data, struct wl_registry *reg, uint32_t name,
         g_power_mgr = wl_registry_bind(reg, name, &zwlr_output_power_manager_v1_interface, 1);
     } else if (strcmp(iface, ext_session_lock_manager_v1_interface.name) == 0) {
         g_lock_mgr = wl_registry_bind(reg, name, &ext_session_lock_manager_v1_interface, 1);
+    } else if (strcmp(iface, zwp_input_method_manager_v2_interface.name) == 0) {
+        g_im_mgr = wl_registry_bind(reg, name, &zwp_input_method_manager_v2_interface, 1);
+    } else if (strcmp(iface, zwp_virtual_keyboard_manager_v1_interface.name) == 0) {
+        g_vk_mgr = wl_registry_bind(reg, name, &zwp_virtual_keyboard_manager_v1_interface, 1);
     } else if (strcmp(iface, wl_compositor_interface.name) == 0 && !g_compositor) {
         g_compositor = wl_registry_bind(reg, name, &wl_compositor_interface, 1);
     } else if (strcmp(iface, wl_shm_interface.name) == 0 && !g_shm) {
@@ -353,6 +424,50 @@ int main(int argc, char **argv)
             wl_shm_pool_destroy(g_lock_pool);
         if (g_lock_fd >= 0)
             close(g_lock_fd);
+    } else if (strcmp(argv[1], "im") == 0) {
+        if (!g_im_mgr) {
+            fprintf(stderr, "no zwp_input_method_manager_v2\n");
+            return 1;
+        }
+        struct zwp_input_method_v2 *im = zwp_input_method_manager_v2_get_input_method(
+            g_im_mgr, g_seat);
+        if (!im) {
+            fprintf(stderr, "get_input_method failed\n");
+            return 1;
+        }
+        zwp_input_method_v2_add_listener(im, &im_listener, NULL);
+        wl_display_roundtrip(display);
+        int guard = 0;
+        while (!g_done && guard < 60 && wl_display_dispatch(display) >= 0)
+            guard++;
+        if (g_im_activated) {
+            zwp_input_method_v2_commit_string(im, "hi");
+            zwp_input_method_v2_commit(im, 0);
+            wl_display_roundtrip(display);
+            printf("COMMIT_SENT\n");
+            fflush(stdout);
+        }
+        if (!g_im_activated) {
+            fprintf(stderr, "never activated\n");
+            return 1;
+        }
+    } else if (strcmp(argv[1], "vkey") == 0) {
+        if (!g_vk_mgr) {
+            fprintf(stderr, "no zwp_virtual_keyboard_manager_v1\n");
+            return 1;
+        }
+        struct zwp_virtual_keyboard_v1 *vk =
+            zwp_virtual_keyboard_manager_v1_create_virtual_keyboard(g_vk_mgr, g_seat);
+        if (!vk) {
+            fprintf(stderr, "create_virtual_keyboard failed\n");
+            return 1;
+        }
+        uint32_t key = argc > 2 ? (uint32_t)atoi(argv[2]) : 30u;
+        zwp_virtual_keyboard_v1_key(vk, 100, key, 1);
+        zwp_virtual_keyboard_v1_key(vk, 120, key, 0);
+        wl_display_roundtrip(display);
+        printf("VKEY_SENT=%u\n", key);
+        fflush(stdout);
     } else {
         fprintf(stderr, "unknown mode %s\n", argv[1]);
         return 1;

@@ -78,6 +78,26 @@ Window {
         color: Qt.rgba(1, 1, 1, 0.85)
         font.pixelSize: 15
     }
+    Rectangle {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 36
+        width: 320
+        height: 44
+        radius: 22
+        color: Qt.rgba(1, 1, 1, 0.16)
+        TextInput {
+            id: demoField
+            anchors.fill: parent
+            anchors.leftMargin: 18
+            anchors.rightMargin: 18
+            verticalAlignment: TextInput.AlignVCenter
+            color: "#FFFFFF"
+            font.pixelSize: 15
+            focus: true
+            onTextChanged: console.info("loali-demo: field text:", JSON.stringify(text))
+        }
+    }
 }
 )"));
     if (engine.rootObjects().isEmpty())
