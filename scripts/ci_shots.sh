@@ -135,6 +135,10 @@ echo "=== protocol tests (standalone session) ==="
 mkdir -p build/shots
 DEMO_ARGS="" dbus-run-session -- sh -c '
     pkill -x loali 2>/dev/null || true
+    if command -v pipewire >/dev/null 2>&1; then
+        pipewire >build/shots/pipewire.log 2>&1 &
+        echo "pipewire started"
+    fi
     ./build/loali >build/shots/loali_proto.log 2>&1 &
     comp=$!
     sleep 6
@@ -142,6 +146,26 @@ DEMO_ARGS="" dbus-run-session -- sh -c '
     WAYLAND_DISPLAY="${socket:-wayland-0}"
     export WAYLAND_DISPLAY
     pstatus=0
+    if [ -x ./build/loportaltest ]; then
+        echo "-- portal screenshot --"
+        out=$(timeout 15 ./build/loportaltest screenshot 2>/dev/null)
+        echo "$out"
+        case "$out" in
+            SHOT_URI=file://*) echo "portal screenshot: PASS" ;;
+            *) echo "portal screenshot: FAIL"; pstatus=1 ;;
+        esac
+        echo "-- portal screencast --"
+        out=$(timeout 15 ./build/loportaltest screencast 2>/dev/null)
+        echo "$out"
+        node=$(echo "$out" | grep -oE "PW_NODE=[0-9]+" | cut -d= -f2)
+        if [ -n "$node" ] && [ "$node" != "0" ]; then
+            echo "portal screencast: PASS (node $node)"
+        elif command -v pw-cli >/dev/null 2>&1 && pw-cli ls Node 2>/dev/null | grep -q loali_screen_cast; then
+            echo "portal screencast: PASS (node in graph)"
+        else
+            echo "portal screencast: FAIL"; pstatus=1
+        fi
+    fi
     if [ -x ./build/lotest ]; then
         echo "-- idle 1500ms --"
         timeout 10 ./build/lotest idle 1500 && echo "idle: PASS" || { echo "idle: FAIL"; pstatus=1; }

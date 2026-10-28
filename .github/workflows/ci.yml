@@ -17,7 +17,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build qt6-base-dev qt6-declarative-dev qt6-wayland-dev libwayland-dev \
             xvfb grim dbus pkg-config qt6-wayland-dev-tools libgl1-mesa-dri libegl-mesa0 mesa-utils libqt6svg6 \
-            fonts-noto-core libxcb1-dev libxcb-composite0-dev xwayland x11-apps wl-clipboard
+            fonts-noto-core libxcb1-dev libxcb-composite0-dev xwayland x11-apps wl-clipboard \
+            libpipewire-0.3-dev libspa-0.2-dev pipewire
           for p in qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-templates \
                    qml6-module-qtquick-window qml6-module-qtquick-shapes qml6-module-qtquick-layouts \
                    qml6-module-qtqml-workerscript qml6-module-qtwayland-compositor; do
@@ -76,7 +77,8 @@ jobs:
             qt6-base-dev qt6-declarative-dev qt6-wayland qt6-wayland-dev qt6-wayland-dev-tools \
             libwayland-dev xvfb xfonts-base grim \
             libgl1-mesa-dri libegl-mesa0 mesa-utils fonts-noto-core \
-            libxcb1-dev libxcb-composite0-dev xwayland x11-apps wl-clipboard
+            libxcb1-dev libxcb-composite0-dev xwayland x11-apps wl-clipboard \
+            libpipewire-0.3-dev libspa-0.2-dev pipewire
           apt-get install -y --no-install-recommends dbus dbus-bin || apt-get install -y --no-install-recommends dbus-bin
           apt-get install -y --no-install-recommends libqt6svg6 || apt-get install -y --no-install-recommends libqt6svg6t64 || apt-get install -y --no-install-recommends qt6-svg || echo "svg plugin skipped"
           for p in qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-templates \

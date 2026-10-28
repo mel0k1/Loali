@@ -23,6 +23,7 @@
 #include "xdgoutput.h"
 #include "datacontrol.h"
 #include "idle.h"
+#include "portals.h"
 #include "xwayland.h"
 
 #include <QQuickWindow>
@@ -33,6 +34,7 @@ namespace {
 void registerIdleBridge()
 {
     Idle::registerTypes();
+    Portals::registerTypes();
 }
 
 
@@ -165,6 +167,7 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:/Loali/qml/Main.qml")));
     if (engine.rootObjects().isEmpty())
         return 1;
+    Portals::create();
     if (parser.isSet(shotOption)) {
         const QString file = parser.value(shotOption);
         const int delay = parser.value(shotDelayOption).toInt();

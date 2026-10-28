@@ -75,6 +75,8 @@ qt_add_qml_module(loali
         src/idle.cpp
         src/datacontrol.h
         src/datacontrol.cpp
+        src/portals.h
+        src/portals.cpp
         src/util.h
     RESOURCES
         assets/logo.svg
@@ -180,6 +182,19 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
 else()
     message(STATUS "lolayer demo client skipped: wayland-scanner or wayland-client missing")
 endif()
+
+pkg_check_modules(PIPEWIRE QUIET IMPORTED_TARGET libpipewire-0.3)
+if(TARGET PkgConfig::PIPEWIRE)
+    target_sources(loali PRIVATE src/pwcast.h src/pwcast.cpp)
+    target_link_libraries(loali PRIVATE PkgConfig::PIPEWIRE)
+    target_compile_definitions(loali PRIVATE HAVE_PIPEWIRE)
+    message(STATUS "PipeWire screencast portal enabled")
+else()
+    message(STATUS "PipeWire missing: screencast portal disabled")
+endif()
+
+qt_add_executable(loportaltest tools/loportaltest.cpp)
+target_link_libraries(loportaltest PRIVATE Qt6::Core Qt6::DBus)
 
 include(GNUInstallDirs)
 
