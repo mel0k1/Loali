@@ -13,6 +13,7 @@ Rectangle {
 
     property var shell
     property var windows
+    property var wallpaperItem: null
     property bool launcherOpen: false
     readonly property bool plane: Settings.dockMode === Settings.Plane
     readonly property bool labeled: Settings.taskbarStyle === Settings.Full
@@ -82,10 +83,18 @@ Rectangle {
 
     implicitWidth: appsRow.width + statusRow.width + Theme.sz(14) + pad * 2
     radius: plane ? 0 : height / 2
-    color: Theme.surfaceContainer
+    color: "transparent"
     border.width: plane ? 0 : 1
     border.color: Qt.alpha(Theme.outlineVariant, 0.6)
     clip: false
+
+    WallpaperTint {
+        anchors.fill: parent
+        wallpaperItem: dock.wallpaperItem
+        cornerRadius: dock.radius
+        tintColor: Theme.surfaceContainer
+        tintAlpha: dock.plane ? 0.78 : 0.7
+    }
 
     Behavior on radius {
         NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } }

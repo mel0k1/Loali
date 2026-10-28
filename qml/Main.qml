@@ -346,6 +346,7 @@ WaylandCompositor {
             onClosing: Qt.quit()
 
             Desktop {
+                id: desktop
                 anchors.fill: parent
                 topInset: comp.topInset
                 bottomInset: comp.bottomInset
@@ -394,6 +395,7 @@ WaylandCompositor {
                 id: dockPanel
                 shell: comp
                 windows: comp.windows
+                wallpaperItem: desktop.wallpaperItem
                 launcherOpen: launcher.open
                 x: comp.dockPlane ? 0 : Math.round((win.width - width) / 2)
                 y: comp.dockPlane ? win.height - height : win.height - height - 12
@@ -778,7 +780,9 @@ WaylandCompositor {
 
     Component {
         id: layerChromeComponent
-        LayerChrome {}
+        LayerChrome {
+            wallpaperItem: desktop.wallpaperItem
+        }
     }
 
     Component {

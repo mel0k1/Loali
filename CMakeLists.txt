@@ -50,6 +50,7 @@ qt_add_qml_module(loali
         qml/MorphShape.qml
         qml/MaterialShapes.js
         qml/MaterialShapeData.js
+        qml/WallpaperTint.qml
     SOURCES
         src/apps.h
         src/apps.cpp
@@ -81,6 +82,8 @@ qt_add_qml_module(loali
         src/idle.cpp
         src/datacontrol.h
         src/datacontrol.cpp
+        src/wallpaperbg.h
+        src/wallpaperbg.cpp
         src/portals.h
         src/portals.cpp
         src/util.h

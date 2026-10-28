@@ -13,6 +13,7 @@ Item {
     property int dragIndex: -1
     property string dragIcon: ""
     property int dropIndex: -1
+    property alias wallpaperItem: wall
 
     function updateDesktopDrag(vx, vy) {
         ghost.x = vx - 32
@@ -41,6 +42,7 @@ Item {
     }
 
     Wallpaper {
+        id: wall
         anchors.fill: parent
     }
 

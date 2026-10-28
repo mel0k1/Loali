@@ -19,6 +19,7 @@
 #include "settings.h"
 #include "tray.h"
 #include "util.h"
+#include "wallpaperbg.h"
 #include "wloutput.h"
 #include "xdgoutput.h"
 #include "datacontrol.h"
@@ -162,6 +163,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.addImageProvider(QStringLiteral("loali"), new IconProvider());
     engine.addImageProvider(QStringLiteral("sni"), new SniImageProvider());
+    engine.addImageProvider(QStringLiteral("loalibg"), WallpaperBgProvider::instance());
     engine.rootContext()->setContextProperty(QStringLiteral("fullscreenMode"),
                                              parser.isSet(fullscreenOption));
     engine.load(QUrl(QStringLiteral("qrc:/Loali/qml/Main.qml")));
