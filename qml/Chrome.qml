@@ -4,6 +4,7 @@ import QtWayland.Compositor.XdgShell
 import Loali
 
 Rectangle {
+    antialiasing: true
     id: chrome
 
     signal windowClosed()

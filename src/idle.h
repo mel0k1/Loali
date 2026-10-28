@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QObject>
+#include <QElapsedTimer>
+#include <QTimer>
 #include <qqml.h>
 
 #include <QtWaylandCompositor/QWaylandCompositorExtensionTemplate>
@@ -19,6 +21,10 @@ class Idle : public QObject
 public:
     static Idle *instance();
     static void activity();
+    static void suppress();
+    static void release();
+    static bool suppressed();
+    static quint64 idleMs();
 
     bool blanked() const { return m_blanked; }
     void setBlanked(bool value);
@@ -36,6 +42,9 @@ private:
 
     static Idle *s_instance;
     bool m_blanked = false;
+    int m_suppression = 0;
+    QElapsedTimer m_idleTimer;
+    QTimer *m_autoBlank = nullptr;
 };
 
 class IdleNotification : public QObject, public QtWaylandServer::ext_idle_notification_v1

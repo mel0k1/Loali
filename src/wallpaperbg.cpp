@@ -205,14 +205,29 @@ void WallpaperBgProvider::applyTint(QImage &image, const QColor &tint)
     const int tr = tint.red();
     const int tg = tint.green();
     const int tb = tint.blue();
+    const qreal tl = 0.2126 * tint.redF() + 0.7152 * tint.greenF() + 0.0722 * tint.blueF();
     for (int y = 0; y < image.height(); ++y) {
         QRgb *row = reinterpret_cast<QRgb *>(image.scanLine(y));
         for (int x = 0; x < image.width(); ++x) {
             const QRgb px = row[x];
-            const int r = int(qRed(px) * (1 - alpha) + tr * alpha);
-            const int g = int(qGreen(px) * (1 - alpha) + tg * alpha);
-            const int b = int(qBlue(px) * (1 - alpha) + tb * alpha);
-            row[x] = qRgba(r, g, b, qAlpha(px));
+            qreal r = qRed(px) * (1 - alpha) + tr * alpha;
+            qreal g = qGreen(px) * (1 - alpha) + tg * alpha;
+            qreal b = qBlue(px) * (1 - alpha) + tb * alpha;
+            qreal lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0;
+            if (lum > 0.001) {
+                qreal target = tl + (lum - tl) * 0.5;
+                target = qBound(tl - 0.2, target, tl + 0.2);
+                const qreal k = target / lum;
+                r *= k;
+                g *= k;
+                b *= k;
+                const qreal outLum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0;
+                r = outLum * 255.0 + (r - outLum * 255.0) * 1.45;
+                g = outLum * 255.0 + (g - outLum * 255.0) * 1.45;
+                b = outLum * 255.0 + (b - outLum * 255.0) * 1.45;
+            }
+            row[x] = qRgba(int(qBound<qreal>(0.0, r, 255.0)), int(qBound<qreal>(0.0, g, 255.0)),
+                           int(qBound<qreal>(0.0, b, 255.0)), qAlpha(px));
         }
     }
 }

@@ -9,6 +9,7 @@ Item {
     z: -1
 
     Rectangle {
+        antialiasing: true
         x: -shadow.extent * 0.4
         y: -shadow.extent * 0.4
         width: parent.width + shadow.extent * 0.8
@@ -17,6 +18,7 @@ Item {
         color: "#2E000000"
     }
     Rectangle {
+        antialiasing: true
         x: -shadow.extent
         y: -shadow.extent
         width: parent.width + shadow.extent * 2

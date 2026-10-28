@@ -43,6 +43,7 @@ Item {
     }
 
     Image {
+        smooth: true
         anchors.fill: parent
         visible: wallpaper.isImage
         source: wallpaper.isImage ? wallpaper.imageSource : ""

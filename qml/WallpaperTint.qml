@@ -12,10 +12,6 @@ Item {
     readonly property point origin: {
         if (!wallpaperItem)
             return Qt.point(0, 0)
-        const px = x
-        const py = y
-        const pw = width
-        const ph = height
         return mapToItem(wallpaperItem, 0, 0)
     }
     readonly property string bgKey: {
@@ -26,13 +22,14 @@ Item {
                     width.toFixed(0) + "|" + height.toFixed(0) + "|" +
                     wallpaperItem.width.toFixed(0) + "|" + wallpaperItem.height.toFixed(0)
         const hex = (v) => ("0" + Math.round(v * 255).toString(16)).slice(-2)
-        const conf = cornerRadius.toFixed(0) + "|" +
+        const conf = cornerRadius.toFixed(0) + "|#" +
                      hex(tintColor.r) + hex(tintColor.g) + hex(tintColor.b) + "|" +
                      tintAlpha.toFixed(2)
         return style + "|" + pal + "|" + conf
     }
 
     Image {
+        smooth: true
         anchors.fill: parent
         visible: tint.bgKey !== ""
         source: tint.bgKey !== "" ? "image://loalibg/" + encodeURIComponent(tint.bgKey) : ""

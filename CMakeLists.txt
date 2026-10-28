@@ -95,6 +95,8 @@ qt_add_qml_module(loali
         src/wallpaperbg.cpp
         src/portals.h
         src/portals.cpp
+        src/powerservice.h
+        src/powerservice.cpp
         src/util.h
     RESOURCES
         assets/logo.svg

@@ -5,6 +5,7 @@ import QtWayland.Compositor
 import Loali
 
 Rectangle {
+    antialiasing: true
     id: dock
 
     signal launcherToggled()
@@ -43,6 +44,9 @@ Rectangle {
         const wins = winsFor(entry.appId)
         if (wins.length === 0) {
             Apps.launchById(entry.appId)
+            const btn = pinnedButtonFor(entry.appId)
+            if (btn)
+                btn.fireBurst()
             return
         }
         const w = wins[0]
@@ -50,6 +54,25 @@ Rectangle {
             shell.minimize(w)
         else
             shell.restore(w)
+    }
+
+    function pinnedButtonFor(appId) {
+        for (let i = 0; i < appsRow.children.length; ++i) {
+            const it = appsRow.children[i]
+            if (it.appRef === appId)
+                return it
+        }
+        for (let j = 0; j < appsRow.children.length; ++j) {
+            const row = appsRow.children[j]
+            if (!row.children)
+                continue
+            for (let k = 0; k < row.children.length; ++k) {
+                const inner = row.children[k]
+                if (inner.appRef === appId)
+                    return inner
+            }
+        }
+        return null
     }
 
     function buttonFor(w) {
@@ -93,7 +116,7 @@ Rectangle {
         wallpaperItem: dock.wallpaperItem
         cornerRadius: dock.radius
         tintColor: Theme.surfaceContainer
-        tintAlpha: dock.plane ? 0.78 : 0.7
+        tintAlpha: dock.plane ? 0.62 : 0.55
     }
 
     Behavior on radius {
@@ -141,6 +164,7 @@ Rectangle {
 
                 DockButton {
                     required property var modelData
+                    appRef: modelData.appId
                     icon: modelData.icon
                     tip: modelData.name
                     running: dock.runningFor(modelData.appId)
@@ -317,6 +341,7 @@ Rectangle {
                     }
 
                     Image {
+                        smooth: true
                         anchors.centerIn: parent
                         width: Theme.sz(18)
                         height: Theme.sz(18)
@@ -525,6 +550,7 @@ Rectangle {
             height: 28
 
             Image {
+                smooth: true
                 id: previewIcon
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
@@ -696,6 +722,7 @@ Rectangle {
         property string glyph
         property string icon
         property string tip
+        property string appRef
         property bool running: false
         property bool engaged: false
         signal clicked()
@@ -705,20 +732,47 @@ Rectangle {
         Behavior on scale {
             SpringAnimation { spring: 5; mass: 0.55; damping: 0.35 }
         }
-        Rectangle {
+        function fireBurst() {
+            burstAnim.restart()
+        }
+
+        MorphShape {
             id: btnBg
             anchors.centerIn: parent
             width: Theme.sz(38)
             height: Theme.sz(38)
-            radius: (ma.containsMouse || btn.engaged) ? width / 2 : width / 4
+            fromShape: "square"
+            toShape: "circle"
+            progress: (ma.containsMouse || btn.engaged) ? 1 : 0
             color: btn.engaged ? Theme.primary
-                 : ma.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.1)
+                 : ma.containsMouse ? Qt.alpha(Theme.textOnSurface, 0.12)
                  : "transparent"
-            Behavior on radius {
+            Behavior on progress {
                 NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
             }
             Behavior on color { ColorAnimation { duration: 150 } }
         }
+
+        ParallelAnimation {
+            id: burstAnim
+            running: false
+            NumberAnimation { target: burstShape; property: "opacity"; from: 0.85; to: 0; duration: 560 }
+            NumberAnimation { target: burstShape; property: "scale"; from: 0.3; to: 1.4; duration: 560; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialSlow } }
+            NumberAnimation { target: burstShape; property: "progress"; from: 0; to: 1; duration: 560; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialSlow } }
+        }
+
+        MorphShape {
+            id: burstShape
+            anchors.centerIn: parent
+            width: Theme.sz(46)
+            height: Theme.sz(46)
+            visible: opacity > 0
+            opacity: 0
+            fromShape: "boom"
+            toShape: "flower"
+            color: Theme.primary
+        }
+
         MIcon {
             anchors.centerIn: parent
             width: Theme.sz(22)
@@ -728,6 +782,7 @@ Rectangle {
             color: btn.engaged ? Theme.onPrimary : Theme.onSurfaceVariant
         }
         Image {
+            smooth: true
             anchors.centerIn: parent
             width: Theme.sz(32)
             height: Theme.sz(32)
@@ -737,14 +792,17 @@ Rectangle {
             fillMode: Image.PreserveAspectFit
             asynchronous: true
         }
-        Rectangle {
+        MorphShape {
+            id: indicator
             anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height - 2
-            width: btn.engaged ? 14 : 4
+            y: parent.height - 5
+            width: btn.engaged ? Theme.sz(16) : Theme.sz(6)
             height: 3
-            radius: 1.5
-            color: Theme.primary
             visible: btn.running
+            fromShape: "circle"
+            toShape: "pill"
+            progress: btn.engaged ? 1 : 0
+            color: Theme.primary
             Behavior on width { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } } }
         }
         MouseArea {
@@ -774,6 +832,8 @@ Rectangle {
         Behavior on color { ColorAnimation { duration: 150 } }
         Behavior on width { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
 
+        readonly property string appIcon: Apps.iconForAppId(taskBtn.winRef ? taskBtn.winRef.toplevel.appId : "")
+
         Row {
             anchors.verticalCenter: parent.verticalCenter
             x: taskBtn.labeled ? 10 : (taskBtn.width - taskBtn.iconW) / 2
@@ -782,12 +842,23 @@ Rectangle {
             readonly property real iconW: taskBtn.labeled ? 18 : 20
 
             Image {
+                smooth: true
                 anchors.verticalCenter: parent.verticalCenter
                 width: 18
                 height: 18
-                source: "image://loali/" + Apps.iconForAppId(taskBtn.winRef ? taskBtn.winRef.toplevel.appId : "")
+                visible: taskBtn.appIcon !== ""
+                source: "image://loali/" + taskBtn.appIcon
                 sourceSize: Qt.size(36, 36)
                 asynchronous: true
+            }
+
+            MIcon {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 16
+                height: 16
+                visible: taskBtn.appIcon === ""
+                path: Theme.iconApps
+                color: Theme.onSurfaceVariant
             }
 
             Text {
@@ -802,13 +873,19 @@ Rectangle {
             }
         }
 
-        Rectangle {
+        MorphShape {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            width: taskBtn.isActive ? 14 : 4
-            height: 2
-            radius: 1
+            anchors.bottomMargin: -1
+            width: taskBtn.isActive ? Theme.sz(16) : Theme.sz(6)
+            height: 3
             visible: !taskBtn.labeled && (taskBtn.isActive || (taskBtn.winRef && !taskBtn.winRef.minimized))
+            fromShape: "circle"
+            toShape: "pill"
+            progress: taskBtn.isActive ? 1 : 0
+            Behavior on progress {
+                NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } }
+            }
             color: Theme.primary
             Behavior on width { NumberAnimation { duration: Theme.durFast; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } } }
         }

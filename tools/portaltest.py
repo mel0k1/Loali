@@ -7,6 +7,19 @@ import dbus
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else "screenshot"
     bus = dbus.SessionBus()
+    if mode == "screensaver":
+        ss = dbus.Interface(bus.get_object("org.freedesktop.ScreenSaver",
+                                           "/org/freedesktop/ScreenSaver"),
+                            "org.freedesktop.ScreenSaver")
+        cookie = ss.Inhibit("loali-test", "ci e2e")
+        if not cookie or int(cookie) <= 0:
+            sys.exit(1)
+        print("SS_COOKIE=%u" % int(cookie))
+        idle_ms = int(ss.GetSessionIdleTime())
+        print("SS_IDLE_MS=%u" % idle_ms)
+        ss.UnInhibit(dbus.UInt32(cookie))
+        ss.SimulateUserActivity()
+        sys.exit(0)
     obj = bus.get_object("org.freedesktop.impl.portal.desktop.loali",
                          "/org/freedesktop/portal/desktop")
     if mode == "screencast":

@@ -4,6 +4,8 @@ import Loali
 Item {
     id: root
 
+    property var wallpaperItem: null
+
     anchors.top: parent.top
     anchors.right: parent.right
     anchors.rightMargin: 12
@@ -35,7 +37,7 @@ Item {
                               easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
         }
 
-        delegate: Rectangle {
+        delegate: Rectangle { antialiasing: true
             id: card
 
             required property int index
@@ -55,6 +57,14 @@ Item {
             color: Theme.surfaceContainerHigh
             border.width: 1
             border.color: urgency === 2 ? Theme.error : Qt.alpha(Theme.outlineVariant, 0.6)
+
+            WallpaperTint {
+                anchors.fill: parent
+                wallpaperItem: root.wallpaperItem
+                cornerRadius: card.radius
+                tintColor: Theme.surfaceContainerHigh
+                tintAlpha: 0.68
+            }
 
             Behavior on height { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
 
@@ -88,6 +98,7 @@ Item {
                     color: Theme.surfaceContainerHighest
 
                     Image {
+                        smooth: true
                         anchors.centerIn: parent
                         width: 24
                         height: 24
@@ -99,6 +110,7 @@ Item {
                     }
 
                     Image {
+                        smooth: true
                         anchors.centerIn: parent
                         width: 34
                         height: 34

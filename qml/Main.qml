@@ -387,6 +387,7 @@ WaylandCompositor {
             }
 
             Rectangle {
+                antialiasing: true
                 id: snapPreview
                 visible: opacity > 0
                 opacity: 0
@@ -444,12 +445,14 @@ WaylandCompositor {
             Launcher {
                 id: launcher
                 shell: comp
+                wallpaperItem: desktop.wallpaperItem
                 z: 200
             }
 
             TrayMenuPanel {
                 id: trayMenuPanel
                 shell: comp
+                wallpaperItem: desktop.wallpaperItem
                 z: 210
             }
 
@@ -460,10 +463,11 @@ WaylandCompositor {
                 z: 150
             }
 
-            NotificationPopups { }
+            NotificationPopups { wallpaperItem: desktop.wallpaperItem }
 
             SettingsApp {
                 id: settingsApp
+                wallpaperItem: desktop.wallpaperItem
                 z: 200
             }
 

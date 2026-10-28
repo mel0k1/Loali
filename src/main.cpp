@@ -6,6 +6,7 @@
 #include <QQuickStyle>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QSurfaceFormat>
 #include <QtQml>
 
 #include "apps.h"
@@ -15,6 +16,7 @@
 #include "layershell.h"
 #include "matcolor.h"
 #include "notifications.h"
+#include "powerservice.h"
 #include "screencopy.h"
 #include "settings.h"
 #include "tray.h"
@@ -96,6 +98,10 @@ void applyUiFont()
 
 int main(int argc, char *argv[])
 {
+    QSurfaceFormat fmt = QSurfaceFormat::defaultFormat();
+    fmt.setSamples(8);
+    fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    QSurfaceFormat::setDefaultFormat(fmt);
     QGuiApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName(QStringLiteral("Loali"));
@@ -138,6 +144,7 @@ int main(int argc, char *argv[])
     qmlRegisterSingletonType<Notifications>("Loali", 1, 0, "Notifications",
                                             [](QQmlEngine *e, QJSEngine *j) -> QObject * { return Notifications::create(e, j); });
     registerIdleBridge();
+    PowerService::registerType();
     qmlRegisterSingletonType<Idle>("Loali", 1, 0, "Idle",
                                    [](QQmlEngine *e, QJSEngine *j) -> QObject * { return Idle::create(e, j); });
     qmlRegisterSingletonType<LoaliUtil>("Loali", 1, 0, "Util",
@@ -184,6 +191,7 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty())
         return 1;
     Portals::create();
+    PowerService::start();
     if (parser.isSet(shotOption)) {
         const QString file = parser.value(shotOption);
         const int delay = parser.value(shotDelayOption).toInt();

@@ -11,6 +11,25 @@ Idle::Idle(QObject *parent)
     : QObject(parent)
 {
     s_instance = this;
+    m_idleTimer.start();
+    m_autoBlank = new QTimer(this);
+    m_autoBlank->setSingleShot(true);
+    m_autoBlank->setInterval(300000);
+    connect(m_autoBlank, &QTimer::timeout, this, [this] {
+        if (m_suppression > 0) {
+            m_autoBlank->start();
+            return;
+        }
+        if (!m_blanked) {
+            m_blanked = true;
+            emit blankedChanged();
+            for (OutputPower *dev : OutputPowerManager::devices())
+                dev->pushMode(true);
+            qInfo() << "Idle: auto blank after inactivity";
+        }
+    });
+    m_autoBlank->start();
+    connect(this, &Idle::activityOccurred, this, [this] { m_autoBlank->start(); });
 }
 
 Idle *Idle::instance()
@@ -23,6 +42,7 @@ Idle *Idle::instance()
 void Idle::activity()
 {
     Idle *self = instance();
+    self->m_idleTimer.restart();
     emit self->activityOccurred();
     if (self->m_blanked) {
         self->m_blanked = false;
@@ -32,6 +52,41 @@ void Idle::activity()
     }
     if (IdleManager::instance())
         IdleManager::instance()->notifyActivity();
+}
+
+void Idle::suppress()
+{
+    Idle *self = instance();
+    ++self->m_suppression;
+    if (self->m_suppression == 1) {
+        if (self->m_blanked)
+            activity();
+        if (IdleManager::instance())
+            IdleManager::instance()->notifyActivity();
+        qInfo() << "Idle: inhibition active";
+    }
+}
+
+void Idle::release()
+{
+    Idle *self = instance();
+    if (self->m_suppression > 0 && --self->m_suppression == 0) {
+        self->m_idleTimer.restart();
+        self->m_autoBlank->start();
+        if (IdleManager::instance())
+            IdleManager::instance()->notifyActivity();
+        qInfo() << "Idle: inhibition released";
+    }
+}
+
+bool Idle::suppressed()
+{
+    return instance()->m_suppression > 0;
+}
+
+quint64 Idle::idleMs()
+{
+    return quint64(instance()->m_idleTimer.elapsed());
 }
 
 void Idle::setBlanked(bool value)
@@ -95,6 +150,10 @@ IdleNotification::IdleNotification(struct ::wl_client *client, uint32_t id, uint
     m_timer->setSingleShot(true);
     m_timer->setInterval(int(timeout));
     connect(m_timer, &QTimer::timeout, this, [this] {
+        if (Idle::suppressed()) {
+            m_timer->start();
+            return;
+        }
         if (!m_idled) {
             m_idled = true;
             send_idled();

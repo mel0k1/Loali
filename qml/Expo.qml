@@ -164,7 +164,7 @@ Item {
             id: cellsRep
             model: expo.active ? expo.frozen : 0
 
-            delegate: Rectangle {
+            delegate: Rectangle { antialiasing: true
                 id: cell
                 required property int index
                 readonly property bool current: expo.shell && expo.shell.currentWorkspace === cell.index

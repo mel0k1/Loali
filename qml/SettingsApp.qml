@@ -8,6 +8,7 @@ Item {
 
     property bool open: false
     property int page: -1
+    property var wallpaperItem: null
     onPageChanged: if (page >= 0) pageStack.currentIndex = page
 
     anchors.fill: parent
@@ -27,6 +28,7 @@ Item {
     }
 
     Rectangle {
+        antialiasing: true
         id: panel
         anchors.centerIn: parent
         width: Math.min(960, settings.width * 0.92)
@@ -41,6 +43,14 @@ Item {
                 duration: 260
                 easing { type: Easing.BezierSpline; bezierCurve: Theme.emphasized }
             }
+        }
+
+        WallpaperTint {
+            anchors.fill: parent
+            wallpaperItem: settings.wallpaperItem
+            cornerRadius: panel.radius
+            tintColor: Theme.surfaceContainer
+            tintAlpha: 0.74
         }
 
         Shadow {
@@ -1067,6 +1077,7 @@ Item {
             Item { Layout.fillHeight: true }
 
             Image {
+                smooth: true
                 Layout.alignment: Qt.AlignHCenter
                 width: 96
                 height: 96

@@ -82,6 +82,7 @@ Item {
             height: grid.cellHeight
 
             Rectangle {
+                antialiasing: true
                 anchors.fill: parent
                 radius: 18
                 color: cell.GridView.isCurrentItem ? Qt.alpha(Theme.textOnSurface, 0.14)
@@ -96,6 +97,7 @@ Item {
             }
 
             Image {
+                smooth: true
                 visible: !cell.isFolder
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
@@ -109,6 +111,7 @@ Item {
             }
 
             Rectangle {
+                antialiasing: true
                 visible: cell.isFolder
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
@@ -195,6 +198,7 @@ Item {
     }
 
     Rectangle {
+        antialiasing: true
         id: ghost
         parent: grid.contentItem
         visible: desktop.dragActive
@@ -207,6 +211,7 @@ Item {
         border.color: Qt.alpha(Theme.primary, 0.6)
         opacity: 0.96
         Image {
+            smooth: true
             anchors.centerIn: parent
             width: 44
             height: 44
@@ -218,6 +223,7 @@ Item {
     }
 
     Rectangle {
+        antialiasing: true
         id: folderPopup
         property string folderId: ""
         property string folderName: ""
@@ -348,6 +354,7 @@ Item {
                     }
 
                     Image {
+                        smooth: true
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: 8

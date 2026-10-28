@@ -3,6 +3,7 @@ import QtWayland.Compositor
 import Loali
 
 Rectangle {
+    antialiasing: true
     id: chrome
 
     signal windowClosed()

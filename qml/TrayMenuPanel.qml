@@ -6,6 +6,7 @@ Item {
 
     property bool openState: false
     property var shell
+    property var wallpaperItem: null
     property int anchorX: 0
     property int anchorY: 0
     property bool above: false
@@ -44,6 +45,7 @@ Item {
     }
 
     Rectangle {
+        antialiasing: true
         id: card
         x: Math.max(12, Math.min(panel.anchorX - width / 2, panel.width - width - 12))
         y: panel.above
@@ -55,6 +57,15 @@ Item {
         color: Theme.surfaceContainer
         border.width: 1
         border.color: Qt.alpha(Theme.outlineVariant, 0.6)
+
+        WallpaperTint {
+            anchors.fill: parent
+            wallpaperItem: panel.wallpaperItem
+            cornerRadius: card.radius
+            tintColor: Theme.surfaceContainer
+            tintAlpha: 0.7
+        }
+
         scale: openState ? 1 : 0.92
         Behavior on scale {
             NumberAnimation {
@@ -165,6 +176,7 @@ Item {
                                 height: parent.height
 
                                 Image {
+                                    smooth: true
                                     anchors.centerIn: parent
                                     width: 20
                                     height: 20

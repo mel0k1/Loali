@@ -7,6 +7,7 @@ Item {
 
     property bool open: false
     property var shell: null
+    property var wallpaperItem: null
 
     anchors.fill: parent
     opacity: open ? 1 : 0
@@ -53,6 +54,7 @@ Item {
     }
 
     Rectangle {
+        antialiasing: true
         id: panel
         anchors.centerIn: parent
         width: Math.min(760, launcher.width * 0.9)
@@ -67,6 +69,14 @@ Item {
                 duration: Theme.durDefault
                 easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault }
             }
+        }
+
+        WallpaperTint {
+            anchors.fill: parent
+            wallpaperItem: launcher.wallpaperItem
+            cornerRadius: panel.radius
+            tintColor: Theme.surfaceContainer
+            tintAlpha: 0.72
         }
 
         Shadow {
@@ -200,6 +210,7 @@ Item {
                     border.color: Qt.alpha(Theme.primary, 0.5)
                     opacity: 0.96
                     Image {
+                        smooth: true
                         anchors.centerIn: parent
                         width: 44
                         height: 44
@@ -277,6 +288,7 @@ Item {
                     }
 
                     Image {
+                        smooth: true
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: 14

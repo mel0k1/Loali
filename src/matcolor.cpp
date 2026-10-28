@@ -1,6 +1,7 @@
 #include "matcolor.h"
 
 #include <QBuffer>
+#include <QFile>
 #include <QHash>
 #include <QImage>
 #include <QQmlEngine>
@@ -122,6 +123,8 @@ void MatColor::generateFromImage(const QString &source)
         path = QUrl(path).toLocalFile();
     else if (path.startsWith(QStringLiteral("qrc:")))
         path = QStringLiteral(":") + path.mid(4);
+    else if (!QFile::exists(path) && !path.contains(QLatin1Char('/')))
+        path = QStringLiteral(":/Loali/assets/wallpapers/") + path + QStringLiteral(".jpg");
 
     QImage img(path);
     if (img.isNull())
