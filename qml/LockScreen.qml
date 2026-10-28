@@ -28,6 +28,54 @@ Item {
         opacity: 0.35
     }
 
+    MorphShape {
+        id: lockBlob
+        width: 260
+        height: 260
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: parent.height * 0.28 - 170
+        opacity: 0.28
+        fromShape: lockCycle[lockStage]
+        toShape: lockCycle[lockStage + 1]
+        progress: lockMorph.progress
+        color: Theme.primary
+
+        readonly property var lockCycle: ["cookie9", "sunny", "clover8", "flower", "boom", "cookie9"]
+        property int lockStage: 0
+
+        SequentialAnimation on scale {
+            running: lock.locked
+            loops: Animation.Infinite
+            NumberAnimation { to: 1.08; duration: 2600; easing.type: Easing.InOutSine }
+            NumberAnimation { to: 1.0; duration: 2600; easing.type: Easing.InOutSine }
+        }
+
+        Timer {
+            interval: 1600
+            running: lock.locked
+            repeat: true
+            onTriggered: {
+                if (lockMorph.running)
+                    return
+                lockBlob.lockStage = (lockBlob.lockStage + 1) % (lockBlob.lockCycle.length - 1)
+                lockMorph.restart()
+            }
+        }
+
+        SequentialAnimation {
+            id: lockMorph
+            property real progress: 0
+            NumberAnimation {
+                target: lockMorph
+                property: "progress"
+                from: 0
+                to: 1
+                duration: 1400
+                easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialSlow }
+            }
+        }
+    }
+
     Column {
         anchors.horizontalCenter: parent.horizontalCenter
         y: parent.height * 0.28

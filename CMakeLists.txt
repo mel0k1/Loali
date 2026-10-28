@@ -10,6 +10,7 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Quick QuickControls2 WaylandCompositor 
 qt_standard_project_setup()
 
 set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/MShapes.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_executable(loali
     src/main.cpp
@@ -44,6 +45,11 @@ qt_add_qml_module(loali
         qml/Expo.qml
         qml/LayerChrome.qml
         qml/XWaylandChrome.qml
+        qml/MShapes.qml
+        qml/MShape.qml
+        qml/MorphShape.qml
+        qml/MaterialShapes.js
+        qml/MaterialShapeData.js
     SOURCES
         src/apps.h
         src/apps.cpp

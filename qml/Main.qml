@@ -277,6 +277,10 @@ WaylandCompositor {
                 launcher.open = true
             else if (mode === "settings")
                 settingsApp.open = true
+            else if (mode === "shapes") {
+                settingsApp.open = true
+                settingsApp.page = 5
+            }
             else if (mode === "expo")
                 comp.toggleExpo()
             else if (mode === "preview") {

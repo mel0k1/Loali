@@ -7,6 +7,8 @@ Item {
     id: settings
 
     property bool open: false
+    property int page: -1
+    onPageChanged: if (page >= 0) pageStack.currentIndex = page
 
     anchors.fill: parent
     opacity: open ? 1 : 0
@@ -56,6 +58,7 @@ Item {
             { id: "panels", title: qsTr("Panels"), glyph: Theme.iconTune },
             { id: "workspaces", title: qsTr("Workspaces"), glyph: Theme.iconApps },
             { id: "notifications", title: qsTr("Notifications"), glyph: Theme.iconBell },
+            { id: "shapes", title: qsTr("Shapes"), glyph: Theme.iconAuto },
             { id: "about", title: qsTr("About"), glyph: Theme.iconInfo }
         ]
 
@@ -187,6 +190,7 @@ Item {
                     PanelsPage { }
                     WorkspacesPage { }
                     NotificationsPage { }
+                    ShapesPage { }
                     AboutPage { }
                 }
             }
@@ -856,6 +860,205 @@ Item {
                     }
                 }
             }
+        }
+
+        component ShapesPage: Flickable {
+            id: shapesScroll
+            clip: true
+            contentWidth: width
+            contentHeight: pageCol.implicitHeight
+
+            ColumnLayout {
+                id: pageCol
+                width: shapesScroll.width
+                spacing: 16
+
+                PageTitle { text: qsTr("Material Shapes") }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: qsTr("35 expressive shapes from the Material shape catalog, with polar-profile morphing")
+                    font.pixelSize: 13
+                    color: Theme.onSurfaceVariant
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    SectionLabel { text: qsTr("Morphing") }
+
+                    Rectangle {
+                        id: morphDemo
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 168
+                        radius: Theme.cornerM
+                        color: Theme.surfaceContainerLow
+
+                        readonly property var cycle: ["circle", "sunny", "cookie9", "clover8", "flower", "pill", "boom", "pentagon", "circle"]
+                        property int stage: 0
+
+                        function advance() {
+                            stage = (stage + 1) % (cycle.length - 1)
+                        }
+
+                        MorphShape {
+                            id: morphItem
+                            width: 120
+                            height: 120
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: 36
+                            fromShape: morphDemo.cycle[morphDemo.stage]
+                            toShape: morphDemo.cycle[morphDemo.stage + 1]
+                            progress: morphAnim.progress
+                            color: Theme.primary
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: 200
+                            text: morphItem.toShape
+                            font.pixelSize: 22
+                            font.weight: Font.Medium
+                            color: Theme.textOnSurface
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: 200
+                            y: 96
+                            text: morphDemo.stage + " / " + (morphDemo.cycle.length - 2)
+                            font.pixelSize: 12
+                            color: Theme.onSurfaceVariant
+                        }
+
+                        Timer {
+                            id: morphTimer
+                            interval: 900
+                            running: settings.open
+                            repeat: true
+                            onTriggered: {
+                                if (morphAnim.running)
+                                    return
+                                morphDemo.advance()
+                                morphAnim.restart()
+                            }
+                        }
+
+                        SequentialAnimation {
+                            id: morphAnim
+                            property real progress: 0
+                            NumberAnimation {
+                                target: morphAnim
+                                property: "progress"
+                                from: 0
+                                to: 1
+                                duration: Theme.durSlow
+                                easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialSlow }
+                            }
+                        }
+
+                        Text {
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 12
+                            text: "polar 128"
+                            font.pixelSize: 11
+                            color: Theme.onSurfaceVariant
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    SectionLabel { text: qsTr("Fill progress") }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 96
+                        radius: Theme.cornerM
+                        color: Theme.surfaceContainerLow
+
+                        MShape {
+                            id: fillDemo
+                            width: 64
+                            height: 64
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: 24
+                            shape: "cookie12"
+                            color: Theme.primary
+                            trackColor: Theme.surfaceContainerHighest
+                            fillProgress: 0.4
+                        }
+
+                        Timer {
+                            interval: 40
+                            running: settings.open
+                            repeat: true
+                            onTriggered: fillDemo.fillProgress = (fillDemo.fillProgress + 0.01) % 1
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    SectionLabel { text: qsTr("Shape catalog") }
+
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Repeater {
+                            model: MShapes.names
+
+                            delegate: Rectangle {
+                                id: shapeCell
+                                required property string modelData
+                                width: 92
+                                height: 108
+                                radius: 14
+                                color: shapeHover.hovered ? Theme.surfaceContainerHigh : Theme.surfaceContainerLow
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                MShape {
+                                    width: 48
+                                    height: 48
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    y: 16
+                                    shape: shapeCell.modelData
+                                    color: shapeHover.hovered ? Theme.secondary : Theme.primary
+                                    scale: shapeHover.hovered ? 1.15 : 1
+                                    Behavior on scale { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.effectsDefault } } }
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 12
+                                    width: parent.width - 12
+                                    text: shapeCell.modelData
+                                    elide: Text.ElideRight
+                                    horizontalAlignment: Text.AlignHCenter
+                                    font.pixelSize: 10
+                                    color: Theme.onSurfaceVariant
+                                }
+
+                                HoverHandler {
+                                    id: shapeHover
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item { Layout.preferredHeight: 8 }
+            }
+
+            ScrollBar.vertical: ScrollBar { }
         }
 
         component AboutPage: ColumnLayout {
