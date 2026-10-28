@@ -91,8 +91,28 @@ int main(int argc, char **argv)
             return false;
         code = out.at(0).toUInt();
         if (out.size() > 1) {
-            results = out.at(1).toMap();
+            {
+                QVariant v = out.at(1);
+                if (v.userType() == qMetaTypeId<QDBusArgument>()) {
+                    QDBusArgument arg = v.value<QDBusArgument>();
+                    QVariantMap m;
+                    arg.beginMap();
+                    while (!arg.atEnd()) {
+                        arg.beginMapEntry();
+                        QVariant key = arg.asVariant();
+                        QVariant val = arg.asVariant();
+                        if (val.userType() == qMetaTypeId<QDBusVariant>())
+                            val = val.value<QDBusVariant>().variant();
+                        arg.endMapEntry();
+                        m.insert(key.toString(), val);
+                    }
+                    arg.endMap();
+                    v = m;
+                }
+                results = v.toMap();
+            }
             for (auto it = results.cbegin(); it != results.cend(); ++it)
+                printf("DBG key=%s vtype=%s\n", qPrintable(it.key()), it.value().typeName());
             fflush(stdout);
         }
         return true;
