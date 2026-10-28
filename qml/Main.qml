@@ -8,11 +8,9 @@ WaylandCompositor {
     id: comp
 
     readonly property int dockHeight: Theme.sz(Settings.dockMode === Settings.Plane ? 56 : 52)
-    readonly property int taskbarHeight: Theme.sz(50)
     readonly property bool dockPlane: Settings.dockMode === Settings.Plane
-    readonly property bool barFull: Settings.taskbarStyle === Settings.Full
-    readonly property real topInset: dockPlane ? dockHeight + 6 : 12 + dockHeight + 8
-    readonly property real bottomInset: barFull ? taskbarHeight + 4 : 12 + taskbarHeight + 8
+    readonly property real topInset: 10
+    readonly property real bottomInset: dockPlane ? dockHeight : 12 + dockHeight + 8
     property int zTop: 10
     property bool locked: false
     property bool expoActive: false
@@ -242,9 +240,9 @@ WaylandCompositor {
         snapPreview.opacity = 0
     }
 
-    function openTrayMenu(row, x, y) {
+    function openTrayMenu(row, x, y, above) {
         launcher.open = false
-        return trayMenuPanel.openAt(row, x, y)
+        return trayMenuPanel.openAt(row, x, y, above === true)
     }
 
     function paletteSource() {
@@ -282,7 +280,7 @@ WaylandCompositor {
             else if (mode === "preview") {
                 const t = comp.topMost()
                 if (t)
-                    taskbarPanel.showPreviewFor(t)
+                    dockPanel.showPreviewFor(t)
             }
         }
     }
@@ -320,9 +318,6 @@ WaylandCompositor {
             comp.reapplyLayouts()
         }
         function onDockModeChanged() {
-            comp.reapplyLayouts()
-        }
-        function onTaskbarStyleChanged() {
             comp.reapplyLayouts()
         }
     }
@@ -390,43 +385,28 @@ WaylandCompositor {
             }
 
             Dock {
+                id: dockPanel
                 shell: comp
+                windows: comp.windows
                 launcherOpen: launcher.open
                 x: comp.dockPlane ? 0 : Math.round((win.width - width) / 2)
-                y: comp.dockPlane ? 0 : 12
-                width: comp.dockPlane ? win.width : implicitWidth
+                y: comp.dockPlane ? win.height - height : win.height - height - 12
+                width: comp.dockPlane ? win.width : Math.min(win.width - 16, implicitWidth)
                 height: comp.dockHeight
                 z: 100
                 Behavior on x {
                     enabled: !comp.dockPlane
                     NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
                 }
-                onLauncherToggled: launcher.open = !launcher.open
-            }
-
-            StatusPill {
-                shell: comp
-                x: win.width - width - (comp.dockPlane ? 10 : 12)
-                y: comp.dockPlane ? Math.round((comp.dockHeight - height) / 2) : 12
-                z: 100
-                Behavior on x {
-                    NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
-                }
                 Behavior on y {
                     NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } }
                 }
+                onLauncherToggled: launcher.open = !launcher.open
+                onLockRequested: comp.locked = true
                 onSettingsRequested: {
                     launcher.open = false
                     settingsApp.open = true
                 }
-            }
-
-            Taskbar {
-                id: taskbarPanel
-                shell: comp
-                windows: comp.windows
-                z: 100
-                onLockRequested: comp.locked = true
             }
 
             Launcher {

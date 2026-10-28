@@ -674,7 +674,7 @@ Item {
 
             Text {
                 width: parent.width
-                text: qsTr("The accent color tints the dock, taskbar, highlights and window focus ring.")
+                text: qsTr("The accent color tints the dock, highlights and window focus ring.")
                 wrapMode: Text.WordWrap
                 font.pixelSize: 13
                 color: Theme.onSurfaceVariant
@@ -688,10 +688,10 @@ Item {
 
             SettingRow {
                 Layout.fillWidth: true
-                title: qsTr("Taskbar style")
-                subtitle: qsTr("Floating pill that widens only when tasks overflow, or a classic full-width bar")
+                title: qsTr("Task buttons")
+                subtitle: qsTr("Compact icons in the dock, or labeled pills for every open window")
                 control: MSegments {
-                    labels: [qsTr("Floating"), qsTr("Full")]
+                    labels: [qsTr("Icons"), qsTr("Labels")]
                     current: Settings.taskbarStyle
                     onPicked: (i) => Settings.taskbarStyle = i
                 }
@@ -700,7 +700,7 @@ Item {
             SettingRow {
                 Layout.fillWidth: true
                 title: qsTr("Dock look")
-                subtitle: qsTr("Dynamic Island that morphs on hover and app launches, or a flat plane across the top")
+                subtitle: qsTr("Dynamic Island floating at the bottom edge, or a flat plane docked to it")
                 control: MSegments {
                     labels: [qsTr("Island"), qsTr("Plane")]
                     current: Settings.dockMode
@@ -711,7 +711,7 @@ Item {
             SettingRow {
                 Layout.fillWidth: true
                 title: qsTr("Panel size")
-                subtitle: qsTr("Scales the dock, taskbar and status pill together")
+                subtitle: qsTr("Scales the dock and its buttons together")
                 control: Slider {
                     id: scaleSlider
                     width: 260

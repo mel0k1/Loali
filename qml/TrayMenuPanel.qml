@@ -8,6 +8,7 @@ Item {
     property var shell
     property int anchorX: 0
     property int anchorY: 0
+    property bool above: false
 
     anchors.fill: parent
     visible: opacity > 0
@@ -17,7 +18,7 @@ Item {
 
     TrayMenu { id: menu }
 
-    function openAt(row, x, y) {
+    function openAt(row, x, y, above) {
         const info = Tray.itemInfo(row)
         if (!info || info.menuPath === undefined || info.menuPath === "")
             return false
@@ -25,6 +26,7 @@ Item {
         menu.path = info.menuPath
         anchorX = x
         anchorY = y
+        panel.above = above === true
         menu.open()
         openState = true
         return true
@@ -44,7 +46,9 @@ Item {
     Rectangle {
         id: card
         x: Math.max(12, Math.min(panel.anchorX - width / 2, panel.width - width - 12))
-        y: Math.max(12, Math.min(panel.anchorY, panel.height - height - 12))
+        y: panel.above
+           ? Math.max(12, Math.min(panel.anchorY - height - 8, panel.height - height - 12))
+           : Math.max(12, Math.min(panel.anchorY, panel.height - height - 12))
         width: 320
         height: Math.min(col.height + 16, panel.height - 24)
         radius: 16

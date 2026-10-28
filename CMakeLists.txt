@@ -35,11 +35,9 @@ qt_add_qml_module(loali
         qml/Wallpaper.qml
         qml/Chrome.qml
         qml/Dock.qml
-        qml/Taskbar.qml
         qml/Desktop.qml
         qml/Launcher.qml
         qml/LockScreen.qml
-        qml/StatusPill.qml
         qml/SettingsApp.qml
         qml/NotificationPopups.qml
         qml/TrayMenuPanel.qml
