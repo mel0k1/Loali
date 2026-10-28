@@ -148,14 +148,14 @@ DEMO_ARGS="" dbus-run-session -- sh -c '
     pstatus=0
     if [ -x ./build/loportaltest ]; then
         echo "-- portal screenshot --"
-        out=$(timeout 15 ./build/loportaltest screenshot 2>/dev/null)
+        out=$(timeout 15 ./build/loportaltest screenshot 2>&1)
         echo "$out"
         case "$out" in
             SHOT_URI=file://*) echo "portal screenshot: PASS" ;;
             *) echo "portal screenshot: FAIL"; pstatus=1 ;;
         esac
         echo "-- portal screencast --"
-        out=$(timeout 15 ./build/loportaltest screencast 2>/dev/null)
+        out=$(timeout 15 ./build/loportaltest screencast 2>&1)
         echo "$out"
         node=$(echo "$out" | grep -oE "PW_NODE=[0-9]+" | cut -d= -f2)
         if [ -n "$node" ] && [ "$node" != "0" ]; then

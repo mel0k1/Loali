@@ -132,10 +132,9 @@ int main(int argc, char **argv)
                 { QVariant::fromValue(QDBusObjectPath(QStringLiteral("/h"))),
                   QStringLiteral("lotest"), QString(), QVariantMap() }, code, results))
         return 1;
-    if (code != 0) {
-        qWarning() << "Screenshot response code" << code;
+    printf("CODE=%u KEYS=%d\n", code, results.size());
+    if (code != 0)
         return 1;
-    }
     const QString uri = results.value(QStringLiteral("uri")).toString();
     printf("SHOT_URI=%s\n", qPrintable(uri));
     fflush(stdout);
