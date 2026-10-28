@@ -18,6 +18,58 @@
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
 #include "blur-client-protocol.h"
 #include "ext-background-effect-v1-client-protocol.h"
+#include "xdg-shell-client-protocol.h"
+#include "viewporter-client-protocol.h"
+#include "xdg-output-unstable-v1-client-protocol.h"
+
+static struct xdg_wm_base *g_xdg_wm = NULL;
+static struct wl_data_device_manager *g_ddm = NULL;
+static struct wl_data_device *g_dd = NULL;
+static struct wp_viewporter *g_viewporter = NULL;
+static struct zxdg_output_manager_v1 *g_xdgout_mgr = NULL;
+static int g_xdg_configured = 0;
+static uint32_t g_xdg_serial = 0;
+static int g_done = 0;
+
+static void xdg_wm_ping(void *data, struct xdg_wm_base *wm, uint32_t serial)
+{
+    (void)data;
+    xdg_wm_base_pong(wm, serial);
+}
+
+static const struct xdg_wm_base_listener xdg_wm_listener = { xdg_wm_ping };
+
+static void xdg_surface_configure(void *data, struct xdg_surface *surf, uint32_t serial)
+{
+    (void)data;
+    (void)surf;
+    g_xdg_serial = serial;
+    g_xdg_configured = 1;
+}
+
+static const struct xdg_surface_listener xdg_surface_listener = { xdg_surface_configure };
+
+static void xdg_toplevel_configure(void *data, struct xdg_toplevel *tl, int32_t w, int32_t h,
+                                   struct wl_array *states)
+{
+    (void)data;
+    (void)tl;
+    (void)states;
+    printf("TOPLEVEL_CONFIGURE %dx%d\n", w, h);
+    fflush(stdout);
+}
+
+static void xdg_toplevel_close(void *data, struct xdg_toplevel *tl)
+{
+    (void)data;
+    (void)tl;
+    g_done = 1;
+}
+
+static const struct xdg_toplevel_listener xdg_toplevel_listener = {
+    xdg_toplevel_configure,
+    xdg_toplevel_close,
+};
 
 static struct ext_idle_notifier_v1 *g_idle_mgr = NULL;
 static struct zwlr_output_power_manager_v1 *g_power_mgr = NULL;
@@ -27,7 +79,7 @@ static struct wl_shm *g_shm = NULL;
 static struct wl_seat *g_seat = NULL;
 static struct wl_output *g_output = NULL;
 static int g_dpms_want = -1;
-static int g_done = 0;
+
 static int g_locked = 0;
 static int g_lock_finished = 0;
 static uint32_t g_lock_color = 0xff182848u;
@@ -294,15 +346,33 @@ static void registry_global(void *data, struct wl_registry *reg, uint32_t name,
     } else if (strcmp(iface, ext_background_effect_manager_v1_interface.name) == 0) {
         g_bgeff_mgr = wl_registry_bind(reg, name, &ext_background_effect_manager_v1_interface, 1);
     } else if (strcmp(iface, wl_compositor_interface.name) == 0 && !g_compositor) {
-        g_compositor = wl_registry_bind(reg, name, &wl_compositor_interface, 1);
+        uint32_t want = getenv("LOALI_COMP_V") ? (uint32_t)atoi(getenv("LOALI_COMP_V")) : 1;
+        g_compositor = wl_registry_bind(reg, name, &wl_compositor_interface,
+                                        version < want ? version : want);
+    } else if (strcmp(iface, xdg_wm_base_interface.name) == 0 && !g_xdg_wm) {
+        g_xdg_wm = wl_registry_bind(reg, name, &xdg_wm_base_interface, 1);
+        if (g_xdg_wm)
+            xdg_wm_base_add_listener(g_xdg_wm, &xdg_wm_listener, NULL);
     } else if (strcmp(iface, wl_shm_interface.name) == 0 && !g_shm) {
         g_shm = wl_registry_bind(reg, name, &wl_shm_interface, 1);
+    } else if (strcmp(iface, wl_data_device_manager_interface.name) == 0 && !g_ddm) {
+        g_ddm = wl_registry_bind(reg, name, &wl_data_device_manager_interface, 1);
+    } else if (strcmp(iface, wp_viewporter_interface.name) == 0 && !g_viewporter) {
+        g_viewporter = wl_registry_bind(reg, name, &wp_viewporter_interface, 1);
+    } else if (strcmp(iface, zxdg_output_manager_v1_interface.name) == 0 && !g_xdgout_mgr) {
+        g_xdgout_mgr = wl_registry_bind(reg, name, &zxdg_output_manager_v1_interface,
+                                        version < 3 ? version : 3);
     } else if (strcmp(iface, wl_seat_interface.name) == 0 && !g_seat) {
         g_seat = wl_registry_bind(reg, name, &wl_seat_interface, version < 7 ? version : 7);
-        if (g_seat)
+        if (g_seat) {
             wl_seat_add_listener(g_seat, &seat_listener, NULL);
+            if (getenv("LOALI_REPL"))
+                wl_seat_get_touch(g_seat);
+        }
     } else if (strcmp(iface, wl_output_interface.name) == 0 && !g_output) {
-        g_output = wl_registry_bind(reg, name, &wl_output_interface, version < 3 ? version : 3);
+        uint32_t owant = getenv("LOALI_OUT_V") ? (uint32_t)atoi(getenv("LOALI_OUT_V")) : 3;
+        g_output = wl_registry_bind(reg, name, &wl_output_interface,
+                                    version < owant ? version : owant);
         if (g_output)
             wl_output_add_listener(g_output, &output_listener, NULL);
     }
@@ -529,6 +599,73 @@ int main(int argc, char **argv)
             fprintf(stderr, "no ext_background_effect_manager_v1\n");
         }
         wl_surface_destroy(surf);
+        wl_display_roundtrip(display);
+    } else if (strcmp(argv[1], "xdg") == 0) {
+        if (!g_compositor || !g_xdg_wm) {
+            fprintf(stderr, "no wl_compositor or xdg_wm_base\n");
+            return 1;
+        }
+        struct wl_surface *surface = wl_compositor_create_surface(g_compositor);
+        if (getenv("LOALI_DELAY")) {
+            sleep(atoi(getenv("LOALI_DELAY")));
+            wl_display_roundtrip(display);
+        }
+        if (getenv("LOALI_DD_FIRST") && g_ddm && g_seat) {
+            g_dd = wl_data_device_manager_get_data_device(g_ddm, g_seat);
+            printf("DD_FIRST\n");
+            fflush(stdout);
+            wl_display_roundtrip(display);
+        }
+        if (getenv("LOALI_REPL") && g_ddm && g_seat) {
+            g_dd = wl_data_device_manager_get_data_device(g_ddm, g_seat);
+            printf("DD_CREATED\n");
+            fflush(stdout);
+        }
+        if (getenv("LOALI_FULL") && g_xdgout_mgr && g_output) {
+            struct zxdg_output_v1 *xo = zxdg_output_manager_v1_get_xdg_output(g_xdgout_mgr,
+                                                                              g_output);
+            zxdg_output_v1_destroy(xo);
+            printf("XDGOUT_DONE\n");
+            fflush(stdout);
+        }
+        if (getenv("LOALI_SHM") && g_shm) {
+            int fd = memfd_create("lotest-pool", 0);
+            if (fd >= 0) {
+                struct wl_shm_pool *pool = wl_shm_create_pool(g_shm, fd, 4096);
+                wl_shm_pool_resize(pool, 16384);
+                wl_shm_pool_destroy(pool);
+                close(fd);
+            }
+            printf("POOL_DONE\n");
+            fflush(stdout);
+        }
+        struct xdg_surface *xs = xdg_wm_base_get_xdg_surface(g_xdg_wm, surface);
+        struct xdg_toplevel *tl = xdg_surface_get_toplevel(xs);
+        xdg_surface_add_listener(xs, &xdg_surface_listener, NULL);
+        xdg_toplevel_add_listener(tl, &xdg_toplevel_listener, NULL);
+        xdg_toplevel_set_title(tl, "lotest");
+        xdg_toplevel_set_app_id(tl, "lotest");
+        wl_surface_commit(surface);
+        wl_display_roundtrip(display);
+        int guard = 0;
+        while (!g_xdg_configured && !g_done && guard < 200) {
+            if (wl_display_dispatch(display) < 0)
+                break;
+            guard++;
+        }
+        if (g_xdg_configured) {
+            printf("XDG_CONFIGURED serial=%u\n", g_xdg_serial);
+            fflush(stdout);
+            xdg_surface_ack_configure(xs, g_xdg_serial);
+            wl_surface_commit(surface);
+            wl_display_roundtrip(display);
+        } else {
+            printf("XDG_NO_CONFIGURE\n");
+            fflush(stdout);
+        }
+        xdg_toplevel_destroy(tl);
+        xdg_surface_destroy(xs);
+        wl_surface_destroy(surface);
         wl_display_roundtrip(display);
     } else {
         fprintf(stderr, "unknown mode %s\n", argv[1]);

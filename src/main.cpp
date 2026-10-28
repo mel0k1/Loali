@@ -99,7 +99,7 @@ void applyUiFont()
 int main(int argc, char *argv[])
 {
     QSurfaceFormat fmt = QSurfaceFormat::defaultFormat();
-    fmt.setSamples(8);
+    fmt.setSamples(qEnvironmentVariableIntValue("LOALI_MSAA") > 0 ? qEnvironmentVariableIntValue("LOALI_MSAA") : 8);
     fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     QSurfaceFormat::setDefaultFormat(fmt);
     QGuiApplication::setAttribute(Qt::AA_ShareOpenGLContexts);

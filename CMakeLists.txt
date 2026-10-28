@@ -243,6 +243,12 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
     set(LOALI_VK_C ${CMAKE_CURRENT_BINARY_DIR}/virtual-keyboard-unstable-v1-protocol.c)
     set(LOALI_BLUR_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/blur.xml)
     set(LOALI_BGEFF_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-background-effect-v1.xml)
+    set(LOALI_XDG_H ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.h)
+    set(LOALI_VP_H ${CMAKE_CURRENT_BINARY_DIR}/viewporter-client-protocol.h)
+    set(LOALI_VP_C ${CMAKE_CURRENT_BINARY_DIR}/viewporter-protocol.c)
+    set(LOALI_XDGOUT_H ${CMAKE_CURRENT_BINARY_DIR}/xdg-output-unstable-v1-client-protocol.h)
+    set(LOALI_XDGOUT_C ${CMAKE_CURRENT_BINARY_DIR}/xdg-output-unstable-v1-protocol.c)
+    set(LOALI_XDG_C ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-protocol.c)
     set(LOALI_BLUR_H ${CMAKE_CURRENT_BINARY_DIR}/blur-client-protocol.h)
     set(LOALI_BLUR_C ${CMAKE_CURRENT_BINARY_DIR}/blur-protocol.c)
     set(LOALI_BGEFF_H ${CMAKE_CURRENT_BINARY_DIR}/ext-background-effect-v1-client-protocol.h)
@@ -257,7 +263,7 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
         OUTPUT ${LOALI_LOTEST_H} ${LOALI_LOTEST_C} ${LOALI_POWER_H} ${LOALI_POWER_C}
                ${LOALI_SLOCK_H} ${LOALI_SLOCK_C} ${LOALI_IM_H} ${LOALI_IM_C}
                ${LOALI_VK_H} ${LOALI_VK_C} ${LOALI_BLUR_H} ${LOALI_BLUR_C}
-               ${LOALI_BGEFF_H} ${LOALI_BGEFF_C}
+               ${LOALI_BGEFF_H} ${LOALI_BGEFF_C} ${LOALI_XDG_H} ${LOALI_XDG_C} ${LOALI_VP_H} ${LOALI_VP_C} ${LOALI_XDGOUT_H} ${LOALI_XDGOUT_C}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_IDLE_XML} ${LOALI_LOTEST_H}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_POWER_XML} ${LOALI_POWER_H}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_SLOCK_XML} ${LOALI_SLOCK_H}
@@ -265,6 +271,9 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_VK_XML} ${LOALI_VK_H}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_BLUR_XML} ${LOALI_BLUR_H}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_BGEFF_XML} ${LOALI_BGEFF_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-shell.xml ${LOALI_XDG_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${CMAKE_CURRENT_SOURCE_DIR}/protocols/viewporter.xml ${LOALI_VP_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-output-unstable-v1.xml ${LOALI_XDGOUT_H}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_IDLE_XML} ${LOALI_LOTEST_C}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_POWER_XML} ${LOALI_POWER_C}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_SLOCK_XML} ${LOALI_SLOCK_C}
@@ -272,8 +281,14 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_VK_XML} ${LOALI_VK_C}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_BLUR_XML} ${LOALI_BLUR_C}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_BGEFF_XML} ${LOALI_BGEFF_C}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-shell.xml ${LOALI_XDG_C}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${CMAKE_CURRENT_SOURCE_DIR}/protocols/viewporter.xml ${LOALI_VP_C}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-output-unstable-v1.xml ${LOALI_XDGOUT_C}
         DEPENDS ${LOALI_IDLE_XML} ${LOALI_POWER_XML} ${LOALI_SLOCK_XML}
                 ${LOALI_IM_XML} ${LOALI_VK_XML} ${LOALI_BLUR_XML} ${LOALI_BGEFF_XML}
+                ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-shell.xml
+                ${CMAKE_CURRENT_SOURCE_DIR}/protocols/viewporter.xml
+                ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-output-unstable-v1.xml
     )
     add_executable(lotest tools/lotest.c
         ${LOALI_LOTEST_C}
@@ -283,6 +298,9 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
         ${LOALI_VK_C}
         ${LOALI_BLUR_C}
         ${LOALI_BGEFF_C}
+        ${LOALI_XDG_C}
+        ${LOALI_VP_C}
+        ${LOALI_XDGOUT_C}
     )
     target_include_directories(lotest PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(lotest PRIVATE PkgConfig::WAYLAND_CLIENT)

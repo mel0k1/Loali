@@ -35,6 +35,10 @@ WaylandCompositor {
         }
     }
 
+    function pingClients() {
+        Util.pingClients(comp, xdgShell)
+    }
+
     function maxArea() {
         const x = 10 + layerInsetLeft
         const y = topInset + layerInsetTop
@@ -754,7 +758,9 @@ WaylandCompositor {
     }
 
     XdgShell {
+        id: xdgShell
         onToplevelCreated: (toplevel, xdgSurface) => {
+            console.info("toplevel created:", toplevel.title, "appId:", toplevel.appId || "?")
             const c = chromeComponent.createObject(workspace, {
                 shellSurface: xdgSurface,
                 toplevel: toplevel,
@@ -765,6 +771,13 @@ WaylandCompositor {
             c.windowClosed.connect(() => removeWindow(c))
             activate(c)
         }
+    }
+
+    Timer {
+        interval: 15000
+        running: true
+        repeat: true
+        onTriggered: comp.pingClients()
     }
 
     LayerShell {

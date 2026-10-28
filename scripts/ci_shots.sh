@@ -38,7 +38,6 @@ EOT
 write_desktop Files folder
 write_desktop Terminal utilities-terminal
 write_desktop Settings preferences-system
-write_desktop foot utilities-terminal
 export XDG_DATA_DIRS="$APPDIR:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 
 run_shot() {
@@ -46,7 +45,6 @@ run_shot() {
     demo="$2"
     extra="$3"
     echo "== shot: $out (demo: ${demo:-none}, tool: $SHOT_TOOL) =="
-    pkill -x foot 2>/dev/null || true
     pkill -f build/lodemo 2>/dev/null || true
     pkill -f build/lolayer 2>/dev/null || true
     DEMO_ARGS="$demo" EXTRA_ARGS="$extra" DEMO_CLIENTS="$4" OUT="$out" SHOT_TOOL="$SHOT_TOOL" LOALI_LAYER="$layer" SHOT_DELAY="$delay" dbus-run-session -- sh -c '
@@ -67,18 +65,10 @@ run_shot() {
         fi
         if [ "$DEMO_CLIENTS" = "1" ]; then
             socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
-            if command -v foot >/dev/null 2>&1; then
-                WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
-                    foot -p "loali session" >build/shots/foot1.log 2>&1 &
-                WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
-                    foot -p "second workspace" >build/shots/foot2.log 2>&1 &
-            else
-                echo "foot missing, lodemo fallback"
-                WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
-                    ./build/lodemo -t Files -c "#7C4DFF" -m "native capture" >build/shots/lodemo1.log 2>&1 &
-                WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
-                    ./build/lodemo -t Terminal -c "#2E7D32" -m "wl_shm client" >build/shots/lodemo2.log 2>&1 &
-            fi
+            WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
+                ./build/lodemo -a files -t Files -c "#7C4DFF" -m "Loali session" >build/shots/lodemo1.log 2>&1 &
+            WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= QT_QPA_PLATFORM=wayland \
+                ./build/lodemo -a terminal -t Terminal -c "#2E7D32" -m "wl_shm client" >build/shots/lodemo2.log 2>&1 &
             if [ "$LOALI_LAYER" = "1" ]; then
                 WAYLAND_DISPLAY="${socket:-wayland-0}" DISPLAY= ./build/lolayer >build/shots/lolayer.log 2>&1 &
                 echo "--- lolayer.log ---"
@@ -119,9 +109,9 @@ run_shot() {
         else
             wait $comp || status=$?
         fi
-        echo "--- foot logs ---"
-        cat build/shots/foot1.log 2>/dev/null || true
-        cat build/shots/foot2.log 2>/dev/null || true
+        echo "--- lodemo logs ---"
+        cat build/shots/lodemo1.log 2>/dev/null || true
+        cat build/shots/lodemo2.log 2>/dev/null || true
         if [ -f "$OUT" ]; then
             echo "saved: $OUT"
         else

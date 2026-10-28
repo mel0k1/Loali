@@ -4,6 +4,8 @@
 #include <QQmlEngine>
 #include <QVariant>
 
+#include <QtWaylandCompositor/QWaylandClient>
+#include <QtWaylandCompositor/QWaylandCompositor>
 #include <QtWaylandCompositor/QWaylandSeat>
 #include <QtWaylandCompositor/QWaylandSurface>
 
@@ -31,6 +33,25 @@ public:
             if (!ok)
                 qWarning() << "loali: setKeyboardFocus failed for" << f;
         }
+    }
+
+    Q_INVOKABLE int pingClients(const QVariant &compositor, const QVariant &shell)
+    {
+        auto *comp = qvariant_cast<QWaylandCompositor *>(compositor);
+        auto *xdg = qvariant_cast<QObject *>(shell);
+        if (!comp || !xdg)
+            return 0;
+        int count = 0;
+        const QList<QWaylandClient *> clients = comp->clients();
+        for (QWaylandClient *client : clients) {
+            if (!client)
+                continue;
+            const bool ok = QMetaObject::invokeMethod(xdg, "ping",
+                                                      Q_ARG(QWaylandClient *, client));
+            if (ok)
+                ++count;
+        }
+        return count;
     }
 
 private:
