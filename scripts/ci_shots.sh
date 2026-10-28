@@ -47,12 +47,12 @@ run_shot() {
     echo "== shot: $out (demo: ${demo:-none}, tool: $SHOT_TOOL) =="
     pkill -f build/lodemo 2>/dev/null || true
     pkill -f build/lolayer 2>/dev/null || true
-    DEMO_ARGS="$demo" EXTRA_ARGS="$extra" DEMO_CLIENTS="$4" OUT="$out" SHOT_TOOL="$SHOT_TOOL" LOALI_LAYER="${LOALI_LAYER:-0}" dbus-run-session -- sh -c '
+    DEMO_ARGS="$demo" EXTRA_ARGS="$extra" DEMO_CLIENTS="$4" OUT="$out" SHOT_TOOL="$SHOT_TOOL" LOALI_LAYER="$layer" SHOT_DELAY="$delay" dbus-run-session -- sh -c '
         if [ "$SHOT_TOOL" = "grim" ]; then
             gdb -q -batch -ex run -ex "echo === BACKTRACE ===" -ex "thread apply all bt 20" \
                 --args ./build/loali $DEMO_ARGS $EXTRA_ARGS >build/shots/loali.log 2>&1 &
         else
-            ./build/loali $DEMO_ARGS $EXTRA_ARGS --screenshot "$OUT" --screenshot-delay 8000 >build/shots/loali.log 2>&1 &
+            ./build/loali $DEMO_ARGS $EXTRA_ARGS --screenshot "$OUT" --screenshot-delay "${SHOT_DELAY:-8000}" >build/shots/loali.log 2>&1 &
         fi
         comp=$!
         sleep 5
@@ -74,6 +74,12 @@ run_shot() {
                 echo "--- lolayer.log ---"
                 sleep 2
                 cat build/shots/lolayer.log 2>/dev/null || true
+            fi
+            if [ "$LOALI_XEYES" = "1" ]; then
+                xd=$(grep -oE "window manager ready on :[0-9]+" build/shots/loali.log | head -n1 | grep -oE "[0-9]+")
+                sleep 1
+                DISPLAY=":${xd:-1}" xeyes >build/shots/xeyes.log 2>&1 &
+                sleep 4
             fi
             sleep 3
             echo "--- loali.log after clients (tail 12) ---"
@@ -118,6 +124,7 @@ run_shot() {
 
 run_shot build/shots/desktop.png "" "" 1
 LOALI_LAYER=1 run_shot build/shots/layer.png "" "" 1
+SHOT_DELAY=14000 LOALI_XEYES=1 run_shot build/shots/xwayland.png "" "" 1
 run_shot build/shots/launcher.png "--demo launcher" "" 1
 run_shot build/shots/settings.png "--demo settings" "" 1
 run_shot build/shots/expo.png "--demo expo" "" 1

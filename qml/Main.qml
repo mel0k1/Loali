@@ -7,6 +7,7 @@ import Loali
 WaylandCompositor {
     id: comp
 
+
     readonly property int dockHeight: Theme.sz(Settings.dockMode === Settings.Plane ? 56 : 52)
     readonly property bool dockPlane: Settings.dockMode === Settings.Plane
     readonly property real topInset: 10
@@ -19,6 +20,7 @@ WaylandCompositor {
     property var activeWin: null
     property string snapMode: ""
     property bool desktopShown: false
+    property alias xwayland: xwaylandShell
     property ListModel windows: ListModel {}
 
     onWorkspaceCountChanged: {
@@ -724,6 +726,21 @@ WaylandCompositor {
         }
     }
 
+    XWaylandShell {
+        id: xwaylandShell
+        onXwaylandSurfaceCreated: (surf) => {
+            const c = xwaylandChromeComponent.createObject(workspace, {
+                shellSurface: surf,
+                compositor: comp,
+                ws: comp.currentWorkspace
+            })
+            windows.append({ win: c })
+            c.windowClosed.connect(() => removeWindow(c))
+            surf.windowClosed.connect(() => removeWindow(c))
+            comp.activate(c)
+        }
+    }
+
     XdgDecorationManagerV1 {
         preferredMode: XdgToplevel.ServerSideDecoration
     }
@@ -745,5 +762,10 @@ WaylandCompositor {
     Component {
         id: layerChromeComponent
         LayerChrome {}
+    }
+
+    Component {
+        id: xwaylandChromeComponent
+        XWaylandChrome {}
     }
 }

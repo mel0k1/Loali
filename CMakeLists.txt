@@ -43,6 +43,7 @@ qt_add_qml_module(loali
         qml/TrayMenuPanel.qml
         qml/Expo.qml
         qml/LayerChrome.qml
+        qml/XWaylandChrome.qml
     SOURCES
         src/apps.h
         src/apps.cpp
@@ -68,6 +69,8 @@ qt_add_qml_module(loali
         src/wloutput.cpp
         src/xdgoutput.h
         src/xdgoutput.cpp
+        src/xwayland.h
+        src/xwayland.cpp
         src/util.h
     RESOURCES
         assets/logo.svg
@@ -95,6 +98,9 @@ qt6_generate_wayland_protocol_server_sources(loali
 qt6_generate_wayland_protocol_server_sources(loali
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-layer-shell-unstable-v1.xml
 )
+qt6_generate_wayland_protocol_server_sources(loali
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xwayland-shell-v1.xml
+)
 
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
@@ -102,6 +108,10 @@ if(PkgConfig_FOUND)
     if(TARGET PkgConfig::WAYLAND_SERVER)
         target_link_libraries(loali PRIVATE PkgConfig::WAYLAND_SERVER)
     endif()
+    pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
+    target_link_libraries(loali PRIVATE PkgConfig::XCB)
+    pkg_check_modules(XCB_COMPOSITE REQUIRED IMPORTED_TARGET xcb-composite)
+    target_link_libraries(loali PRIVATE PkgConfig::XCB_COMPOSITE)
 endif()
 
 qt_add_executable(lodemo

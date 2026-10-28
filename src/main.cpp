@@ -21,6 +21,7 @@
 #include "util.h"
 #include "wloutput.h"
 #include "xdgoutput.h"
+#include "xwayland.h"
 
 #include <QQuickWindow>
 #include <QTimer>
@@ -129,6 +130,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<DesktopModel>("Loali", 1, 0, "DesktopModel");
     qmlRegisterType<WlOutputFix>("Loali", 1, 0, "WlOutputFix");
     qmlRegisterType<LayerShellQuickExtension>("Loali", 1, 0, "LayerShell");
+    qmlRegisterType<XWaylandShellQuickExtension>("Loali", 1, 0, "XWaylandShell");
+    qmlRegisterUncreatableType<XWaylandSurface>("Loali", 1, 0, "XWaylandSurface",
+                                                QStringLiteral("created by the compositor"));
     qmlRegisterType<LayerSurface>("Loali", 1, 0, "LayerSurface");
 
     applyUiFont();
