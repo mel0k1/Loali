@@ -21,12 +21,20 @@
 #include "util.h"
 #include "wloutput.h"
 #include "xdgoutput.h"
+#include "datacontrol.h"
+#include "idle.h"
 #include "xwayland.h"
 
 #include <QQuickWindow>
 #include <QTimer>
 
 namespace {
+
+void registerIdleBridge()
+{
+    Idle::registerTypes();
+}
+
 
 void applyUiPalette()
 {
@@ -122,6 +130,9 @@ int main(int argc, char *argv[])
                                        [](QQmlEngine *e, QJSEngine *j) -> QObject * { return MatColor::create(e, j); });
     qmlRegisterSingletonType<Notifications>("Loali", 1, 0, "Notifications",
                                             [](QQmlEngine *e, QJSEngine *j) -> QObject * { return Notifications::create(e, j); });
+    registerIdleBridge();
+    qmlRegisterSingletonType<Idle>("Loali", 1, 0, "Idle",
+                                   [](QQmlEngine *e, QJSEngine *j) -> QObject * { return Idle::create(e, j); });
     qmlRegisterSingletonType<LoaliUtil>("Loali", 1, 0, "Util",
                                         [](QQmlEngine *e, QJSEngine *j) -> QObject * { return LoaliUtil::create(e, j); });
     qmlRegisterType<TrayMenu>("Loali", 1, 0, "TrayMenu");
@@ -131,6 +142,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<WlOutputFix>("Loali", 1, 0, "WlOutputFix");
     qmlRegisterType<LayerShellQuickExtension>("Loali", 1, 0, "LayerShell");
     qmlRegisterType<XWaylandShellQuickExtension>("Loali", 1, 0, "XWaylandShell");
+    qmlRegisterType<IdleManagerQuickExtension>("Loali", 1, 0, "IdleManager");
+    qmlRegisterType<OutputPowerManagerQuickExtension>("Loali", 1, 0, "OutputPowerManager");
+    qmlRegisterType<DataControlManagerQuickExtension>("Loali", 1, 0, "DataControlManager");
     qmlRegisterUncreatableType<XWaylandSurface>("Loali", 1, 0, "XWaylandSurface",
                                                 QStringLiteral("created by the compositor"));
     qmlRegisterType<LayerSurface>("Loali", 1, 0, "LayerSurface");

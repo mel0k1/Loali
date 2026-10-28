@@ -90,7 +90,6 @@ run_shot() {
                 echo "loali: DIED after clients"
             fi
         fi
-        status=0
         if [ "$SHOT_TOOL" = "grim" ]; then
             socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
             echo "grim: WAYLAND_DISPLAY=${socket:-wayland-0}"
@@ -131,3 +130,43 @@ run_shot build/shots/expo.png "--demo expo" "" 1
 run_shot build/shots/taskbar.png "--demo preview" "--demo-delay 7000 --screenshot-delay 15000" 1
 
 ls -la build/shots
+
+echo "=== protocol tests (standalone session) ==="
+mkdir -p build/shots
+DEMO_ARGS="" dbus-run-session -- sh -c '
+    pkill -x loali 2>/dev/null || true
+    ./build/loali >build/shots/loali_proto.log 2>&1 &
+    comp=$!
+    sleep 6
+    socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
+    WAYLAND_DISPLAY="${socket:-wayland-0}"
+    export WAYLAND_DISPLAY
+    pstatus=0
+    if [ -x ./build/lotest ]; then
+        echo "-- idle 1500ms --"
+        timeout 10 ./build/lotest idle 1500 && echo "idle: PASS" || { echo "idle: FAIL"; pstatus=1; }
+        echo "-- dpms get --"
+        timeout 10 ./build/lotest dpms get || { echo "dpms get: FAIL"; pstatus=1; }
+        echo "-- dpms off --"
+        timeout 10 ./build/lotest dpms off || { echo "dpms off: FAIL"; pstatus=1; }
+        echo "-- dpms on --"
+        timeout 10 ./build/lotest dpms on || { echo "dpms on: FAIL"; pstatus=1; }
+    else
+        echo "lotest missing, skip"
+    fi
+    if command -v wl-copy >/dev/null 2>&1; then
+        echo "-- clipboard wl-copy -> wl-paste --"
+        echo -n "loali-clipboard-test" | timeout 5 wl-copy 2>/dev/null &
+        sleep 1
+        pasted=$(timeout 5 wl-paste 2>/dev/null || true)
+        echo "pasted=[$pasted]"
+        [ "$pasted" = "loali-clipboard-test" ] && echo "clipboard: PASS" || { echo "clipboard: FAIL"; pstatus=1; }
+    else
+        echo "wl-clipboard missing, skip"
+    fi
+    kill $comp 2>/dev/null || true
+    exit $pstatus
+'
+pcode=$?
+echo "protocol tests exit: $pcode"
+[ "$pcode" -eq 0 ] || exit 1

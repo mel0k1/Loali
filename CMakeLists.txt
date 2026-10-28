@@ -71,6 +71,10 @@ qt_add_qml_module(loali
         src/xdgoutput.cpp
         src/xwayland.h
         src/xwayland.cpp
+        src/idle.h
+        src/idle.cpp
+        src/datacontrol.h
+        src/datacontrol.cpp
         src/util.h
     RESOURCES
         assets/logo.svg
@@ -101,6 +105,15 @@ qt6_generate_wayland_protocol_server_sources(loali
 qt6_generate_wayland_protocol_server_sources(loali
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xwayland-shell-v1.xml
 )
+qt6_generate_wayland_protocol_server_sources(loali
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-idle-notify-v1.xml
+)
+qt6_generate_wayland_protocol_server_sources(loali
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-output-power-management-unstable-v1.xml
+)
+qt6_generate_wayland_protocol_server_sources(loali
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-data-control-unstable-v1.xml
+)
 
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
@@ -112,6 +125,9 @@ if(PkgConfig_FOUND)
     target_link_libraries(loali PRIVATE PkgConfig::XCB)
     pkg_check_modules(XCB_COMPOSITE REQUIRED IMPORTED_TARGET xcb-composite)
     target_link_libraries(loali PRIVATE PkgConfig::XCB_COMPOSITE)
+    if(TARGET Qt6::WaylandCompositorPrivate)
+        target_link_libraries(loali PRIVATE Qt6::WaylandCompositorPrivate)
+    endif()
 endif()
 
 qt_add_executable(lodemo
@@ -140,6 +156,27 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
     target_include_directories(lolayer PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(lolayer PRIVATE PkgConfig::WAYLAND_CLIENT)
     install(TARGETS lolayer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    set(LOALI_IDLE_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-idle-notify-v1.xml)
+    set(LOALI_POWER_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-output-power-management-unstable-v1.xml)
+    set(LOALI_LOTEST_H ${CMAKE_CURRENT_BINARY_DIR}/ext-idle-notify-v1-client-protocol.h)
+    set(LOALI_LOTEST_C ${CMAKE_CURRENT_BINARY_DIR}/ext-idle-notify-v1-protocol.c)
+    set(LOALI_POWER_H ${CMAKE_CURRENT_BINARY_DIR}/wlr-output-power-management-unstable-v1-client-protocol.h)
+    set(LOALI_POWER_C ${CMAKE_CURRENT_BINARY_DIR}/wlr-output-power-management-unstable-v1-protocol.c)
+    add_custom_command(
+        OUTPUT ${LOALI_LOTEST_H} ${LOALI_LOTEST_C} ${LOALI_POWER_H} ${LOALI_POWER_C}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_IDLE_XML} ${LOALI_LOTEST_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_POWER_XML} ${LOALI_POWER_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_IDLE_XML} ${LOALI_LOTEST_C}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_POWER_XML} ${LOALI_POWER_C}
+        DEPENDS ${LOALI_IDLE_XML} ${LOALI_POWER_XML}
+    )
+    add_executable(lotest tools/lotest.c
+        ${LOALI_LOTEST_C}
+        ${LOALI_POWER_C}
+    )
+    target_include_directories(lotest PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    target_link_libraries(lotest PRIVATE PkgConfig::WAYLAND_CLIENT)
 else()
     message(STATUS "lolayer demo client skipped: wayland-scanner or wayland-client missing")
 endif()

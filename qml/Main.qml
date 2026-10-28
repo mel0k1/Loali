@@ -442,6 +442,13 @@ WaylandCompositor {
                 onUnlocked: comp.locked = false
             }
 
+            Rectangle {
+                anchors.fill: parent
+                z: 600
+                color: "black"
+                visible: Idle.blanked
+            }
+
             Shortcut {
                 sequence: "Ctrl+Alt+L"
                 onActivated: comp.locked = !comp.locked
@@ -746,6 +753,12 @@ WaylandCompositor {
     }
 
     XdgOutputManager { }
+
+    IdleManager { }
+
+    OutputPowerManager { }
+
+    DataControlManager { }
 
     ScreencopyManager { }
 
