@@ -39,6 +39,7 @@ static struct zwp_input_method_manager_v2 *g_im_mgr = NULL;
 static struct zwp_virtual_keyboard_manager_v1 *g_vk_mgr = NULL;
 static struct org_kde_kwin_blur_manager *g_blur_mgr = NULL;
 static struct ext_background_effect_manager_v1 *g_bgeff_mgr = NULL;
+static struct wl_display *g_display = NULL;
 static int g_im_activated = 0;
 static int g_im_deactivated = 0;
 
@@ -152,7 +153,7 @@ static void lock_surface_configure(void *data, struct ext_session_lock_surface_v
     wl_surface_attach(surface, buffer, 0, 0);
     wl_surface_damage(surface, 0, 0, (int32_t)w, (int32_t)h);
     wl_surface_commit(surface);
-    wl_display_flush(wl_proxy_get_display((struct wl_proxy *)surface));
+    wl_display_flush(g_display);
     g_lock_pool = pool;
     g_lock_buffer = buffer;
     g_lock_fd = fd;
@@ -330,6 +331,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "no wayland display\n");
         return 1;
     }
+    g_display = display;
     struct wl_registry *reg = wl_display_get_registry(display);
     wl_registry_add_listener(reg, &registry_listener, NULL);
     wl_display_roundtrip(display);

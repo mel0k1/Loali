@@ -12,7 +12,7 @@
 #include <QtWaylandCompositor/QWaylandSurface>
 
 #include "qwayland-server-ext-background-effect-v1.h"
-#include "qwayland-server-org-kde-kwin-blur.h"
+#include "qwayland-server-blur.h"
 
 class QWaylandCompositor;
 class KdeBlur;
