@@ -22,6 +22,7 @@ WaylandCompositor {
     property bool desktopShown: false
     property bool debugLockLayer: false
     property alias xwayland: xwaylandShell
+    readonly property alias blurSourceItem: blurContent
     property ListModel windows: ListModel {}
 
     onWorkspaceCountChanged: {
@@ -348,24 +349,29 @@ WaylandCompositor {
             visibility: fullscreenMode ? Window.FullScreen : Window.AutomaticVisibility
             onClosing: Qt.quit()
 
-            Desktop {
-                id: desktop
-                anchors.fill: parent
-                visible: !comp.sessionLocked
-                topInset: comp.topInset
-                bottomInset: comp.bottomInset
-                onEmptyClicked: comp.deactivateAll()
-            }
-
             Item {
-                id: layerUnder
+                id: blurContent
                 anchors.fill: parent
-            }
 
-            Item {
-                id: workspace
-                anchors.fill: parent
-                visible: !comp.sessionLocked
+                Desktop {
+                    id: desktop
+                    anchors.fill: parent
+                    visible: !comp.sessionLocked
+                    topInset: comp.topInset
+                    bottomInset: comp.bottomInset
+                    onEmptyClicked: comp.deactivateAll()
+                }
+
+                Item {
+                    id: layerUnder
+                    anchors.fill: parent
+                }
+
+                Item {
+                    id: workspace
+                    anchors.fill: parent
+                    visible: !comp.sessionLocked
+                }
             }
 
             Item {
@@ -394,6 +400,18 @@ WaylandCompositor {
                 Behavior on y { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
                 Behavior on width { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
                 Behavior on height { NumberAnimation { duration: Theme.durDefault; easing { type: Easing.BezierSpline; bezierCurve: Theme.spatialDefault } } }
+            }
+
+            BlurBackdrop {
+                id: dockBlur
+                x: dockPanel.x
+                y: dockPanel.y
+                width: dockPanel.width
+                height: dockPanel.height
+                cornerRadius: dockPanel.radius
+                sourceItem: blurContent
+                z: 99
+                visible: !comp.sessionLocked
             }
 
             Dock {
@@ -804,6 +822,10 @@ WaylandCompositor {
 
     VirtualKeyboardManager { }
 
+    KdeBlurManager { }
+
+    ExtBackgroundEffectManager { }
+
     ScreencopyManager { }
 
     WlOutputFix {
@@ -820,6 +842,7 @@ WaylandCompositor {
         id: layerChromeComponent
         LayerChrome {
             wallpaperItem: desktop.wallpaperItem
+            blurSourceItem: blurContent
         }
     }
 

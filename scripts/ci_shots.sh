@@ -175,6 +175,19 @@ DEMO_ARGS="" dbus-run-session -- sh -c '
         timeout 10 ./build/lotest dpms off || { echo "dpms off: FAIL"; pstatus=1; }
         echo "-- dpms on --"
         timeout 10 ./build/lotest dpms on || { echo "dpms on: FAIL"; pstatus=1; }
+        echo "-- session lock --"
+        timeout 10 ./build/lotest lock unlock && echo "lock: PASS" || { echo "lock: FAIL"; pstatus=1; }
+        echo "-- input method --"
+        WAYLAND_DISPLAY="$socket" DISPLAY= QT_QPA_PLATFORM=wayland \
+            ./build/lodemo >build/shots/lodemo_im.log 2>&1 &
+        imdemo=$!
+        sleep 4
+        timeout 15 ./build/lotest im && echo "im: PASS" || { echo "im: FAIL"; pstatus=1; }
+        echo "-- virtual keyboard --"
+        timeout 10 ./build/lotest vkey 30 && echo "vkey: PASS" || { echo "vkey: FAIL"; pstatus=1; }
+        kill $imdemo 2>/dev/null || true
+        echo "-- blur --"
+        timeout 10 ./build/lotest blur && echo "blur: PASS" || { echo "blur: FAIL"; pstatus=1; }
     else
         echo "lotest missing, skip"
     fi

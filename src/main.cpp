@@ -25,6 +25,7 @@
 #include "datacontrol.h"
 #include "idle.h"
 #include "inputmethod.h"
+#include "blur.h"
 #include "portals.h"
 #include "sessionlock.h"
 #include "sessionlockview.h"
@@ -154,6 +155,10 @@ int main(int argc, char *argv[])
     qmlRegisterType<SessionLockManagerQuickExtension>("Loali", 1, 0, "SessionLockManager");
     qmlRegisterType<InputMethodManagerQuickExtension>("Loali", 1, 0, "InputMethodManager");
     qmlRegisterType<VirtualKeyboardManagerQuickExtension>("Loali", 1, 0, "VirtualKeyboardManager");
+    qmlRegisterSingletonType<BlurRegistry>("Loali", 1, 0, "LoaliBlur",
+                                           [](QQmlEngine *e, QJSEngine *j) -> QObject * { return BlurRegistry::create(e, j); });
+    qmlRegisterType<KdeBlurManagerQuickExtension>("Loali", 1, 0, "KdeBlurManager");
+    qmlRegisterType<ExtBackgroundEffectManagerQuickExtension>("Loali", 1, 0, "ExtBackgroundEffectManager");
     qmlRegisterUncreatableType<SessionLockSurface>("Loali", 1, 0, "SessionLockSurface",
                                                    QStringLiteral("created by the compositor"));
     qmlRegisterType<SessionLockView>("Loali", 1, 0, "SessionLockView");

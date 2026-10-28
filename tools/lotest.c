@@ -16,6 +16,8 @@
 #include "ext-session-lock-v1-client-protocol.h"
 #include "input-method-unstable-v2-client-protocol.h"
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
+#include "blur-client-protocol.h"
+#include "ext-background-effect-v1-client-protocol.h"
 
 static struct ext_idle_notifier_v1 *g_idle_mgr = NULL;
 static struct zwlr_output_power_manager_v1 *g_power_mgr = NULL;
@@ -35,6 +37,8 @@ static struct wl_buffer *g_lock_buffer = NULL;
 static int g_lock_fd = -1;
 static struct zwp_input_method_manager_v2 *g_im_mgr = NULL;
 static struct zwp_virtual_keyboard_manager_v1 *g_vk_mgr = NULL;
+static struct org_kde_kwin_blur_manager *g_blur_mgr = NULL;
+static struct ext_background_effect_manager_v1 *g_bgeff_mgr = NULL;
 static int g_im_activated = 0;
 static int g_im_deactivated = 0;
 
@@ -284,6 +288,10 @@ static void registry_global(void *data, struct wl_registry *reg, uint32_t name,
         g_im_mgr = wl_registry_bind(reg, name, &zwp_input_method_manager_v2_interface, 1);
     } else if (strcmp(iface, zwp_virtual_keyboard_manager_v1_interface.name) == 0) {
         g_vk_mgr = wl_registry_bind(reg, name, &zwp_virtual_keyboard_manager_v1_interface, 1);
+    } else if (strcmp(iface, org_kde_kwin_blur_manager_interface.name) == 0) {
+        g_blur_mgr = wl_registry_bind(reg, name, &org_kde_kwin_blur_manager_interface, 1);
+    } else if (strcmp(iface, ext_background_effect_manager_v1_interface.name) == 0) {
+        g_bgeff_mgr = wl_registry_bind(reg, name, &ext_background_effect_manager_v1_interface, 1);
     } else if (strcmp(iface, wl_compositor_interface.name) == 0 && !g_compositor) {
         g_compositor = wl_registry_bind(reg, name, &wl_compositor_interface, 1);
     } else if (strcmp(iface, wl_shm_interface.name) == 0 && !g_shm) {
@@ -468,6 +476,58 @@ int main(int argc, char **argv)
         wl_display_roundtrip(display);
         printf("VKEY_SENT=%u\n", key);
         fflush(stdout);
+    } else if (strcmp(argv[1], "blur") == 0) {
+        if (!g_compositor) {
+            fprintf(stderr, "no wl_compositor\n");
+            return 1;
+        }
+        struct wl_surface *surf = wl_compositor_create_surface(g_compositor);
+        if (!surf) {
+            fprintf(stderr, "surface failed\n");
+            return 1;
+        }
+        if (g_blur_mgr) {
+            struct org_kde_kwin_blur *blur = org_kde_kwin_blur_manager_create(g_blur_mgr, surf);
+            if (!blur) {
+                fprintf(stderr, "blur create failed\n");
+                return 1;
+            }
+            org_kde_kwin_blur_set_region(blur, NULL);
+            org_kde_kwin_blur_commit(blur);
+            wl_display_roundtrip(display);
+            printf("BLUR_SET\n");
+            fflush(stdout);
+            org_kde_kwin_blur_manager_unset(g_blur_mgr, surf);
+            wl_display_roundtrip(display);
+            printf("BLUR_UNSET\n");
+            fflush(stdout);
+        } else {
+            fprintf(stderr, "no org_kde_kwin_blur_manager\n");
+        }
+        if (g_bgeff_mgr) {
+            struct wl_region *region = wl_compositor_create_region(g_compositor);
+            wl_region_add(region, 0, 0, 800, 600);
+            struct ext_background_effect_surface_v1 *eff =
+                ext_background_effect_manager_v1_get_background_effect(g_bgeff_mgr, surf);
+            if (!eff) {
+                fprintf(stderr, "background effect failed\n");
+                return 1;
+            }
+            ext_background_effect_surface_v1_set_blur_region(eff, region);
+            wl_surface_commit(surf);
+            wl_display_roundtrip(display);
+            printf("BGEFF_SET\n");
+            fflush(stdout);
+            ext_background_effect_surface_v1_destroy(eff);
+            wl_region_destroy(region);
+            wl_display_roundtrip(display);
+            printf("BGEFF_UNSET\n");
+            fflush(stdout);
+        } else {
+            fprintf(stderr, "no ext_background_effect_manager_v1\n");
+        }
+        wl_surface_destroy(surf);
+        wl_display_roundtrip(display);
     } else {
         fprintf(stderr, "unknown mode %s\n", argv[1]);
         return 1;

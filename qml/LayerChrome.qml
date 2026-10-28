@@ -7,6 +7,7 @@ Item {
 
     required property var shellSurface
     property var wallpaperItem: null
+    property var blurSourceItem: null
     readonly property rect place: shellSurface.placement
 
     x: place.x
@@ -14,12 +15,19 @@ Item {
     width: place.width
     height: place.height
 
+    BlurBackdrop {
+        anchors.fill: parent
+        cornerRadius: 18
+        sourceItem: chrome.blurSourceItem
+        visible: LoaliBlur.blurred(chrome.shellSurface.surface) && chrome.blurSourceItem !== null
+    }
+
     WallpaperTint {
         anchors.fill: parent
         wallpaperItem: chrome.wallpaperItem
         cornerRadius: 18
         tintColor: Theme.surfaceContainer
-        tintAlpha: 0.55
+        tintAlpha: LoaliBlur.blurred(chrome.shellSurface.surface) ? 0.3 : 0.55
     }
 
     ShellSurfaceItem {

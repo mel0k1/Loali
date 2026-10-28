@@ -163,7 +163,7 @@ Rectangle {
     visible: !minimized && (compositor.expoActive || ws === compositor.currentWorkspace)
     enabled: !compositor.expoActive
     radius: maximized || fullscreen ? 0 : 18
-    color: Theme.surfaceContainerLow
+    color: LoaliBlur.blurred(surface) ? "transparent" : Theme.surfaceContainerLow
     border.width: 1
     border.color: fullscreen ? "transparent"
                             : (active ? Theme.primary : Theme.outlineVariant)
@@ -194,6 +194,14 @@ Rectangle {
     }
     Behavior on radius {
         NumberAnimation { duration: 200 }
+    }
+
+    BlurBackdrop {
+        anchors.fill: parent
+        anchors.topMargin: chrome.barHeight
+        cornerRadius: chrome.radius
+        sourceItem: chrome.compositor.blurSourceItem
+        visible: LoaliBlur.blurred(chrome.surface) && chrome.compositor.blurSourceItem !== null
     }
 
     Component.onCompleted: {
