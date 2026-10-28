@@ -20,6 +20,7 @@ WaylandCompositor {
     property var activeWin: null
     property string snapMode: ""
     property bool desktopShown: false
+    property bool debugLockLayer: false
     property alias xwayland: xwaylandShell
     property ListModel windows: ListModel {}
 
@@ -67,8 +68,10 @@ WaylandCompositor {
         layerInsetBottom = b
     }
 
+    readonly property bool sessionLocked: sessionLock.locked
+
     function canOp() {
-        return !locked && !expoActive
+        return !locked && !expoActive && !sessionLocked
     }
 
     function toggleExpo() {
@@ -348,6 +351,7 @@ WaylandCompositor {
             Desktop {
                 id: desktop
                 anchors.fill: parent
+                visible: !comp.sessionLocked
                 topInset: comp.topInset
                 bottomInset: comp.bottomInset
                 onEmptyClicked: comp.deactivateAll()
@@ -361,6 +365,7 @@ WaylandCompositor {
             Item {
                 id: workspace
                 anchors.fill: parent
+                visible: !comp.sessionLocked
             }
 
             Item {
@@ -397,6 +402,7 @@ WaylandCompositor {
                 windows: comp.windows
                 wallpaperItem: desktop.wallpaperItem
                 launcherOpen: launcher.open
+                visible: !comp.sessionLocked
                 x: comp.dockPlane ? 0 : Math.round((win.width - width) / 2)
                 y: comp.dockPlane ? win.height - height : win.height - height - 12
                 width: comp.dockPlane ? win.width : Math.min(win.width - 16, implicitWidth)
@@ -444,8 +450,30 @@ WaylandCompositor {
             }
 
             LockScreen {
-                locked: comp.locked
+                locked: comp.locked && !comp.sessionLocked
                 onUnlocked: comp.locked = false
+            }
+
+            Item {
+                id: sessionLockLayer
+                anchors.fill: parent
+                z: 700
+                visible: comp.sessionLocked
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: "#000000"
+                }
+
+                Repeater {
+                    model: sessionLock.locked ? sessionLock.lockSurfaces : []
+
+                    delegate: SessionLockView {
+                        required property var modelData
+                        anchors.fill: parent
+                        lockSurface: modelData
+                    }
+                }
             }
 
             Rectangle {
@@ -765,6 +793,12 @@ WaylandCompositor {
     OutputPowerManager { }
 
     DataControlManager { }
+
+    SessionLockManager {
+        id: sessionLock
+        onLockSurfacesChanged: console.info("loali: lock surfaces", lockSurfaces.length)
+        onLockedChanged: console.info("loali: session lock", locked)
+    }
 
     ScreencopyManager { }
 

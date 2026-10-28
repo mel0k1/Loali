@@ -82,6 +82,10 @@ qt_add_qml_module(loali
         src/idle.cpp
         src/datacontrol.h
         src/datacontrol.cpp
+        src/sessionlock.h
+        src/sessionlock.cpp
+        src/sessionlockview.h
+        src/sessionlockview.cpp
         src/wallpaperbg.h
         src/wallpaperbg.cpp
         src/portals.h
@@ -124,6 +128,9 @@ qt6_generate_wayland_protocol_server_sources(loali
 )
 qt6_generate_wayland_protocol_server_sources(loali
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-data-control-unstable-v1.xml
+)
+qt6_generate_wayland_protocol_server_sources(loali
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-session-lock-v1.xml
 )
 
 find_package(PkgConfig QUIET)
@@ -184,21 +191,28 @@ if(WAYLAND_SCANNER_EXE AND TARGET PkgConfig::WAYLAND_CLIENT)
 
     set(LOALI_IDLE_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-idle-notify-v1.xml)
     set(LOALI_POWER_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-output-power-management-unstable-v1.xml)
+    set(LOALI_SLOCK_XML ${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-session-lock-v1.xml)
     set(LOALI_LOTEST_H ${CMAKE_CURRENT_BINARY_DIR}/ext-idle-notify-v1-client-protocol.h)
     set(LOALI_LOTEST_C ${CMAKE_CURRENT_BINARY_DIR}/ext-idle-notify-v1-protocol.c)
     set(LOALI_POWER_H ${CMAKE_CURRENT_BINARY_DIR}/wlr-output-power-management-unstable-v1-client-protocol.h)
     set(LOALI_POWER_C ${CMAKE_CURRENT_BINARY_DIR}/wlr-output-power-management-unstable-v1-protocol.c)
+    set(LOALI_SLOCK_H ${CMAKE_CURRENT_BINARY_DIR}/ext-session-lock-v1-client-protocol.h)
+    set(LOALI_SLOCK_C ${CMAKE_CURRENT_BINARY_DIR}/ext-session-lock-v1-protocol.c)
     add_custom_command(
         OUTPUT ${LOALI_LOTEST_H} ${LOALI_LOTEST_C} ${LOALI_POWER_H} ${LOALI_POWER_C}
+               ${LOALI_SLOCK_H} ${LOALI_SLOCK_C}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_IDLE_XML} ${LOALI_LOTEST_H}
         COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_POWER_XML} ${LOALI_POWER_H}
+        COMMAND ${WAYLAND_SCANNER_EXE} client-header ${LOALI_SLOCK_XML} ${LOALI_SLOCK_H}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_IDLE_XML} ${LOALI_LOTEST_C}
         COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_POWER_XML} ${LOALI_POWER_C}
-        DEPENDS ${LOALI_IDLE_XML} ${LOALI_POWER_XML}
+        COMMAND ${WAYLAND_SCANNER_EXE} private-code ${LOALI_SLOCK_XML} ${LOALI_SLOCK_C}
+        DEPENDS ${LOALI_IDLE_XML} ${LOALI_POWER_XML} ${LOALI_SLOCK_XML}
     )
     add_executable(lotest tools/lotest.c
         ${LOALI_LOTEST_C}
         ${LOALI_POWER_C}
+        ${LOALI_SLOCK_C}
     )
     target_include_directories(lotest PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(lotest PRIVATE PkgConfig::WAYLAND_CLIENT)

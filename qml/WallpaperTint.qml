@@ -19,7 +19,7 @@ Item {
         return mapToItem(wallpaperItem, 0, 0)
     }
     readonly property string bgKey: {
-        if (!wallpaperItem || width < 2 || height < 2)
+        if (!wallpaperItem || width < 2 || height < 2 || wallpaperItem.width < 2 || wallpaperItem.height < 2)
             return ""
         const style = Settings.wallpaper
         const pal = origin.x.toFixed(0) + "|" + origin.y.toFixed(0) + "|" +

@@ -1,21 +1,36 @@
+#define _GNU_SOURCE
+
 #include <errno.h>
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 #include <wayland-client.h>
 
 #include "ext-idle-notify-v1-client-protocol.h"
 #include "wlr-output-power-management-unstable-v1-client-protocol.h"
+#include "ext-session-lock-v1-client-protocol.h"
 
 static struct ext_idle_notifier_v1 *g_idle_mgr = NULL;
 static struct zwlr_output_power_manager_v1 *g_power_mgr = NULL;
+static struct ext_session_lock_manager_v1 *g_lock_mgr = NULL;
+static struct wl_compositor *g_compositor = NULL;
+static struct wl_shm *g_shm = NULL;
 static struct wl_seat *g_seat = NULL;
 static struct wl_output *g_output = NULL;
 static int g_dpms_want = -1;
 static int g_done = 0;
+static int g_locked = 0;
+static int g_lock_finished = 0;
+static uint32_t g_lock_color = 0xff182848u;
+static int g_lock_want_unlock = 0;
+static struct wl_shm_pool *g_lock_pool = NULL;
+static struct wl_buffer *g_lock_buffer = NULL;
+static int g_lock_fd = -1;
 
 static void idle_handle_idled(void *data, struct ext_idle_notification_v1 *n)
 {
@@ -68,6 +83,84 @@ static const struct zwlr_output_power_v1_listener power_listener = {
     power_handle_failed,
 };
 
+static void lock_handle_locked(void *data, struct ext_session_lock_v1 *lock)
+{
+    (void)data;
+    (void)lock;
+    printf("LOCKED\n");
+    fflush(stdout);
+    g_locked = 1;
+    g_done = 1;
+}
+
+static void lock_handle_finished(void *data, struct ext_session_lock_v1 *lock)
+{
+    (void)data;
+    (void)lock;
+    printf("FINISHED\n");
+    fflush(stdout);
+    g_lock_finished = 1;
+    g_done = 1;
+}
+
+static const struct ext_session_lock_v1_listener lock_listener = {
+    lock_handle_locked,
+    lock_handle_finished,
+};
+
+static void lock_surface_configure(void *data, struct ext_session_lock_surface_v1 *surf,
+                                   uint32_t serial, uint32_t width, uint32_t height)
+{
+    struct wl_surface *surface = (struct wl_surface *)data;
+    ext_session_lock_surface_v1_ack_configure(surf, serial);
+    const uint32_t w = width ? width : 1280;
+    const uint32_t h = height ? height : 800;
+    const size_t stride = w * 4;
+    const size_t bytes = stride * h;
+    int fd = memfd_create("lotest-lock", 0);
+    if (fd < 0)
+        fd = open("/tmp/lotest-lock-shm", O_CREAT | O_RDWR | O_CLOEXEC, 0600);
+    if (fd < 0) {
+        fprintf(stderr, "lotest: shm open failed\n");
+        return;
+    }
+    if (ftruncate(fd, (off_t)bytes) != 0) {
+        close(fd);
+        return;
+    }
+    uint32_t *map = (uint32_t *)mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (map == MAP_FAILED) {
+        close(fd);
+        return;
+    }
+    for (size_t i = 0; i < bytes / 4; ++i)
+        map[i] = g_lock_color;
+    munmap(map, bytes);
+    struct wl_shm_pool *pool = wl_shm_create_pool(g_shm, fd, (int32_t)bytes);
+    struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, (int32_t)w, (int32_t)h,
+                                                         (int32_t)stride, WL_SHM_FORMAT_ARGB8888);
+    wl_surface_attach(surface, buffer, 0, 0);
+    wl_surface_damage(surface, 0, 0, (int32_t)w, (int32_t)h);
+    wl_surface_commit(surface);
+    wl_display_flush(wl_proxy_get_display((struct wl_proxy *)surface));
+    g_lock_pool = pool;
+    g_lock_buffer = buffer;
+    g_lock_fd = fd;
+    printf("LOCK_SURFACE_READY %ux%u\n", w, h);
+    fflush(stdout);
+}
+
+static void lock_surface_destroy(void *data, struct ext_session_lock_surface_v1 *surf)
+{
+    (void)data;
+    (void)surf;
+}
+
+static const struct ext_session_lock_surface_v1_listener lock_surface_listener = {
+    lock_surface_configure,
+    lock_surface_destroy,
+};
+
 static void output_handle_geometry(void *data, struct wl_output *o, int32_t x, int32_t y,
                                    int32_t pw, int32_t ph, int32_t sub, const char *make,
                                    const char *model, int32_t transform)
@@ -118,6 +211,12 @@ static void registry_global(void *data, struct wl_registry *reg, uint32_t name,
         g_idle_mgr = wl_registry_bind(reg, name, &ext_idle_notifier_v1_interface, 1);
     } else if (strcmp(iface, zwlr_output_power_manager_v1_interface.name) == 0) {
         g_power_mgr = wl_registry_bind(reg, name, &zwlr_output_power_manager_v1_interface, 1);
+    } else if (strcmp(iface, ext_session_lock_manager_v1_interface.name) == 0) {
+        g_lock_mgr = wl_registry_bind(reg, name, &ext_session_lock_manager_v1_interface, 1);
+    } else if (strcmp(iface, wl_compositor_interface.name) == 0 && !g_compositor) {
+        g_compositor = wl_registry_bind(reg, name, &wl_compositor_interface, 1);
+    } else if (strcmp(iface, wl_shm_interface.name) == 0 && !g_shm) {
+        g_shm = wl_registry_bind(reg, name, &wl_shm_interface, 1);
     } else if (strcmp(iface, wl_seat_interface.name) == 0 && !g_seat) {
         g_seat = wl_registry_bind(reg, name, &wl_seat_interface, version < 7 ? version : 7);
         if (g_seat)
@@ -144,7 +243,7 @@ static const struct wl_registry_listener registry_listener = {
 int main(int argc, char **argv)
 {
     if (argc < 2) {
-        fprintf(stderr, "usage: lotest idle <ms> | lotest dpms <on|off|get>\n");
+        fprintf(stderr, "usage: lotest idle <ms> | lotest dpms <on|off|get> | lotest lock [hex] [unlock]\n");
         return 1;
     }
     struct wl_display *display = wl_display_connect(NULL);
@@ -203,6 +302,57 @@ int main(int argc, char **argv)
             guard++;
         printf("DPMS_SET=%s\n", argc > 2 ? argv[2] : "get");
         fflush(stdout);
+    } else if (strcmp(argv[1], "lock") == 0) {
+        if (!g_lock_mgr) {
+            fprintf(stderr, "no ext_session_lock_manager_v1\n");
+            return 1;
+        }
+        for (int i = 2; i < argc; ++i) {
+            if (strcmp(argv[i], "unlock") == 0)
+                g_lock_want_unlock = 1;
+            else if (argv[i][0] == '0' && argv[i][1] == 'x')
+                g_lock_color = (uint32_t)strtoul(argv[i] + 2, NULL, 16) | 0xff000000u;
+            else
+                g_lock_color = (uint32_t)strtoul(argv[i], NULL, 16) | 0xff000000u;
+        }
+        struct ext_session_lock_v1 *lock = ext_session_lock_manager_v1_lock(g_lock_mgr);
+        if (!lock) {
+            fprintf(stderr, "lock failed\n");
+            return 1;
+        }
+        ext_session_lock_v1_add_listener(lock, &lock_listener, NULL);
+        struct wl_surface *surface = wl_compositor_create_surface(g_compositor);
+        if (!surface) {
+            fprintf(stderr, "no compositor surface\n");
+            return 1;
+        }
+        struct ext_session_lock_surface_v1 *lsurf =
+            ext_session_lock_v1_get_lock_surface(lock, surface, g_output);
+        if (!lsurf) {
+            fprintf(stderr, "get_lock_surface failed\n");
+            return 1;
+        }
+        ext_session_lock_surface_v1_add_listener(lsurf, &lock_surface_listener, surface);
+        wl_display_roundtrip(display);
+        while (!g_locked && !g_lock_finished) {
+            if (wl_display_dispatch(display) < 0)
+                break;
+        }
+        if (g_locked && g_lock_want_unlock) {
+            ext_session_lock_v1_unlock_and_destroy(lock);
+            wl_display_roundtrip(display);
+            printf("UNLOCKED\n");
+            fflush(stdout);
+        } else if (g_locked) {
+            while (wl_display_dispatch(display) >= 0) {
+            }
+        }
+        if (g_lock_buffer)
+            wl_buffer_destroy(g_lock_buffer);
+        if (g_lock_pool)
+            wl_shm_pool_destroy(g_lock_pool);
+        if (g_lock_fd >= 0)
+            close(g_lock_fd);
     } else {
         fprintf(stderr, "unknown mode %s\n", argv[1]);
         return 1;

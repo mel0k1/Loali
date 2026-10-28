@@ -25,6 +25,8 @@
 #include "datacontrol.h"
 #include "idle.h"
 #include "portals.h"
+#include "sessionlock.h"
+#include "sessionlockview.h"
 #include "xwayland.h"
 
 #include <QQuickWindow>
@@ -148,6 +150,10 @@ int main(int argc, char *argv[])
     qmlRegisterType<IdleManagerQuickExtension>("Loali", 1, 0, "IdleManager");
     qmlRegisterType<OutputPowerManagerQuickExtension>("Loali", 1, 0, "OutputPowerManager");
     qmlRegisterType<DataControlManagerQuickExtension>("Loali", 1, 0, "DataControlManager");
+    qmlRegisterType<SessionLockManagerQuickExtension>("Loali", 1, 0, "SessionLockManager");
+    qmlRegisterUncreatableType<SessionLockSurface>("Loali", 1, 0, "SessionLockSurface",
+                                                   QStringLiteral("created by the compositor"));
+    qmlRegisterType<SessionLockView>("Loali", 1, 0, "SessionLockView");
     qmlRegisterUncreatableType<XWaylandSurface>("Loali", 1, 0, "XWaylandSurface",
                                                 QStringLiteral("created by the compositor"));
     qmlRegisterType<LayerSurface>("Loali", 1, 0, "LayerSurface");
