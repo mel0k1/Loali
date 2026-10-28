@@ -207,9 +207,6 @@ else()
     message(STATUS "PipeWire missing: screencast portal disabled")
 endif()
 
-qt_add_executable(loportaltest tools/loportaltest.cpp)
-target_link_libraries(loportaltest PRIVATE Qt6::Core Qt6::DBus)
-
 include(GNUInstallDirs)
 
 install(TARGETS loali lodemo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
