@@ -103,7 +103,8 @@ jobs:
         run: cmake --build build
 
       - name: bump wl_seat/ddm versions in prebuilt Qt (skip if Qt already newer)
-        run: python3 scripts/qt_seat_bump.py || echo "seat bump: pattern not found, Qt may already advertise seat>=5"
+        run: |
+          python3 scripts/qt_seat_bump.py || echo "seat bump: pattern not found, Qt may already advertise seat>=5"
 
       - name: grim shots
         env:
