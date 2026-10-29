@@ -69,6 +69,7 @@ Item {
             { id: "workspaces", title: qsTr("Workspaces"), glyph: Theme.iconApps },
             { id: "notifications", title: qsTr("Notifications"), glyph: Theme.iconBell },
             { id: "shapes", title: qsTr("Shapes"), glyph: Theme.iconAuto },
+            { id: "lock", title: qsTr("Lock screen"), glyph: Theme.iconLock },
             { id: "about", title: qsTr("About"), glyph: Theme.iconInfo }
         ]
 
@@ -201,6 +202,7 @@ Item {
                     WorkspacesPage { }
                     NotificationsPage { }
                     ShapesPage { }
+                    LockPage { }
                     AboutPage { }
                 }
             }
@@ -867,6 +869,78 @@ Item {
                             font.pixelSize: 13
                             color: Theme.onSurfaceVariant
                         }
+                    }
+                }
+            }
+        }
+
+        component LockPage: ColumnLayout {
+            spacing: 16
+
+            PageTitle { text: qsTr("Lock screen") }
+
+            SectionLabel { text: qsTr("PIN code") }
+
+            Row {
+                spacing: 12
+
+                TextField {
+                    id: pinField
+                    width: 220
+                    height: 40
+                    placeholderText: qsTr("disabled")
+                    color: Theme.textOnSurface
+                    placeholderTextColor: Theme.onSurfaceVariant
+                    font.pixelSize: 14
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    validator: RegularExpressionValidator { regularExpression: /[0-9]{0,8}/ }
+                    text: Settings.pin
+                    background: Rectangle {
+                        radius: 20
+                        color: Theme.surfaceContainerHighest
+                        border.width: 1
+                        border.color: pinField.activeFocus ? Theme.primary : Qt.alpha(Theme.outlineVariant, 0.6)
+                    }
+                }
+
+                MButton {
+                    label: qsTr("Save")
+                    anchors.verticalCenter: parent.verticalCenter
+                    onClicked: Settings.pin = pinField.text.trim()
+                }
+            }
+
+            Text {
+                width: Math.min(560, parent.width)
+                text: Settings.pin === ""
+                      ? qsTr("PIN is off: the lock screen unlocks with a click or Enter.")
+                      : qsTr("The screen locks on idle and wakes to this PIN. Digits only, up to 8.")
+                font.pixelSize: 13
+                color: Theme.onSurfaceVariant
+                wrapMode: Text.WordWrap
+            }
+
+            SectionLabel { text: qsTr("Behavior") }
+
+            ColumnLayout {
+                spacing: 8
+                width: Math.min(560, parent.width)
+
+                Repeater {
+                    model: [
+                        { d: qsTr("Idle blanking locks the session automatically") },
+                        { d: qsTr("logind PrepareForSleep and session Lock/Unlock follow the same path") },
+                        { d: qsTr("Three wrong attempts pause the keypad for a moment") },
+                        { d: qsTr("Ctrl + Alt + L locks the screen right away") }
+                    ]
+
+                    delegate: Text {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        text: "· " + modelData.d
+                        font.pixelSize: 13
+                        color: Theme.onSurfaceVariant
+                        wrapMode: Text.WordWrap
                     }
                 }
             }

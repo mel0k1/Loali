@@ -55,7 +55,7 @@ private:
     PowerService *m_service;
 };
 
-} // namespace
+}
 
 PowerService::PowerService(QObject *parent)
     : QObject(parent)

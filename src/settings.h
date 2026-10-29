@@ -19,6 +19,7 @@ class LoaliSettings : public QObject
     Q_PROPERTY(qreal panelScale READ panelScale WRITE setPanelScale NOTIFY panelScaleChanged)
     Q_PROPERTY(int colorStyle READ colorStyle WRITE setColorStyle NOTIFY colorStyleChanged)
     Q_PROPERTY(qreal contrast READ contrast WRITE setContrast NOTIFY contrastChanged)
+    Q_PROPERTY(QString pin READ pin WRITE setPin NOTIFY pinChanged)
 
 public:
     enum BarStyle
@@ -84,6 +85,9 @@ public:
     qreal contrast() const { return m_contrast; }
     void setContrast(qreal value);
 
+    QString pin() const { return m_pin; }
+    void setPin(const QString &value);
+
 signals:
     void wallpaperChanged();
     void dimChanged();
@@ -97,6 +101,7 @@ signals:
     void panelScaleChanged();
     void colorStyleChanged();
     void contrastChanged();
+    void pinChanged();
 
 private:
     explicit LoaliSettings(QObject *parent = nullptr);
@@ -114,4 +119,5 @@ private:
     qreal m_panelScale = 0.9;
     int m_colorStyle = TonalSpot;
     qreal m_contrast = 0.0;
+    QString m_pin;
 };

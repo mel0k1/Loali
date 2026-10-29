@@ -14,6 +14,7 @@ WaylandCompositor {
     readonly property real bottomInset: dockPlane ? dockHeight : 12 + dockHeight + 8
     property int zTop: 10
     property bool locked: false
+    property var preLockSurface: null
     property bool expoActive: false
     property int workspaceCount: Settings.workspaces
     property int currentWorkspace: 0
@@ -74,6 +75,22 @@ WaylandCompositor {
     }
 
     readonly property bool sessionLocked: sessionLock.locked
+
+    onLockedChanged: {
+        if (locked) {
+            preLockSurface = activeWin ? activeWin.surface : null
+            Util.focus(defaultSeat, null)
+        } else {
+            if (preLockSurface) {
+                Util.focus(defaultSeat, preLockSurface)
+                preLockSurface = null
+            } else {
+                const t = topMost()
+                if (t)
+                    Util.focus(defaultSeat, t.surface)
+            }
+        }
+    }
 
     function canOp() {
         return !locked && !expoActive && !sessionLocked
@@ -291,6 +308,8 @@ WaylandCompositor {
             }
             else if (mode === "expo")
                 comp.toggleExpo()
+            else if (mode === "lock")
+                comp.locked = true
             else if (mode === "preview") {
                 const t = comp.topMost()
                 if (t)
@@ -480,6 +499,7 @@ WaylandCompositor {
                 locked: comp.locked && !comp.sessionLocked
                 onUnlocked: {
                     comp.locked = false
+                    Power.simulateUserActivity()
                     console.info("loali: unlocked (user)")
                 }
             }
@@ -487,8 +507,12 @@ WaylandCompositor {
             Connections {
                 target: Power
                 onLockRequested: {
-                    comp.locked = true
-                    console.info("loali: locked (power)")
+                    if (!comp.sessionLocked) {
+                        comp.locked = true
+                        console.info("loali: locked (power)")
+                    } else {
+                        console.info("loali: lock requested while session locked, skipping")
+                    }
                 }
                 onUnlockRequested: {
                     comp.locked = false
@@ -777,6 +801,7 @@ WaylandCompositor {
         id: xdgShell
         onToplevelCreated: (toplevel, xdgSurface) => {
             console.info("toplevel created:", toplevel.title, "appId:", toplevel.appId || "?")
+            Util.watchClient(xdgSurface.surface.client)
             const c = chromeComponent.createObject(workspace, {
                 shellSurface: xdgSurface,
                 toplevel: toplevel,
@@ -848,7 +873,21 @@ WaylandCompositor {
     SessionLockManager {
         id: sessionLock
         onLockSurfacesChanged: console.info("loali: lock surfaces", lockSurfaces.length)
-        onLockedChanged: console.info("loali: session lock", locked)
+        onLockedChanged: {
+            console.info("loali: session lock", locked)
+            if (locked) {
+                if (!comp.preLockSurface)
+                    comp.preLockSurface = comp.activeWin ? comp.activeWin.surface : null
+                const surf = lockSurfaces.length > 0 ? lockSurfaces[0].surface : null
+                Util.focus(defaultSeat, surf)
+            } else {
+                Power.simulateUserActivity()
+                if (comp.preLockSurface) {
+                    Util.focus(defaultSeat, comp.preLockSurface)
+                    comp.preLockSurface = null
+                }
+            }
+        }
     }
 
     InputMethodManager { }

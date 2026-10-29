@@ -89,7 +89,7 @@ QVariantMap schemeRoles(const material_color_utilities::DynamicScheme &s)
     return m;
 }
 
-} // namespace
+}
 
 MatColor::MatColor(QObject *parent)
     : QObject(parent)

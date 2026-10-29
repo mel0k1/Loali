@@ -38,7 +38,7 @@ QByteArray variantBytes(const QVariant &value)
     return value.toByteArray();
 }
 
-} // namespace
+}
 
 const QDBusArgument &operator>>(const QDBusArgument &arg, DbusMenuNode &node)
 {

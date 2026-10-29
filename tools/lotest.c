@@ -2,11 +2,13 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <wayland-client.h>
@@ -393,7 +395,7 @@ static const struct wl_registry_listener registry_listener = {
 int main(int argc, char **argv)
 {
     if (argc < 2) {
-        fprintf(stderr, "usage: lotest idle <ms> | lotest dpms <on|off|get> | lotest lock [hex] [unlock]\n");
+        fprintf(stderr, "usage: lotest idle <ms> | lotest dpms <on|off|get> | lotest lock <unlock> | lotest hang <ms>\n");
         return 1;
     }
     struct wl_display *display = wl_display_connect(NULL);
@@ -667,6 +669,87 @@ int main(int argc, char **argv)
         xdg_surface_destroy(xs);
         wl_surface_destroy(surface);
         wl_display_roundtrip(display);
+    } else if (strcmp(argv[1], "hang") == 0) {
+        if (!g_compositor || !g_xdg_wm || !g_shm) {
+            fprintf(stderr, "no wl_compositor, xdg_wm_base or wl_shm\n");
+            return 1;
+        }
+        struct wl_surface *surface = wl_compositor_create_surface(g_compositor);
+        struct xdg_surface *xs = xdg_wm_base_get_xdg_surface(g_xdg_wm, surface);
+        struct xdg_toplevel *tl = xdg_surface_get_toplevel(xs);
+        xdg_surface_add_listener(xs, &xdg_surface_listener, NULL);
+        xdg_toplevel_add_listener(tl, &xdg_toplevel_listener, NULL);
+        xdg_toplevel_set_title(tl, "lothang");
+        xdg_toplevel_set_app_id(tl, "lothang");
+        wl_surface_commit(surface);
+        wl_display_roundtrip(display);
+        int guard = 0;
+        while (!g_xdg_configured && !g_done && guard < 200) {
+            if (wl_display_dispatch(display) < 0)
+                break;
+            guard++;
+        }
+        if (!g_xdg_configured) {
+            fprintf(stderr, "no xdg configure\n");
+            return 1;
+        }
+        xdg_surface_ack_configure(xs, g_xdg_serial);
+        const uint32_t w = 320;
+        const uint32_t h = 240;
+        const size_t stride = w * 4;
+        const size_t bytes = stride * h;
+        int fd = memfd_create("lotest-hang", 0);
+        if (fd < 0) {
+            fprintf(stderr, "memfd failed\n");
+            return 1;
+        }
+        if (ftruncate(fd, (off_t)bytes) != 0) {
+            fprintf(stderr, "ftruncate failed\n");
+            return 1;
+        }
+        uint32_t *map = (uint32_t *)mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+        if (map == MAP_FAILED) {
+            fprintf(stderr, "mmap failed\n");
+            return 1;
+        }
+        for (size_t i = 0; i < bytes / 4; ++i)
+            map[i] = 0xff504030u;
+        munmap(map, bytes);
+        struct wl_shm_pool *pool = wl_shm_create_pool(g_shm, fd, (int32_t)bytes);
+        struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, (int32_t)w, (int32_t)h,
+                                                             (int32_t)stride, WL_SHM_FORMAT_ARGB8888);
+        wl_surface_attach(surface, buffer, 0, 0);
+        wl_surface_damage(surface, 0, 0, (int32_t)w, (int32_t)h);
+        wl_surface_commit(surface);
+        wl_display_flush(display);
+        printf("HANG_WINDOW_MAPPED\n");
+        fflush(stdout);
+        int maxMs = argc > 2 ? atoi(argv[2]) : 90000;
+        struct timespec ts0;
+        clock_gettime(CLOCK_MONOTONIC, &ts0);
+        int killed = 0;
+        long elapsed = 0;
+        while (elapsed < maxMs) {
+            struct pollfd pfd = { wl_display_get_fd(display), POLLIN, 0 };
+            int r = poll(&pfd, 1, 200);
+            if (r > 0 && (pfd.revents & (POLLHUP | POLLERR))) {
+                killed = 1;
+                break;
+            }
+            if (r > 0 && (pfd.revents & POLLIN) && wl_display_flush(display) < 0) {
+                killed = 1;
+                break;
+            }
+            struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            elapsed = (ts.tv_sec - ts0.tv_sec) * 1000L + (ts.tv_nsec - ts0.tv_nsec) / 1000000L;
+        }
+        printf(killed ? "HANG_KILLED\n" : "HANG_SURVIVED\n");
+        fflush(stdout);
+        wl_buffer_destroy(buffer);
+        wl_shm_pool_destroy(pool);
+        close(fd);
+        return killed ? 0 : 1;
     } else {
         fprintf(stderr, "unknown mode %s\n", argv[1]);
         return 1;

@@ -25,7 +25,7 @@ const QRegularExpression &fieldCode()
     return re;
 }
 
-} // namespace
+}
 
 Apps::Apps(QObject *parent)
     : QAbstractListModel(parent)

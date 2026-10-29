@@ -80,7 +80,7 @@ QString pixmapDataUrl(const QVariant &value)
     return QStringLiteral("data:image/png;base64,") + QString::fromLatin1(bytes.toBase64());
 }
 
-} // namespace
+}
 
 Notifications::Notifications(QObject *parent)
     : QAbstractListModel(parent)

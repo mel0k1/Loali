@@ -32,6 +32,7 @@ LoaliSettings::LoaliSettings(QObject *parent)
         m_colorStyle = TonalSpot;
     m_contrast = s.value(QStringLiteral("appearance/contrast"), 0.0).toReal();
     m_contrast = std::clamp(m_contrast, -1.0, 1.0);
+    m_pin = s.value(QStringLiteral("lock/pin"), QString()).toString();
 }
 
 LoaliSettings *LoaliSettings::create(QQmlEngine *engine, QJSEngine *jsEngine)
@@ -172,4 +173,21 @@ void LoaliSettings::setContrast(qreal value)
     QSettings s;
     s.setValue(QStringLiteral("appearance/contrast"), value);
     emit contrastChanged();
+}
+
+void LoaliSettings::setPin(const QString &value)
+{
+    QString v = value.trimmed();
+    if (v.size() > 8)
+        v.truncate(8);
+    for (const QChar &c : v) {
+        if (!c.isDigit())
+            return;
+    }
+    if (m_pin == v)
+        return;
+    m_pin = v;
+    QSettings s;
+    s.setValue(QStringLiteral("lock/pin"), v);
+    emit pinChanged();
 }

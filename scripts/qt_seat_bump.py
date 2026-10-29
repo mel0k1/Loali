@@ -1,13 +1,4 @@
 #!/usr/bin/env python3
-"""Patch libQt6WaylandCompositor to advertise wl_seat v5 and wl_data_device_manager v3.
-
-Qt 6.4.2 hardcodes:
-  QWaylandSeat::initialize()        -> d->init(display, 4)
-  DataDeviceManager::DataDeviceManager() -> wl_data_device_manager(display, 1)
-
-foot >= 1.16 requires wl_seat >= 5 and wl_data_device_manager >= 3, so we bump
-the two immediates in the prebuilt library. Idempotent; verifies after patch.
-"""
 import re
 import subprocess
 import sys
