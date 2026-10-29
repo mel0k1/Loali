@@ -63,7 +63,8 @@
 - **Settings application** — a built-in M3 settings app with wallpaper (bundled art, custom image path, dim overlay), appearance (dark/light, dynamic color, wallpaper style, contrast, accent), panels (taskbar style, dock look, panel size), workspace count, a shortcut cheat-sheet and an about page; everything persists via QSettings.
 - **Wallpapers** — a bundled default artwork plus procedural M3E gradient styles, applied to the desktop and the lock screen.
 - **Window management** — server-side title bars, drag, 8-way resize, maximize, fullscreen, minimize, click-to-focus.
-- **Lock screen** — large M3 display-style clock over a dimmed wallpaper.
+- **Lock screen** — large M3 display-style clock over a dimmed wallpaper with a morphing M3E shape backdrop; the session locks automatically on idle (through the Power service, together with DPMS blanking) and unlocks on click or Enter; `logind` `PrepareForSleep` / session `Lock`/`Unlock` signals route into the same lock screen.
+- **Stock Wayland terminal support** — Loali publishes `wl_seat` v5 and `wl_data_device_manager` v3 (a build step patches the prebuilt Qt compositor library, which hardcodes v4/v1), so `foot` and other clients with modern version floors run as real, interactable windows.
 - **Themed system palette** — the Qt application palette (tooltips, text fields, controls) and the preferred UI font (Noto Sans with graceful fallbacks) follow the active M3 scheme, so every stock control stays light-on-dark or dark-on-light with the theme toggle.
 - **Material 3 Expressive design** — dark and light tonal palettes, 18–32 px corner radii, emphasized easing curves and spring animations.
 - **Automatic app discovery** — parses `.desktop` files from standard XDG locations, with a themed-icon provider and graceful fallback icons.

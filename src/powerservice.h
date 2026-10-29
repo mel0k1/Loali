@@ -37,6 +37,7 @@ signals:
     void uninhibited(int cookie);
     void activitySimulated();
     void lockRequested();
+    void unlockRequested();
     void logoutRequested();
     void actionFailed(const QString &action, const QString &message);
 
@@ -44,7 +45,11 @@ private:
     explicit PowerService(QObject *parent = nullptr);
     void probeLogind();
     bool callLogind(const QString &method);
+    void watchIdle();
+private slots:
+    void onPrepareForSleep(bool start);
 
+private:
     static PowerService *s_instance;
     uint m_nextCookie = 0;
     QHash<uint, QPair<QString, QString>> m_inhibits;

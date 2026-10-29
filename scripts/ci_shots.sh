@@ -215,3 +215,74 @@ DEMO_ARGS="" dbus-run-session -- sh -c '
 pcode=$?
 echo "protocol tests exit: $pcode"
 [ "$pcode" -eq 0 ] || exit 1
+
+echo "=== foot real-client test (standalone session) ==="
+dbus-run-session -- sh -c '
+    status=0
+    pkill -x loali 2>/dev/null || true
+    ./build/loali >build/shots/loali_foot.log 2>&1 &
+    comp=$!
+    sleep 6
+    if command -v foot >/dev/null 2>&1; then
+        socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
+        WAYLAND_DISPLAY="${socket:-wayland-0}" timeout 10 foot >build/shots/foot.log 2>&1 &
+        fpid=$!
+        sleep 5
+        if kill -0 $fpid 2>/dev/null; then
+            echo "foot: alive after 5s: PASS"
+        else
+            echo "foot: exited early: FAIL"; status=1
+        fi
+        if grep -q "toplevel created" build/shots/loali_foot.log; then
+            echo "foot toplevel: PASS"
+        else
+            echo "foot toplevel: FAIL"; status=1
+        fi
+        if grep -qiE "too old|unsupported (seat|version)" build/shots/foot.log; then
+            echo "foot protocol: FAIL"; status=1
+        else
+            echo "foot protocol: PASS"
+        fi
+        kill $fpid 2>/dev/null || true
+    else
+        echo "foot missing, skip"
+    fi
+    kill $comp 2>/dev/null || true
+    exit $status
+'
+fcode=$?
+echo "foot tests exit: $fcode"
+[ "$fcode" -eq 0 ] || exit 1
+
+echo "=== idle lock via Power (standalone session) ==="
+dbus-run-session -- sh -c '
+    status=0
+    pkill -x loali 2>/dev/null || true
+    LOALI_IDLE_BLANK_MS=2500 ./build/loali >build/shots/loali_idlelock.log 2>&1 &
+    comp=$!
+    sleep 5
+    if grep -q "locked (power)" build/shots/loali_idlelock.log; then
+        echo "idle lock: PASS"
+    else
+        echo "idle lock: FAIL"; status=1
+    fi
+    socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
+    WAYLAND_DISPLAY="${socket:-wayland-0}" timeout 10 ./build/lotest dpms on >/dev/null 2>&1 || true
+    sleep 1
+    if command -v xdotool >/dev/null 2>&1; then
+        DISPLAY="${DISPLAY:-:99}" xdotool mousemove 640 400 click 1 2>/dev/null || true
+        sleep 1
+        if grep -q "unlocked (user)" build/shots/loali_idlelock.log; then
+            echo "idle unlock: PASS"
+        else
+            echo "idle unlock: FAIL"; status=1
+        fi
+    else
+        echo "xdotool missing, unlock skipped"
+    fi
+    kill $comp 2>/dev/null || true
+    exit $status
+'
+lcode=$?
+echo "idle lock tests exit: $lcode"
+[ "$lcode" -eq 0 ] || exit 1

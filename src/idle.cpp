@@ -14,7 +14,8 @@ Idle::Idle(QObject *parent)
     m_idleTimer.start();
     m_autoBlank = new QTimer(this);
     m_autoBlank->setSingleShot(true);
-    m_autoBlank->setInterval(300000);
+    const int envMs = int(qEnvironmentVariableIntValue("LOALI_IDLE_BLANK_MS"));
+    m_autoBlank->setInterval(envMs > 0 ? envMs : 300000);
     connect(m_autoBlank, &QTimer::timeout, this, [this] {
         if (m_suppression > 0) {
             m_autoBlank->start();

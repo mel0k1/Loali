@@ -476,8 +476,24 @@ WaylandCompositor {
             }
 
             LockScreen {
+                z: 550
                 locked: comp.locked && !comp.sessionLocked
-                onUnlocked: comp.locked = false
+                onUnlocked: {
+                    comp.locked = false
+                    console.info("loali: unlocked (user)")
+                }
+            }
+
+            Connections {
+                target: Power
+                onLockRequested: {
+                    comp.locked = true
+                    console.info("loali: locked (power)")
+                }
+                onUnlockRequested: {
+                    comp.locked = false
+                    console.info("loali: unlocked (power)")
+                }
             }
 
             Item {

@@ -90,7 +90,18 @@ void PowerService::start()
         qWarning() << "PowerService: register ScreenSaver failed:" << bus.lastError().message();
     if (!bus.registerObject(QStringLiteral("/org/freedesktop/ScreenSaver"), self))
         qWarning() << "PowerService: register object failed:" << bus.lastError().message();
+    self->watchIdle();
     qInfo() << "PowerService: org.freedesktop.ScreenSaver ready";
+}
+
+void PowerService::watchIdle()
+{
+    connect(Idle::instance(), &Idle::blankedChanged, this, [this] {
+        if (Idle::instance()->blanked()) {
+            qInfo() << "PowerService: idle blank -> lock";
+            emit lockRequested();
+        }
+    });
 }
 
 void PowerService::probeLogind()
@@ -116,7 +127,33 @@ void PowerService::probeLogind()
         else
             m_canReboot = ok;
     }
+    sys.connect(QStringLiteral("org.freedesktop.login1"),
+                QStringLiteral("/org/freedesktop/login1"),
+                QStringLiteral("org.freedesktop.login1.Manager"),
+                QStringLiteral("PrepareForSleep"),
+                this, SLOT(onPrepareForSleep(bool)));
+    const QString selfSession = QStringLiteral("/org/freedesktop/login1/session/self");
+    const bool lockWatch = sys.connect(QStringLiteral("org.freedesktop.login1"), selfSession,
+                                       QStringLiteral("org.freedesktop.login1.Session"),
+                                       QStringLiteral("Lock"),
+                                       this, SIGNAL(lockRequested()));
+    const bool unlockWatch = sys.connect(QStringLiteral("org.freedesktop.login1"), selfSession,
+                                         QStringLiteral("org.freedesktop.login1.Session"),
+                                         QStringLiteral("Unlock"),
+                                         this, SIGNAL(unlockRequested()));
+    if (lockWatch || unlockWatch)
+        qInfo() << "PowerService: logind session lock signals connected";
     emit powerActionsChanged();
+}
+
+void PowerService::onPrepareForSleep(bool start)
+{
+    if (start) {
+        qInfo() << "PowerService: prepare for sleep -> lock";
+        emit lockRequested();
+    } else {
+        Idle::activity();
+    }
 }
 
 bool PowerService::callLogind(const QString &method)
