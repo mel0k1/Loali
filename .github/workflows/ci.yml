@@ -48,7 +48,7 @@ jobs:
         run: cmake --build build
 
       - name: bump wl_seat/ddm versions in prebuilt Qt (foot needs seat>=5, ddm>=3)
-        run: python3 scripts/qt_seat_bump.py
+        run: sudo python3 scripts/qt_seat_bump.py
 
       - name: shots
         run: sh scripts/ci_shots.sh
