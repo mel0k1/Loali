@@ -45,7 +45,7 @@ Loali *is* the display server: a lightweight desktop shell written in C++ and QM
 - **Session services** — StatusNotifier tray with DBusMenu menus, Notifications daemon, `org.freedesktop.ScreenSaver` inhibition, logind power actions.
 - **Portals** — Screenshot and ScreenCast (`org.freedesktop.impl.portal.*`) backed by PipeWire screencast nodes.
 - **Screencopy** — `zwlr_screencopy_manager_v1` + own `wl_output` v4 global, so `grim` captures the shell natively; `loali --screenshot shot.png` uses the same path.
-- **Lock screen** — idle blanking locks the session (DPMS + `ext_idle_notify_v1`), unlock by click or a **numeric PIN** set in Settings; `ext-session-lock-v1` and logind sleep/lock signals follow the same path.
+- **Lock screen** — idle blanking locks the session (DPMS + `ext_idle_notify_v1`), unlock by click or a **numeric PIN** set in Settings (kept only as a salted PBKDF2-SHA256 hash, 60k iterations); `ext-session-lock-v1` and logind sleep/lock signals follow the same path.
 - **Watchdog** — clients that stop answering `xdg_wm_base` pings are killed after a pong timeout.
 - **Settings app** — wallpapers, appearance, panels, workspaces, notifications, lock screen — all persisted via QSettings.
 

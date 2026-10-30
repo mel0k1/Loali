@@ -888,13 +888,13 @@ Item {
                     id: pinField
                     width: 220
                     height: 40
-                    placeholderText: qsTr("disabled")
+                    placeholderText: Settings.pinSet ? qsTr("enter new pin to replace") : qsTr("disabled")
                     color: Theme.textOnSurface
                     placeholderTextColor: Theme.onSurfaceVariant
                     font.pixelSize: 14
+                    echoMode: TextInput.Password
                     inputMethodHints: Qt.ImhDigitsOnly
                     validator: RegularExpressionValidator { regularExpression: /[0-9]{0,8}/ }
-                    text: Settings.pin
                     background: Rectangle {
                         radius: 20
                         color: Theme.surfaceContainerHighest
@@ -906,15 +906,18 @@ Item {
                 MButton {
                     label: qsTr("Save")
                     anchors.verticalCenter: parent.verticalCenter
-                    onClicked: Settings.pin = pinField.text.trim()
+                    onClicked: {
+                        Settings.setPin(pinField.text.trim())
+                        pinField.clear()
+                    }
                 }
             }
 
             Text {
                 width: Math.min(560, parent.width)
-                text: Settings.pin === ""
-                      ? qsTr("PIN is off: the lock screen unlocks with a click or Enter.")
-                      : qsTr("The screen locks on idle and wakes to this PIN. Digits only, up to 8.")
+                text: Settings.pinSet
+                      ? qsTr("The screen locks on idle and wakes to this PIN. Digits only, up to 8. Stored as a salted PBKDF2 hash.")
+                      : qsTr("PIN is off: the lock screen unlocks with a click or Enter.")
                 font.pixelSize: 13
                 color: Theme.onSurfaceVariant
                 wrapMode: Text.WordWrap

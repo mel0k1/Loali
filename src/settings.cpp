@@ -1,10 +1,83 @@
 #include "settings.h"
 
+#include <QCryptographicHash>
 #include <QQmlEngine>
+#include <QRandomGenerator>
 #include <QSettings>
 #include <algorithm>
 
 LoaliSettings *LoaliSettings::s_instance = nullptr;
+
+static const int kPinIterations = 60000;
+static const QLatin1String kPinTag("pbkdf2-sha256");
+
+static void pinPads(const QByteArray &password, QByteArray &ipad, QByteArray &opad)
+{
+    QByteArray k = password;
+    if (k.size() > 64)
+        k = QCryptographicHash::hash(k, QCryptographicHash::Sha256);
+    if (k.size() < 64)
+        k += QByteArray(64 - k.size(), '\0');
+    ipad = QByteArray(64, '\x36');
+    opad = QByteArray(64, '\x5c');
+    for (int i = 0; i < 64; ++i) {
+        ipad[i] = char(ipad.at(i) ^ k.at(i));
+        opad[i] = char(opad.at(i) ^ k.at(i));
+    }
+}
+
+static QByteArray hmacSha256(const QByteArray &ipad, const QByteArray &opad, const QByteArray &message)
+{
+    QCryptographicHash h(QCryptographicHash::Sha256);
+    h.addData(ipad);
+    h.addData(message);
+    const QByteArray inner = h.result();
+    h.reset();
+    h.addData(opad);
+    h.addData(inner);
+    return h.result();
+}
+
+static QByteArray pbkdf2Sha256(const QByteArray &password, const QByteArray &salt, int iterations, int length)
+{
+    QByteArray ipad;
+    QByteArray opad;
+    pinPads(password, ipad, opad);
+    QByteArray derived;
+    quint32 block = 1;
+    while (derived.size() < length) {
+        QByteArray be(4, '\0');
+        be[0] = char((block >> 24) & 0xff);
+        be[1] = char((block >> 16) & 0xff);
+        be[2] = char((block >> 8) & 0xff);
+        be[3] = char(block & 0xff);
+        QByteArray u = hmacSha256(ipad, opad, salt + be);
+        QByteArray acc = u;
+        for (int i = 1; i < iterations; ++i) {
+            u = hmacSha256(ipad, opad, u);
+            for (int j = 0; j < u.size(); ++j)
+                acc[j] = char(acc.at(j) ^ u.at(j));
+        }
+        derived += acc;
+        ++block;
+    }
+    derived.truncate(length);
+    return derived;
+}
+
+static QString makePinRecord(const QString &pin)
+{
+    QByteArray salt(16, '\0');
+    for (int i = 0; i < salt.size(); ++i)
+        salt[i] = char(QRandomGenerator::system()->generate() & 0xff);
+    const QByteArray key = pbkdf2Sha256(pin.toUtf8(), salt, kPinIterations, 32);
+    return QStringLiteral("%1$%2$%3$%4$%5")
+        .arg(kPinTag)
+        .arg(kPinIterations)
+        .arg(QString::fromLatin1(salt.toBase64()))
+        .arg(QString::fromLatin1(key.toBase64()))
+        .arg(pin.size());
+}
 
 LoaliSettings::LoaliSettings(QObject *parent)
     : QObject(parent)
@@ -32,7 +105,18 @@ LoaliSettings::LoaliSettings(QObject *parent)
         m_colorStyle = TonalSpot;
     m_contrast = s.value(QStringLiteral("appearance/contrast"), 0.0).toReal();
     m_contrast = std::clamp(m_contrast, -1.0, 1.0);
-    m_pin = s.value(QStringLiteral("lock/pin"), QString()).toString();
+    m_pinRecord = QString();
+    m_pinLength = 0;
+    const QString stored = s.value(QStringLiteral("lock/pin"), QString()).toString();
+    const QStringList parts = stored.split(QLatin1Char('$'));
+    if (parts.size() == 5 && parts.first() == kPinTag) {
+        m_pinRecord = stored;
+        m_pinLength = parts.last().toInt();
+    } else if (!stored.isEmpty()) {
+        m_pinRecord = makePinRecord(stored);
+        m_pinLength = stored.size();
+        s.setValue(QStringLiteral("lock/pin"), m_pinRecord);
+    }
 }
 
 LoaliSettings *LoaliSettings::create(QQmlEngine *engine, QJSEngine *jsEngine)
@@ -175,6 +259,24 @@ void LoaliSettings::setContrast(qreal value)
     emit contrastChanged();
 }
 
+bool LoaliSettings::verifyPin(const QString &attempt) const
+{
+    if (m_pinRecord.isEmpty() || attempt.size() != m_pinLength)
+        return false;
+    const QStringList parts = m_pinRecord.split(QLatin1Char('$'));
+    if (parts.size() != 5 || parts.first() != kPinTag)
+        return false;
+    const QByteArray salt = QByteArray::fromBase64(parts.at(2).toLatin1());
+    const QByteArray expect = QByteArray::fromBase64(parts.at(3).toLatin1());
+    const QByteArray got = pbkdf2Sha256(attempt.toUtf8(), salt, parts.at(1).toInt(), expect.size());
+    if (got.size() != expect.size())
+        return false;
+    char diff = 0;
+    for (int i = 0; i < expect.size(); ++i)
+        diff |= char(got.at(i) ^ expect.at(i));
+    return diff == 0;
+}
+
 void LoaliSettings::setPin(const QString &value)
 {
     QString v = value.trimmed();
@@ -184,10 +286,16 @@ void LoaliSettings::setPin(const QString &value)
         if (!c.isDigit())
             return;
     }
-    if (m_pin == v)
-        return;
-    m_pin = v;
+    if (v.isEmpty()) {
+        if (m_pinRecord.isEmpty())
+            return;
+        m_pinRecord = QString();
+        m_pinLength = 0;
+    } else {
+        m_pinRecord = makePinRecord(v);
+        m_pinLength = v.size();
+    }
     QSettings s;
-    s.setValue(QStringLiteral("lock/pin"), v);
+    s.setValue(QStringLiteral("lock/pin"), m_pinRecord);
     emit pinChanged();
 }

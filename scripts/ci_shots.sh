@@ -286,3 +286,53 @@ dbus-run-session -- sh -c '
 lcode=$?
 echo "idle lock tests exit: $lcode"
 [ "$lcode" -eq 0 ] || exit 1
+
+echo "=== pin unlock via Power (standalone session) ==="
+dbus-run-session -- sh -c '
+    status=0
+    pkill -x loali 2>/dev/null || true
+    mkdir -p "$HOME/.config/Loali"
+    printf "[lock]\npin=1357\n" > "$HOME/.config/Loali/Loali.conf"
+    LOALI_IDLE_BLANK_MS=2500 ./build/loali >build/shots/loali_pin.log 2>&1 &
+    comp=$!
+    sleep 4
+    if grep -q "pbkdf2-sha256" "$HOME/.config/Loali/Loali.conf"; then
+        echo "pin migration: PASS"
+    else
+        echo "pin migration: FAIL"; status=1
+    fi
+    for i in $(seq 1 10); do
+        grep -q "locked (power)" build/shots/loali_pin.log && break
+        sleep 1
+    done
+    if grep -q "locked (power)" build/shots/loali_pin.log; then
+        echo "pin idle lock: PASS"
+    else
+        echo "pin idle lock: FAIL"; status=1
+    fi
+    socket=$(ls "$XDG_RUNTIME_DIR" | grep "^wayland-" | head -n1)
+    WAYLAND_DISPLAY="${socket:-wayland-0}" timeout 10 ./build/lotest dpms on >/dev/null 2>&1 || true
+    sleep 1
+    wid=$(xdotool search --onlyvisible --name Loali | head -n1)
+    xdotool windowfocus "$wid" 2>/dev/null || true
+    sleep 0.5
+    for d in 1 1 1 1; do xdotool key "$d"; sleep 0.4; done
+    sleep 1.5
+    if grep -q "unlocked (user)" build/shots/loali_pin.log; then
+        echo "pin wrong reject: FAIL"; status=1
+    else
+        echo "pin wrong reject: PASS"
+    fi
+    for d in 1 3 5 7; do xdotool key "$d"; sleep 0.4; done
+    sleep 2
+    if grep -q "unlocked (user)" build/shots/loali_pin.log; then
+        echo "pin unlock: PASS"
+    else
+        echo "pin unlock: FAIL"; status=1
+    fi
+    kill $comp 2>/dev/null || true
+    exit $status
+'
+pcode=$?
+echo "pin tests exit: $pcode"
+[ "$pcode" -eq 0 ] || exit 1

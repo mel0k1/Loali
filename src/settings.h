@@ -19,7 +19,8 @@ class LoaliSettings : public QObject
     Q_PROPERTY(qreal panelScale READ panelScale WRITE setPanelScale NOTIFY panelScaleChanged)
     Q_PROPERTY(int colorStyle READ colorStyle WRITE setColorStyle NOTIFY colorStyleChanged)
     Q_PROPERTY(qreal contrast READ contrast WRITE setContrast NOTIFY contrastChanged)
-    Q_PROPERTY(QString pin READ pin WRITE setPin NOTIFY pinChanged)
+    Q_PROPERTY(bool pinSet READ pinSet NOTIFY pinChanged)
+    Q_PROPERTY(int pinLength READ pinLength NOTIFY pinChanged)
 
 public:
     enum BarStyle
@@ -85,7 +86,9 @@ public:
     qreal contrast() const { return m_contrast; }
     void setContrast(qreal value);
 
-    QString pin() const { return m_pin; }
+    bool pinSet() const { return !m_pinRecord.isEmpty(); }
+    int pinLength() const { return m_pinLength; }
+    Q_INVOKABLE bool verifyPin(const QString &attempt) const;
     void setPin(const QString &value);
 
 signals:
@@ -119,5 +122,6 @@ private:
     qreal m_panelScale = 0.9;
     int m_colorStyle = TonalSpot;
     qreal m_contrast = 0.0;
-    QString m_pin;
+    QString m_pinRecord;
+    int m_pinLength = 0;
 };

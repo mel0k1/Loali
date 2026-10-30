@@ -8,8 +8,8 @@ Item {
     property bool locked: false
     signal unlocked()
 
-    readonly property bool pinRequired: Settings.pin !== ""
-    readonly property int pinLength: Math.max(1, Settings.pin.length)
+    readonly property bool pinRequired: Settings.pinSet
+    readonly property int pinLength: Math.max(1, Settings.pinLength)
     property string pinEntry: ""
     property int pinFailures: 0
     property bool pinLockedOut: false
@@ -291,7 +291,7 @@ Item {
             return
         if (pinEntry.length < pinLength)
             return
-        if (pinEntry === Settings.pin) {
+        if (Settings.verifyPin(pinEntry)) {
             pinSuccess.start()
             unlocked()
         } else {
